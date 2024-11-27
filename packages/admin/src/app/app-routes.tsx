@@ -3,6 +3,10 @@ import { Link, Navigate, useRoutes } from "react-router-dom";
 export function AppRoutes() {
   return useRoutes([
     {
+      path: "/",
+      element: <Navigate to="/admin" replace />,
+    },
+    {
       path: "/admin",
       children: [
         {
