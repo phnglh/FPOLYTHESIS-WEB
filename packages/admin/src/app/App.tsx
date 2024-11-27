@@ -1,5 +1,10 @@
-function App() {
-  return <h1>admin</h1>;
-}
+import { AppLayout } from "./app-layout";
+import { AppRoutes } from "./app-routes";
 
-export default App;
+export function App() {
+  return (
+    <AppLayout>
+      <AppRoutes />
+    </AppLayout>
+  );
+}
