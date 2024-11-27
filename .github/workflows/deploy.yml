@@ -24,8 +24,6 @@ jobs:
           node-version: 18
           cache: "pnpm"
 
-      - run: npm install -g pnpm
-
       - name: Install dependencies
         run: pnpm install
 
