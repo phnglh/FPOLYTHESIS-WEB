@@ -36,9 +36,9 @@ jobs:
       - name: Deploy Client to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx vercel deploy packages/client --prod --confirm
+        run: npx vercel deploy packages/client --prod --confirm --token ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Admin to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx vercel deploy packages/admin --prod --confirm
+        run: npx vercel deploy packages/admin --prod --confirm --token ${{ secrets.VERCEL_TOKEN }}
