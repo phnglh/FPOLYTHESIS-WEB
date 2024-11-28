@@ -5,18 +5,18 @@ export function AppRoutes() {
   return useRoutes([
     {
       index: true,
-      element: <Navigate replace to="dashboard" />,
+      element: <Navigate replace to="/dashboard" />,
     },
     {
-      path: "dashboard",
+      path: "/dashboard",
       element: <h1>Dashboard</h1>,
     },
     {
-      path: "customer",
+      path: "/customer",
       element: <h1>Customer</h1>,
     },
     {
-      path: "users",
+      path: "/users",
       element: (
         <div>
           <p>Users page management</p>
