@@ -12,7 +12,7 @@ export function AppRoutes() {
       element: <h1>Dashboard</h1>,
     },
     {
-      path: "/customer",
+      path: "/customers",
       element: <h1>Customer</h1>,
     },
     {

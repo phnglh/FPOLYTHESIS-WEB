@@ -21,15 +21,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </li>
               <li>
                 <Link
-                  to="/collection"
+                  to="/customers"
                   className="text-white hover:text-blue-200"
                 >
-                  About
+                  Customers
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-white hover:text-blue-200">
-                  Contact
+                <Link to="/users" className="text-white hover:text-blue-200">
+                  Users
                 </Link>
               </li>
             </ul>
