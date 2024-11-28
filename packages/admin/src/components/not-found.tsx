@@ -1,3 +1,9 @@
+import { useEffect } from "react";
+
 export function NotFound() {
-  throw new Error("404 Not Found");
+  useEffect(() => {
+    throw new Error("404 Not Found");
+  }, []);
+
+  return null;
 }
