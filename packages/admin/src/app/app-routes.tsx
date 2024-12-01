@@ -9,7 +9,7 @@ export function AppRoutes() {
     },
     {
       path: "/dashboard",
-      element: <h1>Dashboard</h1>,
+      element: <h1 className="text-2xl text-pink-500">Dashboard</h1>,
     },
     {
       path: "/customer",
