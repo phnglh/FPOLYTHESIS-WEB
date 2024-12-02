@@ -1,0 +1,17 @@
+{
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "[typescript]": {
+    "togglequotes.chars": ["\"", "'", "`"],
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "togglequotes.chars": ["\"", "'", "`"],
+    "editor.quickSuggestions": {
+      "other": "on",
+      "comments": "on",
+      "strings": "on"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.autoSave": "afterDelay"
+}

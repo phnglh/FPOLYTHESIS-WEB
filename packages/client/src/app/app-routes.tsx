@@ -1,6 +1,7 @@
 import { Link, Navigate, useRoutes } from "react-router-dom";
 import { Home } from "./home";
 import { NotFound } from "../components/not-found";
+import { Login } from "@/app/login";
 
 export function AppRoutes() {
   return useRoutes([
@@ -24,6 +25,10 @@ export function AppRoutes() {
           <Link to="/collection">Collection</Link>
         </div>
       ),
+    },
+    {
+      path: "/customer/login",
+      element: <Login />,
     },
     {
       path: "*",
