@@ -7,6 +7,7 @@ import {
   Container,
 } from "@mui/material";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface Product {
   id: number;
@@ -46,6 +47,7 @@ export function Home() {
   console.log(cart);
   const handleAddToCart = (id: number) => {
     setCart((prev) => [...prev, id]);
+    toast.success(`Sản phẩm ${id} đã được thêm vào giỏ hàng!`);
   };
 
   return (
