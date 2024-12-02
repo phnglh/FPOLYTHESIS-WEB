@@ -5,14 +5,21 @@ import "./styles/index.css";
 import { StyledEngineProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { App } from "@/app/App";
+import { Provider } from "react-redux";
+import { store } from "@/app/store";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <StyledEngineProvider injectFirst>
-        <CssBaseline />
-        <App />
-      </StyledEngineProvider>
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <StyledEngineProvider injectFirst>
+          <CssBaseline />
+          <App />
+          <ToastContainer />
+        </StyledEngineProvider>
+      </BrowserRouter>
+    </Provider>
   </StrictMode>
 );
