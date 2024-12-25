@@ -25,3 +25,6 @@ dist-ssr
 *.sw?
 
 vite-project
+
+# project files
+.env
