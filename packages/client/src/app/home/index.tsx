@@ -1,3 +1,4 @@
+import useDocumentTitle from '@/hooks/title'
 import {
   Card,
   CardContent,
@@ -24,25 +25,26 @@ const products: Product[] = [
     name: 'Product 1',
     description: 'This is product 1 description.',
     price: 29.99,
-    image: 'https://via.placeholder.com/150',
+    image: 'https://via.placeholder.com/300',
   },
   {
     id: 2,
     name: 'Product 2',
     description: 'This is product 2 description.',
     price: 49.99,
-    image: 'https://via.placeholder.com/150',
+    image: 'https://via.placeholder.com/300',
   },
   {
     id: 3,
     name: 'Product 3',
     description: 'This is product 3 description.',
     price: 99.99,
-    image: 'https://via.placeholder.com/150',
+    image: 'https://via.placeholder.com/300',
   },
 ]
 
 export function Home() {
+  useDocumentTitle('Trang Chủ')
   const [cart, setCart] = useState<number[]>([])
 
   console.log(cart)
@@ -71,7 +73,6 @@ export function Home() {
           <Card key={product.id} className="shadow-md">
             <CardMedia
               component="img"
-              height="200"
               image={product.image}
               alt={product.name}
               className="object-cover"

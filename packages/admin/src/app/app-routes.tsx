@@ -1,5 +1,5 @@
-import { Link, Navigate, useRoutes } from "react-router-dom";
-import { NotFound } from "../components/not-found";
+import { Link, Navigate, useRoutes } from 'react-router-dom'
+import { NotFound } from '../components/not-found'
 
 export function AppRoutes() {
   return useRoutes([
@@ -8,15 +8,15 @@ export function AppRoutes() {
       element: <Navigate replace to="/dashboard" />,
     },
     {
-      path: "/dashboard",
+      path: '/dashboard',
       element: <h1 className="text-2xl text-pink-500">Dashboard</h1>,
     },
     {
-      path: "/customer",
+      path: '/customers',
       element: <h1>Customer</h1>,
     },
     {
-      path: "/users",
+      path: '/users',
       element: (
         <div>
           <p>Users page management</p>
@@ -25,8 +25,8 @@ export function AppRoutes() {
       ),
     },
     {
-      path: "*",
+      path: '*',
       element: <NotFound />,
     },
-  ]);
+  ])
 }

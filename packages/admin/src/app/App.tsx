@@ -1,7 +1,7 @@
-import { ErrorBoundary } from "react-error-boundary";
-import { AppLayout } from "./app-layout";
-import { AppRoutes } from "./app-routes";
-import ErrorFallback from "../components/ErrorFallback";
+import { ErrorBoundary } from 'react-error-boundary'
+import { AppRoutes } from './app-routes'
+import ErrorFallback from '../components/ErrorFallback'
+import { AppLayout } from '@/app/app-layout'
 
 export function App() {
   return (
@@ -10,5 +10,5 @@ export function App() {
         <AppRoutes />
       </AppLayout>
     </ErrorBoundary>
-  );
+  )
 }
