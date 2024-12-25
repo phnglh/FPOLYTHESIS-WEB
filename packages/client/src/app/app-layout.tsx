@@ -17,32 +17,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div>
           <nav>
             <ul className="flex space-x-4">
-              <li>
-                <Link to="/" className="text-black hover:text-blue-600">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/collections"
-                  className="text-black hover:text-blue-600"
-                >
-                  Collections
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/collection"
-                  className="text-black hover:text-blue-600"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-black hover:text-blue-600">
-                  Contact
-                </Link>
-              </li>
+              <Link to="/" className="text-black hover:text-blue-600">
+                Home
+              </Link>
+              <Link
+                to="/collections"
+                className="text-black hover:text-blue-600"
+              >
+                Collections
+              </Link>
+              <Link to="/collection" className="text-black hover:text-blue-600">
+                About
+              </Link>
+              <Link to="/contact" className="text-black hover:text-blue-600">
+                Contact
+              </Link>
             </ul>
           </nav>
         </div>
