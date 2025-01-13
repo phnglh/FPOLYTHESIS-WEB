@@ -39,18 +39,16 @@ export const ProductList = () => {
         flex: 1,
         headerName: translate('products.fields.category'),
         minWidth: 200,
-        valueGetter: ({ row }) => {
-          const value = row?.category
-          return value
-        },
-        display: 'flex',
-        renderCell: function render({ value }) {
-          return categoryLoading ? (
-            <>{translate('loading')}</>
-          ) : (
-            (categoryData?.data?.find((item) => item.id === value?.id)?.title ??
-              null)
-          )
+        renderCell: ({ row }) => {
+          if (categoryLoading) {
+            return <>{translate('loading')}</>
+          }
+
+          const categoryTitle = categoryData?.data?.find(
+            (category) => category.id === row?.category?.id,
+          )?.title
+
+          return categoryTitle || translate('')
         },
       },
       {

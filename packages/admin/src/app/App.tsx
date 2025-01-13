@@ -23,6 +23,11 @@ import { ColorModeContextProvider } from './contexts/color-mode'
 
 import { Header } from '@/components/header'
 import { ProductList } from '@/app/products/list'
+import { CategoryList } from '@/app/categories/list'
+
+// icons
+import DashboardIcon from '@mui/icons-material/Dashboard'
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 
 export function App() {
   const { t, i18n } = useTranslation()
@@ -44,7 +49,24 @@ export function App() {
           i18nProvider={i18nProvider}
           resources={[
             {
+              name: 'dashboard',
+              list: '/dashboard',
+              meta: {
+                icon: <DashboardIcon />,
+              },
+            },
+            {
+              name: 'store',
+              meta: {
+                icon: <StorefrontOutlinedIcon />,
+              },
+            },
+            {
               name: 'products',
+              meta: {
+                parent: 'store',
+                icon: false,
+              },
               list: '/products',
               create: '/products/new',
               edit: '/products/:id/edit',
@@ -57,6 +79,8 @@ export function App() {
               edit: '/categories/:id/edit',
               show: '/categories/:id',
               meta: {
+                parent: 'store',
+                icon: false,
                 canDelete: true,
               },
             },
@@ -77,20 +101,23 @@ export function App() {
             >
               <Route
                 index
-                element={<NavigateToResource resource="products" />}
+                element={<NavigateToResource resource="dashboard" />}
               />
+              <Route path="/dashboard">
+                <Route index element={<>alol</>} />
+              </Route>
               <Route path="/products">
                 <Route index element={<ProductList />} />
                 {/* <Route path="new" element={<ProductCreate />} /> */}
                 {/* <Route path=":id" element={<ProductShow />} /> */}
                 {/* <Route path=":id/edit" element={<ProductEdit />} /> */}
               </Route>
-              {/* <Route path="/categories">
-                  <Route index element={<CategoryList />} />
-                  <Route path="new" element={<CategoryCreate />} />
-                  <Route path=":id" element={<CategoryShow />} />
-                  <Route path=":id/edit" element={<CategoryEdit />} />
-                </Route> */}
+              <Route path="/categories">
+                <Route index element={<CategoryList />} />
+                {/* <Route path="new" element={<CategoryCreate />} />
+                <Route path=":id" element={<CategoryShow />} />
+                <Route path=":id/edit" element={<CategoryEdit />} /> */}
+              </Route>
               <Route path="*" element={<ErrorComponent />} />
             </Route>
             <Route
