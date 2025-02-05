@@ -1,7 +1,7 @@
-import { Link, Navigate, useRoutes } from "react-router-dom";
-import { Home } from "./home";
-import { NotFound } from "../components/not-found";
-import { Login } from "@/app/login";
+import { Link, Navigate, useRoutes } from 'react-router-dom'
+import { Home } from './home'
+import { NotFound } from '../components/not-found'
+import { Login } from '@/app/login'
 
 export function AppRoutes() {
   return useRoutes([
@@ -10,15 +10,15 @@ export function AppRoutes() {
       element: <Navigate replace to="/home" />,
     },
     {
-      path: "/home",
+      path: '/home',
       element: <Home />,
     },
     {
-      path: "/collection",
+      path: '/collection',
       element: <h1>collection</h1>,
     },
     {
-      path: "/contact",
+      path: '/contact',
       element: (
         <div>
           <p>Contact page content</p>
@@ -27,12 +27,12 @@ export function AppRoutes() {
       ),
     },
     {
-      path: "/customer/login",
+      path: '/customer/login',
       element: <Login />,
     },
     {
-      path: "*",
+      path: '*',
       element: <NotFound />,
     },
-  ]);
+  ])
 }

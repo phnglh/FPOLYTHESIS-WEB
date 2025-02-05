@@ -5,7 +5,7 @@ function ErrorFallback({ error }: { error: Error }) {
       <p>{error.message || "The page you're looking for doesn't exist."}</p>
       <a href="/">Go back to Home</a>
     </div>
-  );
+  )
 }
 
-export default ErrorFallback;
+export default ErrorFallback
