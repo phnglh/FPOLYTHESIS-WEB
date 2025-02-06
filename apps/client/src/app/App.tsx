@@ -1,14 +1,17 @@
-import { ErrorBoundary } from 'react-error-boundary'
-import { AppLayout } from './app-layout'
-import { AppRoutes } from './app-routes'
-import ErrorFallback from '../components/ErrorFallback'
+import { Route, Routes } from 'react-router'
+import Layout from '../layout/Layout'
+import Home from './home'
+import NotFound from '../layout/components/NotFound'
 
-export function App() {
+function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <AppLayout>
-        <AppRoutes />
-      </AppLayout>
-    </ErrorBoundary>
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Home />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   )
 }
+
+export default App
