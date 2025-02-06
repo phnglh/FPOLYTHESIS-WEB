@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "dev": "pnpm -C packages/client dev & pnpm -C packages/admin dev",
-    "build": "pnpm -C packages/client build && pnpm -C packages/admin build",
+    "dev": "pnpm -C apps/client dev & pnpm -C apps/admin dev",
+    "build": "pnpm -C apps/client build && pnpm -C apps/admin build",
     "prepare": "husky"
   },
   "devDependencies": {
