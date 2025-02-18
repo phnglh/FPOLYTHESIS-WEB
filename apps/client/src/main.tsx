@@ -1,28 +1,19 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import './styles/index.css'
-import { StyledEngineProvider } from '@mui/material/styles'
-import { CssBaseline, ThemeProvider } from '@mui/material'
-import { App } from '@/app/App'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import { Provider } from 'react-redux'
-import { store } from '@/app/store'
-import theme from '@/theme'
+import App from './app/App.tsx'
+import { BrowserRouter } from 'react-router'
+import { ErrorBoundary } from 'react-error-boundary'
+import './config/i18n.ts'
+import './styles/global.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
+    {/* <ErrorBoundary FallbackComponent={ErrorFallback}> */}
+    <Suspense fallback={<div>Loading...</div>}>
       <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <StyledEngineProvider injectFirst>
-            <CssBaseline />
-            <App />
-            <ToastContainer />
-          </StyledEngineProvider>
-        </ThemeProvider>
+        <App />
       </BrowserRouter>
-    </Provider>
+    </Suspense>
+    {/* </ErrorBoundary> */}
   </StrictMode>,
 )

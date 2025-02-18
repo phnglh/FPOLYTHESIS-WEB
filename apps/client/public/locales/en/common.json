@@ -1,0 +1,7 @@
+{
+  "hello": "Hello",
+  "customer": {
+    "name": "Name",
+    "age": "Age"
+  }
+}
