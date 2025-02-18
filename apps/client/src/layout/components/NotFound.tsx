@@ -1,9 +1,7 @@
-import { Container, Typography } from '@mui/material'
-
 export default function NotFound() {
   return (
-    <Container>
-      <Typography variant="h3">404</Typography>
-    </Container>
+    <>
+      <h1 className="text-9xl">404</h1>
+    </>
   )
 }
