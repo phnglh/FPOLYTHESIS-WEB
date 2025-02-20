@@ -4,7 +4,7 @@ import Layout from '../layout/Layout'
 function App() {
   return (
     <Routes>
-      <Route path="/admin" element={<Layout />}>
+      <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<h1>Dashboard</h1>} />
       </Route>
