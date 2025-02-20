@@ -22,16 +22,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --filter . --prod
 
       - name: Build Client
-        run: pnpm -C packages/client build
+        run: pnpm -C apps/client build
 
       - name: Build Admin
-        run: pnpm -C packages/admin build
+        run: pnpm -C apps/admin build
 
       - name: Deploy Client to Vercel
         env:
