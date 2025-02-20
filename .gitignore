@@ -28,3 +28,4 @@ vite-project
 
 # project files
 .env
+.vercel
