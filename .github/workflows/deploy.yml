@@ -25,7 +25,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --filter .
+        run: pnpm install --recursive
 
       - name: Build Client
         run: pnpm -C apps/client build
