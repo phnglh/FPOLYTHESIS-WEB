@@ -26,8 +26,8 @@
     "react-router": "^7.1.5",
     "react-toastify": "^11.0.3",
     "tailwindcss": "^4.0.6",
-    "tailwind-merge": "*",
-    "clsx": "*"
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

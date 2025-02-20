@@ -25,9 +25,5 @@
     "*.{ts,tsx}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.1"
   }
 }
