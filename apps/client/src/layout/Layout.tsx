@@ -18,6 +18,7 @@ const contentStyle: React.CSSProperties = {
   lineHeight: '120px',
   color: '#fff',
   // backgroundColor: '#0958d9',
+  margin: '0 30px',
 }
 
 const footerStyle: React.CSSProperties = {

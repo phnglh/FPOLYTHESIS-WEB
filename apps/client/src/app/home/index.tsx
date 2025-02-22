@@ -660,7 +660,7 @@ export default function Home() {
           <Row gutter={[16, 16]} justify="center">
             <Col xs={24} sm={24} md={18} lg={18}>
               <Row gutter={[16, 16]}>
-                {products.map((product, index) => (
+                {products.slice(0, 6).map((product, index) => (
                   <Col xs={12} sm={8} md={8} lg={8} key={index}>
                     <Card
                       hoverable
@@ -697,7 +697,6 @@ export default function Home() {
               </Row>
             </Col>
 
-            {/* Banner bên phải */}
             <Col xs={24} sm={24} md={6} lg={6}>
               <Image
                 src={banner}
@@ -718,21 +717,18 @@ export default function Home() {
             Xem tất cả
           </Button>
         </div>
-        {/* đánh giá khách hàng */}
+        {/* khách hàng nói gìgì */}
         <Row
           style={{ background: '#3E5E46', padding: '50px 0' }}
           align="middle"
         >
-          {/* Ảnh cửa hàng */}
           <Col xs={24} md={12}>
             <Image
-              src="store-image.jpg" // Thay thế bằng link ảnh thực tế
+              src="store-image.jpg"
               preview={false}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </Col>
-
-          {/* Phần đánh giá của khách hàng */}
           <Col xs={24} md={12} style={{ padding: '40px', color: 'white' }}>
             <Title level={2} style={{ color: 'white' }}>
               KHÁCH HÀNG NÓI GÌ VỀ SẢN PHẨM CỦA OH! THỂ THAO
@@ -761,7 +757,6 @@ export default function Home() {
                   }}
                 >
                   <Avatar src="customer-avatar.jpg" size={50} />{' '}
-                  {/* Ảnh khách hàng */}
                   <div style={{ marginLeft: '15px' }}>
                     <Title level={5} style={{ margin: 0, color: 'white' }}>
                       Bạn Diễm Hằng
