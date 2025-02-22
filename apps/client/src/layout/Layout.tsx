@@ -17,7 +17,7 @@ const contentStyle: React.CSSProperties = {
   minHeight: 120,
   lineHeight: '120px',
   color: '#fff',
-  backgroundColor: '#0958d9',
+  // backgroundColor: '#0958d9',
 }
 
 const footerStyle: React.CSSProperties = {
@@ -33,7 +33,7 @@ const layoutStyle = {
 export default function AppLayout() {
   return (
     <Layout style={layoutStyle}>
-      <Header style={headerStyle}>Header</Header>
+      <Header style={headerStyle}>Header </Header>
       <Content style={contentStyle}>
         <Outlet />
       </Content>
