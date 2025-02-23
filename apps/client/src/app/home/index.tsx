@@ -31,6 +31,7 @@ export default function Home() {
   const { t } = useTranslation()
   const [value, setValue] = useState(false)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
   const images = [
     'https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/slider_2.jpg?1721817765499',
     'https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/slider_1.jpg?1721817765499',
@@ -99,15 +100,21 @@ export default function Home() {
     'Phụ kiện thể thao',
   ]
   const products2 = [
-    { image: '/images/banner.png', type: 'banner' },
     {
-      image: '/images/product1.png',
+      banner:
+        'https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/product_tab_banner.jpg?1721817765499',
+      type: 'banner',
+    },
+    {
+      image:
+        'https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653',
       name: 'ÁO LÓT GIỮ NHIỆT ĐÁ BÓNG',
       brand: 'Kipsta',
       price: '395.000₫',
     },
     {
-      image: '/images/product2.png',
+      image:
+        'https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-a9e9e3cc-29fd-445f-bdc4-457dc2299a10.jpg?v=1696522711763',
       name: 'ÁO GIỮ NHIỆT NAM',
       brand: 'Underwear',
       price: '200.000₫',
@@ -405,7 +412,6 @@ export default function Home() {
                     overflow: 'hidden',
                   }}
                 >
-                  {/* Icon ❤️ ở góc phải trên */}
                   <HeartOutlined
                     style={{
                       fontSize: 20,
@@ -416,8 +422,6 @@ export default function Home() {
                       cursor: 'pointer',
                     }}
                   />
-
-                  {/* Ảnh sản phẩm */}
                   <div style={{ position: 'relative' }}>
                     <img
                       alt={product.name}
@@ -431,8 +435,6 @@ export default function Home() {
                         opacity: hoveredIndex === index ? 0.7 : 1,
                       }}
                     />
-
-                    {/* Hiển thị nút khi hover */}
                     {hoveredIndex === index && (
                       <div
                         style={{
@@ -463,8 +465,6 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-
-                  {/* Thông tin sản phẩm */}
                   <Text type="secondary">{product.brand}</Text>
                   <Title level={5} style={{ marginTop: '5px' }}>
                     {product.name}
@@ -480,8 +480,6 @@ export default function Home() {
                   >
                     {product.price}
                   </Text>
-
-                  {/* Hiển thị màu sản phẩm nếu có */}
                   {product.colors && (
                     <div style={{ marginTop: '8px' }}>
                       {product.colors.map((color, idx) => (
@@ -609,17 +607,85 @@ export default function Home() {
               <Tabs.TabPane tab={category} key={index}></Tabs.TabPane>
             ))}
           </Tabs>
-          <Row gutter={[16, 16]} justify="center">
-            {products2.slice(0, 3).map((product, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={index}>
+
+          <Row gutter={[16, 16]} justify="center" align="middle">
+            <Col
+              xs={24}
+              sm={24}
+              md={12}
+              lg={12}
+              style={{ position: 'relative' }}
+            >
+              <Image
+                src={products2[0].banner}
+                preview={false}
+                style={{
+                  marginTop: '50px',
+                  width: '100%',
+                  height: '320px',
+                  borderRadius: '10px',
+                  objectFit: 'cover',
+                }}
+              />
+            </Col>
+
+            {products2.slice(1, 3).map((product, index) => (
+              <Col xs={12} sm={12} md={6} lg={6} key={index}>
                 <Card
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                   hoverable
                   cover={
-                    <Image
-                      src={product.image}
-                      preview={false}
-                      style={{ height: '200px', objectFit: 'cover' }}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <HeartOutlined
+                        style={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          fontSize: '20px',
+                          color: '#00000',
+                          zIndex: 10,
+                        }}
+                      />
+                      <Image
+                        src={product.image}
+                        preview={false}
+                        style={{
+                          height: '200px',
+                          width: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                      {hoveredIndex === index && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            padding: '10px',
+                          }}
+                        >
+                          <Button
+                            style={{
+                              backgroundColor: '#3C6255',
+                              color: 'white',
+                              border: 'none',
+                            }}
+                          >
+                            Xem chi tiết
+                          </Button>
+                          <Button
+                            style={{ backgroundColor: '#555', color: 'white' }}
+                          >
+                            Tùy chọn
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   }
                   style={{
                     textAlign: 'center',
@@ -644,15 +710,62 @@ export default function Home() {
 
           <Row gutter={[16, 16]} justify="center">
             {products.slice(0, 4).map((product, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={index}>
+              <Col xs={24} sm={24} md={8} lg={6} key={index}>
                 <Card
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                   hoverable
                   cover={
-                    <Image
-                      src={product.image}
-                      preview={false}
-                      style={{ height: '200px', objectFit: 'cover' }}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <HeartOutlined
+                        style={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          fontSize: '20px',
+                          color: '#00000',
+                          zIndex: 10,
+                        }}
+                      />
+                      <Image
+                        src={product.image}
+                        preview={false}
+                        style={{
+                          height: '200px',
+                          width: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                      {hoveredIndex === index && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            padding: '10px',
+                          }}
+                        >
+                          <Button
+                            style={{
+                              backgroundColor: '#3C6255',
+                              color: 'white',
+                              border: 'none',
+                            }}
+                          >
+                            Xem chi tiết
+                          </Button>
+                          <Button
+                            style={{ backgroundColor: '#555', color: 'white' }}
+                          >
+                            Tùy chọn
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   }
                   style={{
                     textAlign: 'center',
@@ -724,13 +837,68 @@ export default function Home() {
                 {products.slice(0, 6).map((product, index) => (
                   <Col xs={12} sm={8} md={8} lg={8} key={index}>
                     <Card
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
                       hoverable
                       cover={
-                        <Image
-                          src={product.image}
-                          preview={false}
-                          style={{ height: '180px', objectFit: 'cover' }}
-                        />
+                        <div
+                          style={{ position: 'relative', textAlign: 'center' }}
+                        >
+                          <HeartOutlined
+                            style={{
+                              position: 'absolute',
+                              top: 10,
+                              right: 10,
+                              fontSize: '20px',
+                              color: '#000',
+                              zIndex: 10,
+                            }}
+                          />
+
+                          <Image
+                            src={product.image}
+                            preview={false}
+                            style={{
+                              height: '180px',
+                              width: '100%',
+                              objectFit: 'cover',
+                              borderRadius: '10px',
+                            }}
+                          />
+
+                          {hoveredIndex === index && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                background: 'rgba(0, 0, 0, 0.7)',
+                                padding: '10px',
+                              }}
+                            >
+                              <Button
+                                style={{
+                                  backgroundColor: '#3C6255',
+                                  color: 'white',
+                                  border: 'none',
+                                }}
+                              >
+                                Xem chi tiết
+                              </Button>
+                              <Button
+                                style={{
+                                  backgroundColor: '#555',
+                                  color: 'white',
+                                }}
+                              >
+                                Tùy chọn
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       }
                       style={{ textAlign: 'center', borderRadius: '10px' }}
                     >
@@ -762,7 +930,7 @@ export default function Home() {
               <Image
                 src={banner}
                 preview={false}
-                style={{ width: '100%', borderRadius: '10px' }}
+                style={{ width: '100%', height: '640px', borderRadius: '10px' }}
               />
             </Col>
           </Row>
