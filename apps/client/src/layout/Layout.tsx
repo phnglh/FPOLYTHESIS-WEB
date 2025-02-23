@@ -5,30 +5,30 @@ const { Header, Footer, Content } = Layout
 
 const headerStyle: React.CSSProperties = {
   textAlign: 'center',
-  color: '#fff',
+  color: 'black',
   height: 64,
   paddingInline: 48,
   lineHeight: '64px',
-  backgroundColor: '#4096ff',
+  backgroundColor: 'white',
 }
 
 const contentStyle: React.CSSProperties = {
   textAlign: 'center',
   minHeight: 120,
   lineHeight: '120px',
-  color: '#fff',
-  backgroundColor: '#0958d9',
+  color: 'black',
 }
 
 const footerStyle: React.CSSProperties = {
   textAlign: 'center',
-  color: '#fff',
-  backgroundColor: '#4096ff',
+  color: 'black',
+  backgroundColor: 'white',
 }
 const layoutStyle = {
   borderRadius: 8,
   overflow: 'hidden',
   minHeight: '100vh',
+  backgroundColor: 'white',
 }
 export default function AppLayout() {
   return (
