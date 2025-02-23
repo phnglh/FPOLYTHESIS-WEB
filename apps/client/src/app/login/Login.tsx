@@ -1,12 +1,20 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Input, Button, Typography } from 'antd'
 import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 
 const Login: React.FC = () => {
-  const onFinish = (values: any) => {
-    console.log('Success:', values)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+
+  // Xử lý đăng nhập
+  const handleLogin = (values: any) => {
+    console.log('Đăng nhập với:', values)
+  }
+
+  // Xử lý quên mật khẩu
+  const handleForgotPassword = (values: any) => {
+    console.log('Email lấy lại mật khẩu:', values.email)
   }
 
   return (
@@ -37,7 +45,12 @@ const Login: React.FC = () => {
           </a>
         </Text>
 
-        <Form layout="vertical" onFinish={onFinish} style={{ marginTop: 20 }}>
+        {/* Form Đăng Nhập */}
+        <Form
+          layout="vertical"
+          onFinish={handleLogin}
+          style={{ marginTop: 20 }}
+        >
           <Form.Item
             name="email"
             rules={[{ required: true, message: 'Vui lòng nhập Email!' }]}
@@ -63,20 +76,58 @@ const Login: React.FC = () => {
           </Form.Item>
         </Form>
 
+        {/* Hiển thị "Quên mật khẩu" */}
         <a
-          href="/forgot-password"
-          style={{ display: 'block', marginBottom: 10 }}
+          style={{ display: 'block', marginBottom: 10, cursor: 'pointer' }}
+          onClick={() => setShowForgotPassword(!showForgotPassword)}
         >
-          Quên mật khẩu
+          {showForgotPassword ? 'Đóng lấy lại mật khẩu' : 'Quên mật khẩu?'}
         </a>
 
+        {/* Form Lấy Lại Mật Khẩu */}
+        {showForgotPassword && (
+          <div
+            style={{
+              marginTop: 2,
+              padding: 15,
+              background: '#f5f5f5',
+              borderRadius: 5,
+            }}
+          >
+            <Text>Nhập email của bạn để đặt lại mật khẩu.</Text>
+            <Form
+              layout="vertical"
+              onFinish={handleForgotPassword}
+              style={{ marginTop: 10 }}
+            >
+              <Form.Item
+                name="email"
+                rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
+              >
+                <Input placeholder="Nhập email của bạn" size="large" />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  style={{ width: '100%' }}
+                >
+                  Lấy lại mật khẩu
+                </Button>
+              </Form.Item>
+            </Form>
+          </div>
+        )}
+
+        {/* Đăng nhập bằng MXH */}
         <Text>Hoặc đăng nhập bằng</Text>
         <div
           style={{
             marginTop: 10,
             display: 'flex',
             justifyContent: 'center',
-            gap: 10,
+            gap: 2,
           }}
         >
           <Button

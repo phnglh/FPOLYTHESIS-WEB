@@ -30,7 +30,7 @@ const { Title, Text } = Typography
 export default function Home() {
   const { t } = useTranslation()
   const [value, setValue] = useState(false)
-
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const images = [
     'https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/slider_2.jpg?1721817765499',
     'https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/slider_1.jpg?1721817765499',
@@ -246,6 +246,7 @@ export default function Home() {
         'https://link-to-image-1.jpg',
         'https://link-to-image-2.jpg',
       ],
+      colors: ['#00A693', '#000'],
     },
     {
       brand: 'Descente',
@@ -391,59 +392,119 @@ export default function Home() {
           </Title>
           <Row gutter={[16, 16]} justify="center">
             {products.map((product, index) => (
-              <Col xs={12} sm={8} md={6} lg={6} key={index}>
-                <Popover
-                  content={
-                    <div>
-                      <Title level={5}>{product.name}</Title>
-                      <Text>{product.brand}</Text>
-                      <div style={{ marginTop: '10px' }}>
-                        <Text
-                          strong
-                          style={{ fontSize: '16px', color: '#3C6255' }}
-                        >
-                          {product.price}
-                        </Text>
-                        {product.oldPrice && (
-                          <Text
-                            delete
-                            style={{ marginLeft: '8px', color: '#999' }}
-                          >
-                            {product.oldPrice}
-                          </Text>
-                        )}
-                      </div>
-                    </div>
-                  }
-                  title="Chi tiết sản phẩm"
-                  trigger="hover"
+              <Col xs={12} sm={12} md={6} lg={6} key={index}>
+                <Card
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  style={{
+                    textAlign: 'center',
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: 'none',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
                 >
-                  <Card
-                    cover={
-                      <img
-                        alt={product.name}
-                        src={product.image}
-                        style={{ height: '200px', objectFit: 'cover' }}
-                      />
-                    }
-                    actions={[<HeartOutlined key="like" />]}
-                    style={{ textAlign: 'center', borderRadius: '8px' }}
-                  >
-                    <Text type="secondary">{product.brand}</Text>
-                    <Title level={5} style={{ marginTop: '5px' }}>
-                      {product.name}
-                    </Title>
-                    {product.discount && (
-                      <Badge
-                        count={product.discount}
-                        style={{ backgroundColor: '#3C6255', fontSize: '12px' }}
-                      />
+                  {/* Icon ❤️ ở góc phải trên */}
+                  <HeartOutlined
+                    style={{
+                      fontSize: 20,
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      color: '#3C6255',
+                      cursor: 'pointer',
+                    }}
+                  />
+
+                  {/* Ảnh sản phẩm */}
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      alt={product.name}
+                      src={product.image}
+                      style={{
+                        height: '200px',
+                        objectFit: 'contain',
+                        padding: '10px',
+                        width: '100%',
+                        transition: 'opacity 0.3s',
+                        opacity: hoveredIndex === index ? 0.7 : 1,
+                      }}
+                    />
+
+                    {/* Hiển thị nút khi hover */}
+                    {hoveredIndex === index && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          background: 'rgba(0, 0, 0, 0.7)',
+                          padding: '10px',
+                        }}
+                      >
+                        <Button
+                          style={{
+                            backgroundColor: '#3C6255',
+                            color: 'white',
+                            border: 'none',
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                        <Button
+                          style={{ backgroundColor: '#555', color: 'white' }}
+                        >
+                          Tùy chọn
+                        </Button>
+                      </div>
                     )}
-                  </Card>
-                </Popover>
+                  </div>
+
+                  {/* Thông tin sản phẩm */}
+                  <Text type="secondary">{product.brand}</Text>
+                  <Title level={5} style={{ marginTop: '5px' }}>
+                    {product.name}
+                  </Title>
+                  <Text
+                    strong
+                    style={{
+                      fontSize: '16px',
+                      color: '#3C6255',
+                      display: 'block',
+                      marginTop: '5px',
+                    }}
+                  >
+                    {product.price}
+                  </Text>
+
+                  {/* Hiển thị màu sản phẩm nếu có */}
+                  {product.colors && (
+                    <div style={{ marginTop: '8px' }}>
+                      {product.colors.map((color, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            display: 'inline-block',
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            backgroundColor: color,
+                            margin: '0 4px',
+                            border: '1px solid #ccc',
+                          }}
+                        ></span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </Col>
             ))}
           </Row>
+
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
             <Button
               type="primary"
