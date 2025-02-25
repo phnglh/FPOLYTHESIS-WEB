@@ -1,5 +1,7 @@
+// ProductPage.jsx
 import { Layout, Menu, Card, Checkbox, Dropdown } from 'antd'
 import { DownOutlined } from '@ant-design/icons'
+import { Link } from 'react-router'
 
 const { Sider } = Layout
 const { Meta } = Card
@@ -20,34 +22,7 @@ export default function ProductPage() {
       price: '200.000₫',
       img: '/img2.jpg',
     },
-    {
-      id: 3,
-      name: 'ÁO DÀI TAY NAM UNDER ARMOUR',
-      brand: 'Armour',
-      price: '800.000₫',
-      img: '/img3.jpg',
-    },
-    {
-      id: 4,
-      name: 'ÁO BA LỖ THỂ THAO NAM PHOM',
-      brand: 'Skechers',
-      price: '690.000₫',
-      img: '/img4.jpg',
-    },
-    {
-      id: 5,
-      name: 'ÁO BA LỖ THỂ THAO NAM',
-      brand: 'Jacquard Training',
-      price: '500.000₫',
-      img: '/img5.jpg',
-    },
-    {
-      id: 6,
-      name: 'QUẦN DÀI TẬP LUYỆN NAM BMW',
-      brand: 'Motorsport',
-      price: '850.000₫',
-      img: '/img6.jpg',
-    },
+    // ... các sản phẩm khác
   ]
 
   return (
@@ -121,26 +96,28 @@ export default function ProductPage() {
         {/* Product Grid */}
         <div className="grid grid-cols-3 gap-4 mt-4">
           {products.map((product) => (
-            <Card
-              key={product.id}
-              cover={
-                <img
-                  alt={product.name}
-                  src={product.img}
-                  className="h-48 w-full object-cover"
-                />
-              }
-            >
-              <Meta
-                title={
-                  <span className="text-green-800 font-semibold">
-                    {product.brand}
-                  </span>
+            <Link to={`/products/${product.id}`} key={product.id}>
+              <Card
+                cover={
+                  <img
+                    alt={product.name}
+                    src={product.img}
+                    className="h-48 w-full object-cover"
+                  />
                 }
-                description={product.name}
-              />
-              <p className="text-green-700 font-bold mt-2">{product.price}</p>
-            </Card>
+                hoverable
+              >
+                <Meta
+                  title={
+                    <span className="text-green-800 font-semibold">
+                      {product.brand}
+                    </span>
+                  }
+                  description={product.name}
+                />
+                <p className="text-green-700 font-bold mt-2">{product.price}</p>
+              </Card>
+            </Link>
           ))}
         </div>
       </Layout>

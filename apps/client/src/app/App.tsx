@@ -1,10 +1,11 @@
-import { Route, Router, Routes } from 'react-router'
+import { Route, Routes } from 'react-router'
 import Layout from '../layout/Layout'
 import Home from './home'
 import Login from './login/Login'
 import Register from './login/Register'
 import NotFound from '../layout/components/NotFound'
 import ProductPage from './products'
+import ProductDetails from './products/details'
 
 function App() {
   return (
@@ -14,8 +15,8 @@ function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="products" element={<ProductPage />} />
+        <Route path="products/:productId" element={<ProductDetails />} />
       </Route>
-      {/* <Route path="/login" element={<Login/>}/> */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
