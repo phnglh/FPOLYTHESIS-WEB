@@ -6,7 +6,7 @@ const Cart = () => {
   const [cart, setCart] = useState([
     {
       key: '1',
-      image: 'https://via.placeholder.com/50', // Thay bằng link ảnh thật
+      image: 'https://via.placeholder.com/50',
       name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
       size: 'XL',
       price: 395000,
@@ -96,7 +96,9 @@ const Cart = () => {
 
   return (
     <div style={{ maxWidth: '900px', margin: 'auto' }}>
-      <h2>Giỏ hàng của bạn</h2>
+      <h2 style={{ textAlign: 'left', color: 'black', fontSize: '30px' }}>
+        Giỏ hàng của bạn
+      </h2>
       <Table columns={columns} dataSource={cart} pagination={false} />
       <Card style={{ marginTop: 16, textAlign: 'right' }}>
         <h3>

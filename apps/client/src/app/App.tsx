@@ -8,6 +8,7 @@ import Contact from './home/contact'
 import NewsPage from './home/news'
 import NationwideStores from './home/nationwidestores'
 import Cart from './home/carts'
+import ProductPage from './home/products'
 import NotFound from '../layout/components/NotFound'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="newspage" element={<NewsPage />} />
         <Route path="stores" element={<NationwideStores />} />
         <Route path="cart" element={<Cart />} />
+        <Route path="product" element={<ProductPage />} />
       </Route>
       {/* <Route path="/login" element={<Login/>}/> */}
       <Route path="*" element={<NotFound />} />
