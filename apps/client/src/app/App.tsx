@@ -7,6 +7,7 @@ import Introduce from './home/introduce'
 import Contact from './home/contact'
 import NewsPage from './home/news'
 import NationwideStores from './home/nationwidestores'
+import Cart from './home/carts'
 import NotFound from '../layout/components/NotFound'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="newspage" element={<NewsPage />} />
         <Route path="stores" element={<NationwideStores />} />
+        <Route path="cart" element={<Cart />} />
       </Route>
       {/* <Route path="/login" element={<Login/>}/> */}
       <Route path="*" element={<NotFound />} />
