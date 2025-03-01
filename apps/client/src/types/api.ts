@@ -10,6 +10,8 @@ export interface ApiRequest<T> {
 
 export interface ApiResponse<T> {
   data: T
+  message?: string
+  status?: string
 }
 
 export interface ApiError {

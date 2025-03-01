@@ -41,7 +41,7 @@ export interface ProductResponse {
 }
 
 export interface GetProductsResponse {
-  products: Product[]
+  products?: Product[]
   meta: {
     total: number
     per_page: number
