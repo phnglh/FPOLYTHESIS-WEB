@@ -4,15 +4,13 @@ import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 
-const Login: React.FC = () => {
+const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
 
-  // Xử lý đăng nhập
   const handleLogin = (values: any) => {
     console.log('Đăng nhập với:', values)
   }
 
-  // Xử lý quên mật khẩu
   const handleForgotPassword = (values: any) => {
     console.log('Email lấy lại mật khẩu:', values.email)
   }
@@ -45,7 +43,6 @@ const Login: React.FC = () => {
           </a>
         </Text>
 
-        {/* Form Đăng Nhập */}
         <Form
           layout="vertical"
           onFinish={handleLogin}
@@ -75,8 +72,6 @@ const Login: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
-
-        {/* Hiển thị "Quên mật khẩu" */}
         <a
           style={{ display: 'block', marginBottom: 10, cursor: 'pointer' }}
           onClick={() => setShowForgotPassword(!showForgotPassword)}
@@ -84,7 +79,6 @@ const Login: React.FC = () => {
           {showForgotPassword ? 'Đóng lấy lại mật khẩu' : 'Quên mật khẩu?'}
         </a>
 
-        {/* Form Lấy Lại Mật Khẩu */}
         {showForgotPassword && (
           <div
             style={{
@@ -119,8 +113,6 @@ const Login: React.FC = () => {
             </Form>
           </div>
         )}
-
-        {/* Đăng nhập bằng MXH */}
         <Text>Hoặc đăng nhập bằng</Text>
         <div
           style={{

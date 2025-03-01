@@ -4,7 +4,7 @@ import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 
-const Register: React.FC = () => {
+const Register = () => {
   const onFinish = (values: any) => {
     console.log('Received values:', values)
   }
