@@ -6,11 +6,10 @@ import { Sidebar } from './components/SideBar'
 
 const { Header, Sider } = Layout
 
-const AuthLayout: React.FC = () => {
+const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
 
   const user = JSON.parse(localStorage.getItem('user')!)
-  console.log(user)
 
   return (
     <Layout>
@@ -79,4 +78,4 @@ const AuthLayout: React.FC = () => {
   )
 }
 
-export default AuthLayout
+export default AdminLayout
