@@ -9,6 +9,8 @@ import NewsPage from './news'
 import StoresPage from './stores'
 import CartPage from './carts'
 import ProductPage from './products'
+import FavoriteProducts from './products/yeuthich'
+import CheckoutPage from './products/checkout'
 import NotFound from '../layout/components/NotFound'
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
         <Route path="lien-he" element={<ContactPage />} />
         <Route path="tin-tuc" element={<NewsPage />} />
         <Route path="he-thong-cua-hang" element={<StoresPage />} />
+        <Route path="yeu-thich" element={<FavoriteProducts />} />
+        <Route path="thanh-toan" element={<CheckoutPage />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
       </Route>
