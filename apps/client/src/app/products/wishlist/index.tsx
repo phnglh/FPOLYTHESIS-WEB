@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card, Typography, Row, Col, Button } from 'antd'
 
 const { Title, Text } = Typography

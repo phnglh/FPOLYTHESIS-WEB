@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Card,
   Radio,
@@ -12,12 +12,7 @@ import {
   Col,
   Typography,
 } from 'antd'
-import {
-  HeartFilled,
-  HeartOutlined,
-  LikeFilled,
-  ShoppingCartOutlined,
-} from '@ant-design/icons'
+import { HeartOutlined, ShoppingCartOutlined } from '@ant-design/icons'
 
 const { TabPane } = Tabs
 const { Title, Text } = Typography
