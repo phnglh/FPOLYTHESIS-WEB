@@ -1,7 +1,7 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { Button, Layout } from 'antd'
 import React, { useState } from 'react'
-import { Outlet } from 'react-router'
+import { Navigate, Outlet } from 'react-router'
 import { Sidebar } from './components/SideBar'
 
 const { Header, Sider } = Layout
@@ -9,7 +9,11 @@ const { Header, Sider } = Layout
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
 
-  const user = JSON.parse(localStorage.getItem('user')!)
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <Layout>

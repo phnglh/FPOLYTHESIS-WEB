@@ -24,3 +24,11 @@ export interface ApiError {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
 }
+
+export interface BaseState<T> {
+  data: T
+  loading: boolean
+  error: string | null
+}
+
+export const transformResponse = <T>(response: ApiResponse<T>) => response.data

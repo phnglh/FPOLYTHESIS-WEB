@@ -1,28 +1,16 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '../services/apiClient'
+import { Product, ProductsState } from '#types/product'
 
-// Interface
-interface Product {
-  id: number
-  name: string
-  price: number
-}
-
-interface ProductState {
-  products: Product[]
-  loading: boolean
-  error: string | null
-}
-
-const initialState: ProductState = {
-  products: [],
+const initialProductsState: ProductsState = {
+  data: [],
   loading: false,
   error: null,
 }
 
 // GET Products
 export const fetchProducts = createAsyncThunk(
-  'product/fetchProducts',
+  'products/fetchProducts',
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/products')
@@ -35,7 +23,7 @@ export const fetchProducts = createAsyncThunk(
 
 // POST Product
 export const addProduct = createAsyncThunk(
-  'product/addProduct',
+  'products/addProduct',
   async (newProduct: Omit<Product, 'id'>, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/products', newProduct)
@@ -48,7 +36,7 @@ export const addProduct = createAsyncThunk(
 
 // PUT Product
 export const updateProduct = createAsyncThunk(
-  'product/updateProduct',
+  'products/updateProduct',
   async (updatedProduct: Product, { rejectWithValue }) => {
     try {
       const response = await apiClient.put(
@@ -64,7 +52,7 @@ export const updateProduct = createAsyncThunk(
 
 // DELETE Product
 export const deleteProduct = createAsyncThunk(
-  'product/deleteProduct',
+  'products/deleteProduct',
   async (id: number, { rejectWithValue }) => {
     try {
       await apiClient.delete(`/products/${id}`)
@@ -76,8 +64,8 @@ export const deleteProduct = createAsyncThunk(
 )
 
 const productSlice = createSlice({
-  name: 'product',
-  initialState,
+  name: 'products',
+  initialState: initialProductsState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -89,7 +77,7 @@ const productSlice = createSlice({
       .addCase(
         fetchProducts.fulfilled,
         (state, action: PayloadAction<Product[]>) => {
-          state.products = action.payload
+          state.data = action.payload
           state.loading = false
         },
       )
@@ -102,7 +90,7 @@ const productSlice = createSlice({
       .addCase(
         addProduct.fulfilled,
         (state, action: PayloadAction<Product>) => {
-          state.products.push(action.payload)
+          state.data.push(action.payload)
         },
       )
 
@@ -110,11 +98,9 @@ const productSlice = createSlice({
       .addCase(
         updateProduct.fulfilled,
         (state, action: PayloadAction<Product>) => {
-          const index = state.products.findIndex(
-            (p) => p.id === action.payload.id,
-          )
+          const index = state.data.findIndex((p) => p.id === action.payload.id)
           if (index !== -1) {
-            state.products[index] = action.payload
+            state.data[index] = action.payload
           }
         },
       )
@@ -123,7 +109,7 @@ const productSlice = createSlice({
       .addCase(
         deleteProduct.fulfilled,
         (state, action: PayloadAction<number>) => {
-          state.products = state.products.filter(
+          state.data = state.data.filter(
             (product) => product.id !== action.payload,
           )
         },

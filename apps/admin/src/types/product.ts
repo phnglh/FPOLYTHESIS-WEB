@@ -1,3 +1,5 @@
+import { BaseState } from '#types/api'
+
 export interface Product {
   id: number
   name: string
@@ -48,3 +50,5 @@ export interface GetProductsResponse {
     current_page: number
   }
 }
+
+export type ProductsState = BaseState<Product[]>

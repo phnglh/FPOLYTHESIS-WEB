@@ -1,35 +1,36 @@
-import { Category } from '@/@types/category'
-import {
-  createCategory,
-  deleteCategory,
-  getAllCategory,
-  updateCategory,
-} from '@/api/services/CategoryService'
+import { Category } from '#types/category'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Modal, Space, Table } from 'antd'
+import {} from '@store/api/categoryApi'
+import {
+  addCategory,
+  deleteCategory,
+  fetchCategories,
+} from '@store/slices/categorySlice'
+import { AppDispatch, RootState } from '@store/store'
+import { Button, Form, Input, Modal, Select, Space, Table } from 'antd'
 import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 const CategoryManagement = () => {
-  const [categories, setCategories] = useState<Category[]>([])
   const [isAddModalVisible, setIsAddModalVisible] = useState(false)
   const [isEditModalVisible, setIsEditModalVisible] = useState(false)
   const [currentCategory, setCurrentCategory] = useState<any>(null)
   const [form] = Form.useForm()
 
+  const dispatch = useDispatch<AppDispatch>()
+  const { data, loading, error } = useSelector(
+    (state: RootState) => state.categories,
+  )
+
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    dispatch(fetchCategories())
+  }, [dispatch])
 
-  const fetchCategories = async () => {
-    const data = await getAllCategory()
-    setCategories(data)
-  }
-
-  const handleAddCategory = async (values: Category) => {
+  const handleAddCategory = async (value: Category) => {
     try {
-      await createCategory(values)
-      fetchCategories()
+      await dispatch(addCategory(value))
+      await dispatch(fetchCategories())
       setIsAddModalVisible(false)
       form.resetFields()
     } catch (error) {
@@ -37,10 +38,9 @@ const CategoryManagement = () => {
     }
   }
 
-  const handleEditCategory = async (values: Category) => {
+  const handleEditCategory = async (value: Category) => {
     try {
-      await updateCategory(currentCategory?.id, values)
-      fetchCategories()
+      console.log(value)
       setIsEditModalVisible(false)
       form.resetFields()
     } catch (error) {
@@ -50,12 +50,13 @@ const CategoryManagement = () => {
 
   const handleDeleteCategory = async (categoryId: number) => {
     try {
-      await deleteCategory(categoryId)
-      fetchCategories()
+      await dispatch(deleteCategory(categoryId))
+      toast.success('Xóa danh mục thành công!')
     } catch (error) {
-      console.error('Failed to delete category:', error)
+      toast.error('Xóa danh mục thất bại!')
     }
   }
+  console.log(currentCategory)
 
   const showDeleteConfirm = (category: Category) => {
     if (category.quantity > 0) {
@@ -119,28 +120,49 @@ const CategoryManagement = () => {
         Thêm Danh Mục Mới
       </Button>
 
-      <Table columns={columns} dataSource={categories} rowKey={'id'} />
+      <Table columns={columns} dataSource={data} rowKey="id" />
 
       <Modal
         title="Thêm Danh Mục Mới"
         open={isAddModalVisible}
         onCancel={() => setIsAddModalVisible(false)}
-        footer={null}
       >
-        <Form form={form} onFinish={handleAddCategory}>
+        <Form
+          form={form}
+          onFinish={handleAddCategory}
+          layout="vertical"
+          labelCol={{ span: 6 }}
+          wrapperCol={{ span: 18 }}
+        >
           <Form.Item
             label="Tên Danh Mục"
             name="name"
-            rules={[
-              {
-                required: true,
-                message: 'Không được để trống',
-              },
-            ]}
+            rules={[{ required: true, message: 'Không được để trống' }]}
           >
-            <Input />
+            <Input placeholder="Nhập tên danh mục" />
           </Form.Item>
-          <Form.Item>
+
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            rules={[{ required: true, message: 'Không được để trống' }]}
+          >
+            <Input placeholder="Nhập mô tả" />
+          </Form.Item>
+
+          <Form.Item label="Danh Mục Cha" name="parentId">
+            <Select placeholder="Chọn danh mục cha" allowClear>
+              {data
+                ?.filter((category) => category.parentId === null)
+                .map((category) => (
+                  <Select.Option key={category.id} value={category.id}>
+                    {category.name}
+                  </Select.Option>
+                ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item wrapperCol={{ offset: 6, span: 18 }}>
             <Button type="primary" htmlType="submit">
               Thêm Danh Mục
             </Button>
@@ -154,19 +176,66 @@ const CategoryManagement = () => {
         onCancel={() => setIsEditModalVisible(false)}
         footer={null}
       >
-        <Form form={form} onFinish={handleEditCategory}>
+        <Form form={form} onFinish={handleEditCategory} layout="vertical">
           <Form.Item
             label="Tên Danh Mục"
             name="name"
-            rules={[
-              {
-                required: true,
-                message: 'Không được để trống',
-              },
-            ]}
+            rules={[{ required: true, message: 'Không được để trống' }]}
           >
             <Input />
           </Form.Item>
+
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            rules={[{ required: true, message: 'Không được để trống' }]}
+          >
+            <Input />
+          </Form.Item>
+          {currentCategory?.parentId !== null && (
+            <Form.Item label="Danh Mục Cha" name="parentId">
+              <Select placeholder="Chọn danh mục cha" allowClear>
+                {data
+                  ?.filter(
+                    (category) =>
+                      category.id !== currentCategory?.id &&
+                      category.parentId === null,
+                  )
+                  .map((category) => (
+                    <Select.Option key={category.id} value={category.id}>
+                      {category.name}
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          )}
+
+          {/* {currentCategory?.children?.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold">Danh Mục Con:</h4>
+              <ul className="space-y-2 mt-2">
+                {currentCategory.children.map((child: Category) => (
+                  <li
+                    key={child.id}
+                    className="flex justify-between items-center"
+                  >
+                    <span>{child.name}</span>
+                    <Button
+                      size="small"
+                      danger
+                      onClick={
+                        () => console.log(child)
+                        // handleRemoveChildCategory(child.id)
+                      }
+                    >
+                      Xóa khỏi danh mục con
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )} */}
+
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Lưu Thay Đổi

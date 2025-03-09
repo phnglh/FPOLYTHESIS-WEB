@@ -5,9 +5,10 @@ import {
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react'
 import axios, { AxiosError } from 'axios'
-import { GetProductsResponse, Product } from '../../types/products'
+import { GetProductsResponse, Product } from '../../types/product'
 import { ApiError, ApiRequest, ApiResponse } from '../../types/api'
 import { getErrorMessage } from '../../utils/error'
+import { transformResponse } from '#types/api'
 
 export const axiosBaseQuery =
   <T>({
@@ -36,11 +37,9 @@ export const axiosBaseQuery =
     }
   }
 
-const transformResponse = <T>(response: ApiResponse<T>) => response.data
-
 export const productApi = createApi({
   reducerPath: 'productApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/api' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/api/v1' }),
   refetchOnFocus: true,
   refetchOnReconnect: true,
   tagTypes: ['Products'],

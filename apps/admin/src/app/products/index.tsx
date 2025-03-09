@@ -3,22 +3,23 @@ import { Button, Descriptions, Input, Modal, Space, Table } from 'antd'
 
 import { ColumnGroupType, ColumnType } from 'antd/es/table'
 import { useNavigate } from 'react-router'
-import { useProductList } from '../../hooks/useProductQuery'
 import { useState } from 'react'
-import { Product } from '../../types/products'
 import { useDispatch } from 'react-redux'
-import { deleteProduct } from '../../store/slices/productSlice'
+import { AppDispatch } from '@store/store'
+import { deleteProduct } from '@store/slices/productSlice'
+import { useProductList } from '@hooks/useProductQuery'
+import type { Product } from '#types/product'
 
 const ProductPage = () => {
   const [filter, setfilter] = useState<any>()
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { data, errorMessage, isLoading } = useProductList()
   const navigate = useNavigate()
   if (errorMessage || !data) return <div>{errorMessage}</div>
   const { products, meta } = data
-
+  console.log(data)
   const handleDelete = (id: number) => {
     if (confirm('Bạn có chắc chắn muốn xoá không?')) {
       dispatch(deleteProduct(id))
