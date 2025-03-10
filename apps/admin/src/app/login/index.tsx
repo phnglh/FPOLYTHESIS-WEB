@@ -1,6 +1,5 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
-import apiClient from '@store/services/apiClient'
-import { setAuth } from '@store/slices/authSlice'
+import { login } from '@store/slices/authSlice'
 import { RootState } from '@store/store'
 import { Button, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
@@ -13,30 +12,17 @@ const { Title } = Typography
 const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<RootState>()
 
-  const handleLogin = async (values: { email: string; password: string }) => {
-    setLoading(true)
-    try {
-      const res = await apiClient.post('/login', values, {
-        withCredentials: true,
+  const handleLogin = (values) => {
+    dispatch(login(values))
+      .unwrap()
+      .then(() => {
+        toast.success('Đăng nhập thành công!')
       })
-      const user = res.data.user
-
-      if (user.role !== 'admin') {
-        toast.error('Tài khoản không có quyền truy cập!')
-        return
-      }
-
-      localStorage.setItem('access_token', res.data.access_token)
-      dispatch(setAuth({ user, token: res.data.access_token }))
-
-      toast.success('Đăng nhập thành công!')
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Đăng nhập thất bại')
-    } finally {
-      setLoading(false)
-    }
+      .catch((err) => {
+        toast.error(err)
+      })
   }
 
   if (user && user.role === 'admin') {
