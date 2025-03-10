@@ -1,20 +1,26 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import apiClient from '@store/services/apiClient'
+import { setAuth } from '@store/slices/authSlice'
+import { RootState } from '@store/store'
 import { Button, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useDispatch, useSelector } from 'react-redux'
+import { Navigate } from 'react-router'
 import { toast } from 'react-toastify'
 
 const { Title } = Typography
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const { user } = useSelector((state: RootState) => state.auth)
+  const dispatch = useDispatch()
 
   const handleLogin = async (values: { email: string; password: string }) => {
+    setLoading(true)
     try {
-      const res = await apiClient.post('/login', values)
-
+      const res = await apiClient.post('/login', values, {
+        withCredentials: true,
+      })
       const user = res.data.user
 
       if (user.role !== 'admin') {
@@ -23,13 +29,18 @@ const LoginPage = () => {
       }
 
       localStorage.setItem('access_token', res.data.access_token)
-      localStorage.setItem('user', JSON.stringify(user))
+      dispatch(setAuth({ user, token: res.data.access_token }))
 
       toast.success('Đăng nhập thành công!')
-      navigate('')
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Đăng nhập thất bại')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (user && user.role === 'admin') {
+    return <Navigate to="/dashboard" replace />
   }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

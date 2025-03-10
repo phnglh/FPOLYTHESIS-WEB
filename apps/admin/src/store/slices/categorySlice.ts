@@ -12,7 +12,7 @@ export const fetchCategories = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/categories')
-      console.log(response)
+      console.log('response', response)
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data || 'Lỗi không xác định')

@@ -21,5 +21,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), vercel()],
   server: {
     port: 3001,
+    proxy: {
+      '/api': 'http://127.0.0.1:8000',
+      '/sanctum': 'http://127.0.0.1:8000',
+    },
   },
 })

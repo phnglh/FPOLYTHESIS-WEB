@@ -1,82 +1,123 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
-import { Button, Layout } from 'antd'
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
+import { Avatar, Button, Dropdown, Layout, Typography, Space, Flex } from 'antd'
 import React, { useState } from 'react'
-import { Navigate, Outlet } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './components/SideBar'
+import apiClient from '@store/services/apiClient'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@store/store'
+import { logout } from '@store/slices/authSlice'
 
-const { Header, Sider } = Layout
+const { Title, Text } = Typography
+const { Header, Sider, Content } = Layout
 
 const AdminLayout: React.FC = () => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
+  const { user } = useSelector((state: RootState) => state.auth)
+  const avatarSrc =
+    user?.avatar ||
+    'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg'
 
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  // Xử lý logout
+  const handleMenuClick = async ({ key }: { key: string }) => {
+    if (key === 'logout') {
+      try {
+        dispatch(logout())
 
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/login" replace />
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('user')
+
+        navigate('/login', { replace: true })
+      } catch (error) {
+        console.error('Logout failed:', error)
+      }
+    }
+  }
+
+  const profileMenu = {
+    items: [
+      {
+        key: 'profile',
+        label: <span>Hồ sơ</span>,
+      },
+      {
+        key: 'logout',
+        label: <span>Đăng xuất</span>,
+      },
+    ],
+    onClick: handleMenuClick,
   }
 
   return (
-    <Layout>
+    <Layout style={{ minHeight: '100vh' }}>
       <Sider
-        width={210}
+        width={250}
         theme="light"
         trigger={null}
         collapsible
         collapsed={collapsed}
+        style={{ borderRight: '1px solid #f0f0f0' }}
       >
-        {!collapsed ? (
-          <div className="p-3 text-2xl font-bold">GENTLEMAN'S</div>
-        ) : (
-          <div className="pb-2 pl-2 pt-2  font-bold">GENTLE</div>
-        )}
+        <Flex
+          align="center"
+          justify="center"
+          style={{
+            padding: collapsed ? '12px 8px' : '16px',
+          }}
+        >
+          <Title
+            level={collapsed ? 5 : 4}
+            style={{
+              margin: 0,
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {collapsed ? 'FL' : 'Flames Management'}
+          </Title>
+        </Flex>
 
         <Sidebar />
       </Sider>
+
       <Layout>
-        <Header style={{ padding: 0, background: 'white', display: 'flex' }}>
+        <Header
+          style={{
+            padding: '0 16px',
+            background: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #f0f0f0',
+          }}
+        >
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
-            }}
+            style={{ fontSize: '18px' }}
           />
-          <div className="ml-auto mr-3">
-            <div className="dropdown relative ms-3 ">
-              <button className="bg-gray-100 pl-5 pr-5">
-                <div className="flex items-center">
-                  <img
-                    className="header-profile-user h-10 w-10 rounded-full "
-                    src={
-                      user?.data?.avatar
-                        ? user?.data?.avatar
-                        : 'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg'
-                    }
-                    alt="Header Avatar"
-                  />
-                  <div className="ml-2 text-start">
-                    <span className="ms-1 hidden font-medium xl:inline-block ">
-                      {user?.data?.name ? user?.data?.name : ''}
-                    </span>
-                    <span
-                      className="user-name-sub-text ms-1 hidden  text-xs xl:block"
-                      style={{ marginTop: '-20px' }}
-                    >
-                      Admin
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
+
+          <Dropdown menu={profileMenu} placement="bottomRight" arrow>
+            <Space align="center" size="middle" style={{ cursor: 'pointer' }}>
+              <Avatar size="large" src={avatarSrc} icon={<UserOutlined />} />
+              {!collapsed && <Text strong>{user?.name || ''}</Text>}
+            </Space>
+          </Dropdown>
         </Header>
 
-        <div className="site-layout-content p-10">
+        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
           <Outlet />
-        </div>
+        </Content>
       </Layout>
     </Layout>
   )

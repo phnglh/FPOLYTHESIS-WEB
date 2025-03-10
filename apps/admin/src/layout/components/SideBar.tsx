@@ -21,7 +21,42 @@ const items = [
   {
     key: '2',
     icon: <AppstoreOutlined />,
-    label: <Link to="quan-ly-danh-muc">Tất cả danh mục</Link>,
+    label: 'Store',
+    children: [
+      {
+        key: '21',
+        label: 'Danh muc',
+        children: [
+          {
+            key: '211',
+            label: <Link to="quan-ly-danh-muc">Tất cả danh mục</Link>,
+          },
+          {
+            key: '212',
+            label: <Link to="quan-ly-danh-muc">Tất cả danh mục</Link>,
+          },
+        ],
+      },
+      { key: '22', label: 'Option 2' },
+      {
+        key: '23',
+        label: 'Submenu',
+        children: [
+          { key: '231', label: 'Option 1' },
+          { key: '232', label: 'Option 2' },
+          { key: '233', label: 'Option 3' },
+        ],
+      },
+      {
+        key: '24',
+        label: 'Submenu 2',
+        children: [
+          { key: '241', label: 'Option 1' },
+          { key: '242', label: 'Option 2' },
+          { key: '243', label: 'Option 3' },
+        ],
+      },
+    ],
   },
   {
     key: 'sub2',

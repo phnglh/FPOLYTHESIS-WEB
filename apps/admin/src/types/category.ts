@@ -4,8 +4,8 @@ export interface Category {
   id: number
   name: string
   description: string
-  imgaeUrl?: string
-  parentId?: number
+  image?: string
+  parent_id?: number
 }
 
 export interface CategoryResponse {

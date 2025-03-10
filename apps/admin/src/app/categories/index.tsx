@@ -15,13 +15,15 @@ import { toast } from 'react-toastify'
 const CategoryManagement = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false)
   const [isEditModalVisible, setIsEditModalVisible] = useState(false)
-  const [currentCategory, setCurrentCategory] = useState<any>(null)
+  const [currentCategory, setCurrentCategory] = useState<Category>()
   const [form] = Form.useForm()
 
   const dispatch = useDispatch<AppDispatch>()
   const { data, loading, error } = useSelector(
     (state: RootState) => state.categories,
   )
+
+  console.log(data)
 
   useEffect(() => {
     dispatch(fetchCategories())
@@ -59,11 +61,6 @@ const CategoryManagement = () => {
   console.log(currentCategory)
 
   const showDeleteConfirm = (category: Category) => {
-    if (category.quantity > 0) {
-      toast.warning('Danh mục này có sản phẩm và không thể xóa.')
-      return
-    }
-
     Modal.confirm({
       title: 'Xác nhận xóa',
       content: 'Bạn có chắc chắn muốn xóa danh mục này không?',
@@ -115,7 +112,6 @@ const CategoryManagement = () => {
         type="primary"
         icon={<PlusOutlined />}
         onClick={() => setIsAddModalVisible(true)}
-        style={{ marginBottom: '16px' }}
       >
         Thêm Danh Mục Mới
       </Button>
@@ -150,10 +146,10 @@ const CategoryManagement = () => {
             <Input placeholder="Nhập mô tả" />
           </Form.Item>
 
-          <Form.Item label="Danh Mục Cha" name="parentId">
+          <Form.Item label="Danh Mục Cha" name="parent_id">
             <Select placeholder="Chọn danh mục cha" allowClear>
               {data
-                ?.filter((category) => category.parentId === null)
+                ?.filter((category) => category.parent_id === null)
                 .map((category) => (
                   <Select.Option key={category.id} value={category.id}>
                     {category.name}
@@ -192,14 +188,14 @@ const CategoryManagement = () => {
           >
             <Input />
           </Form.Item>
-          {currentCategory?.parentId !== null && (
-            <Form.Item label="Danh Mục Cha" name="parentId">
+          {currentCategory?.parent_id !== null && (
+            <Form.Item label="Danh Mục Cha" name="parent_id">
               <Select placeholder="Chọn danh mục cha" allowClear>
                 {data
                   ?.filter(
                     (category) =>
                       category.id !== currentCategory?.id &&
-                      category.parentId === null,
+                      category.parent_id === null,
                   )
                   .map((category) => (
                     <Select.Option key={category.id} value={category.id}>
@@ -209,32 +205,6 @@ const CategoryManagement = () => {
               </Select>
             </Form.Item>
           )}
-
-          {/* {currentCategory?.children?.length > 0 && (
-            <div className="mb-4">
-              <h4 className="font-semibold">Danh Mục Con:</h4>
-              <ul className="space-y-2 mt-2">
-                {currentCategory.children.map((child: Category) => (
-                  <li
-                    key={child.id}
-                    className="flex justify-between items-center"
-                  >
-                    <span>{child.name}</span>
-                    <Button
-                      size="small"
-                      danger
-                      onClick={
-                        () => console.log(child)
-                        // handleRemoveChildCategory(child.id)
-                      }
-                    >
-                      Xóa khỏi danh mục con
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )} */}
 
           <Form.Item>
             <Button type="primary" htmlType="submit">
