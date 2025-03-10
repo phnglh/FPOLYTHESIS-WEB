@@ -5,106 +5,89 @@ import {
   FallOutlined,
   FormatPainterOutlined,
   OrderedListOutlined,
-  ShoppingCartOutlined,
   TagsOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
 import { Menu } from 'antd'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 const items = [
   {
-    key: '1',
+    key: '/dashboard',
     icon: <BarChartOutlined />,
-    label: <Link to="dashboard">Thống kê</Link>,
+    label: <Link to="/dashboard">Thống kê</Link>,
   },
   {
-    key: '2',
+    key: '/store',
     icon: <AppstoreOutlined />,
     label: 'Store',
     children: [
       {
-        key: '21',
-        label: 'Danh muc',
+        key: '/categories',
+        label: 'Danh mục',
+        icon: <AppstoreOutlined />,
         children: [
           {
-            key: '211',
-            label: <Link to="quan-ly-danh-muc">Tất cả danh mục</Link>,
+            key: '/categories/list',
+            label: <Link to="/categories">Tất cả danh mục</Link>,
           },
           {
-            key: '212',
-            label: <Link to="quan-ly-danh-muc">Tất cả danh mục</Link>,
+            key: '/categories/create',
+            label: <Link to="/categories/create">Tạo danh mục</Link>,
           },
         ],
       },
-      { key: '22', label: 'Option 2' },
       {
-        key: '23',
-        label: 'Submenu',
+        key: '/products',
+        icon: <AppstoreOutlined />,
+        label: 'Sản phẩm',
         children: [
-          { key: '231', label: 'Option 1' },
-          { key: '232', label: 'Option 2' },
-          { key: '233', label: 'Option 3' },
-        ],
-      },
-      {
-        key: '24',
-        label: 'Submenu 2',
-        children: [
-          { key: '241', label: 'Option 1' },
-          { key: '242', label: 'Option 2' },
-          { key: '243', label: 'Option 3' },
+          {
+            key: '/products/list',
+            label: <Link to="/products">Tất cả sản phẩm</Link>,
+          },
+          {
+            key: '/products/create',
+            label: <Link to="/products/create">Thêm sản phẩm</Link>,
+          },
         ],
       },
     ],
   },
   {
-    key: 'sub2',
-    icon: <ShoppingCartOutlined />,
-    label: 'Quản lý sản phẩm',
-    children: [
-      {
-        key: '3',
-        label: <Link to="products">Tất cả sản phẩm</Link>,
-      },
-      {
-        key: '4',
-        label: <Link to="products/add">Thêm sản phẩm</Link>,
-      },
-    ],
-  },
-  {
-    key: '6',
+    key: '/quan-ly-attr',
     icon: <TagsOutlined />,
-    label: <Link to="quan-ly-attr">Quản lý thuộc tính</Link>,
+    label: <Link to="/quan-ly-attr">Quản lý thuộc tính</Link>,
   },
   {
-    key: '7',
+    key: '/quan-ly-nguoi-dung',
     icon: <TeamOutlined />,
-    label: <Link to="quan-ly-nguoi-dung">Quản lý người dùng</Link>,
+    label: <Link to="/quan-ly-nguoi-dung">Quản lý người dùng</Link>,
   },
   {
-    key: '8',
+    key: '/quan-ly-orders',
     icon: <OrderedListOutlined />,
-    label: <Link to="quan-ly-orders">Quản lý đơn hàng</Link>,
+    label: <Link to="/quan-ly-orders">Quản lý đơn hàng</Link>,
   },
   {
-    key: '9',
+    key: '/quan-ly-sale',
     icon: <FallOutlined />,
-    label: <Link to="quan-ly-sale">Quản lý sản phẩm giảm giá</Link>,
+    label: <Link to="/quan-ly-sale">Quản lý sản phẩm giảm giá</Link>,
   },
   {
-    key: '10',
+    key: '/voucher',
     icon: <FormatPainterOutlined />,
-    label: <Link to="voucher">Quản lý mã giảm giá</Link>,
+    label: <Link to="/voucher">Quản lý mã giảm giá</Link>,
   },
   {
-    key: '11',
+    key: '/comment',
     icon: <CommentOutlined />,
-    label: <Link to="comment">Quản lý đánh giá</Link>,
+    label: <Link to="/comment">Quản lý đánh giá</Link>,
   },
 ]
 
 export function Sidebar() {
-  return <Menu mode="inline" defaultSelectedKeys={['1']} items={items} />
+  const location = useLocation()
+
+  return <Menu mode="inline" selectedKeys={[location.pathname]} items={items} />
 }

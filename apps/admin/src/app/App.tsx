@@ -10,6 +10,10 @@ import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
 import PrivateRoute from '@app/routes/PrivateRoute'
 import Dashboard from './dashboard'
+import CreateCategory from '@app/categories/create'
+import UpdateCategory from '@app/categories/update'
+import CreateProduct from '@app/products/add'
+import UpdateProduct from '@app/products/update'
 
 function App() {
   const dispatch = useDispatch()
@@ -32,13 +36,18 @@ function App() {
           </PrivateRoute>
         }
       >
+        <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="dashboard" element={<h1>dashboard</h1>} />
-        <Route path="quan-ly-danh-muc" element={<CategoryManagement />} />
+        <Route path="categories">
+          <Route index element={<CategoryManagement />} />
+          <Route path="create" element={<CreateCategory />} />
+          <Route path="update/:id" element={<UpdateCategory />} />
+        </Route>
         <Route path="quan-ly-san-pham" element={<ProductPage />} />
         <Route path="products">
           <Route index element={<ProductPage />} />
-          <Route path="add" element={<h1>Product detail</h1>} />
+          <Route path="create" element={<CreateProduct />} />
+          <Route path="update" element={<UpdateProduct />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

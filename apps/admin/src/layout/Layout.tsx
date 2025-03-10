@@ -7,17 +7,18 @@ import { Avatar, Button, Dropdown, Layout, Typography, Space, Flex } from 'antd'
 import React, { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './components/SideBar'
-import apiClient from '@store/services/apiClient'
 import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '@store/store'
+import { AppDispatch, RootState } from '@store/store'
 import { logout } from '@store/slices/authSlice'
+import { useAppToast } from '@hooks/useAppToast'
 
 const { Title, Text } = Typography
 const { Header, Sider, Content } = Layout
 
 const AdminLayout: React.FC = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  const { success } = useAppToast()
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
   const avatarSrc =
@@ -28,12 +29,8 @@ const AdminLayout: React.FC = () => {
   const handleMenuClick = async ({ key }: { key: string }) => {
     if (key === 'logout') {
       try {
-        dispatch(logout())
-
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('user')
-
-        navigate('/login', { replace: true })
+        await dispatch(logout()).unwrap()
+        success('Đăng xuất thành công!', { onClose: () => navigate('/login') })
       } catch (error) {
         console.error('Logout failed:', error)
       }
