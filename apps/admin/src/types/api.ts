@@ -24,9 +24,13 @@ export interface ApiError {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
 }
+export interface ApiErrorResponse {
+  message: string
+}
 
-export interface BaseState<T> {
+export interface BaseState<T, K> {
   data: T
+  selectedItem: K | null
   loading: boolean
   error: string | null
 }

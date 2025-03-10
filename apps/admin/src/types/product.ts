@@ -51,4 +51,4 @@ export interface GetProductsResponse {
   }
 }
 
-export type ProductsState = BaseState<Product[]>
+export type ProductsState = BaseState<Product[], Product>

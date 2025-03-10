@@ -4,21 +4,14 @@ export interface Category {
   id: number
   name: string
   description: string
-  image?: string
+  image_url?: string
   parent_id?: number
 }
 
 export interface CategoryResponse {
   success: boolean
   message: string
-  data: {
-    categories: Category[]
-    meta: {
-      total: number
-      per_page: number
-      current_page: number
-    }
-  }
+  data: Category[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors: any | null
 }
@@ -32,4 +25,4 @@ export interface GetCategoryResponse {
   }
 }
 
-export type CategoryState = BaseState<Category[]>
+export type CategoryState = BaseState<Category[], Category>
