@@ -18,7 +18,7 @@ const ProductPage = () => {
   const { data, errorMessage, isLoading } = useProductList()
   const navigate = useNavigate()
   if (errorMessage || !data) return <div>{errorMessage}</div>
-  const { products, meta } = data
+  const { products } = data
   console.log(data)
   const handleDelete = (id: number) => {
     if (confirm('Bạn có chắc chắn muốn xoá không?')) {

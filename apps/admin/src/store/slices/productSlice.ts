@@ -4,6 +4,7 @@ import { Product, ProductsState } from '#types/product'
 
 const initialProductsState: ProductsState = {
   data: [],
+  selectedItem: null,
   loading: false,
   error: null,
 }
