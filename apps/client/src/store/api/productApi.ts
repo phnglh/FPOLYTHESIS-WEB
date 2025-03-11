@@ -38,12 +38,13 @@ export const axiosBaseQuery =
 
 export const productApi = createApi({
   reducerPath: 'productApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/api' }),
+  baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
   endpoints: (builder) => ({
     getProducts: builder.query<GetProductsResponse, void>({
       query: () => '/products',
-      transformResponse: (response: ApiResponse<GetProductsResponse>) =>
-        response.data,
+      transformResponse: (response: ApiResponse<GetProductsResponse>) => {
+        return response.data
+      },
     }),
   }),
 })

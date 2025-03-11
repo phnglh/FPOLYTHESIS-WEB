@@ -4,8 +4,8 @@ export interface Product {
   id: number
   name: string
   description: string
-  isPublished: boolean
-  imageUrl?: string
+  is_published: boolean
+  image_url?: string
   skus?: Sku[]
 }
 

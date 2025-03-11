@@ -15,7 +15,7 @@ const ProductPage = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  const { data, errorMessage, isLoading } = useProductList()
+  const { data, errorMessage } = useProductList()
   const navigate = useNavigate()
   if (errorMessage || !data) return <div>{errorMessage}</div>
   const { products } = data
@@ -55,7 +55,7 @@ const ProductPage = () => {
       key: 'image',
       render: (text, record) => (
         <img
-          src={record.image}
+          src={record.image_url}
           style={{ width: '50px', height: 'auto' }}
           alt={text}
         />
