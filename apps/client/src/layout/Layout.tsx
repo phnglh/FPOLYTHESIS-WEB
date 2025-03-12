@@ -58,7 +58,7 @@ const layoutStyle: React.CSSProperties = {
 }
 
 const contentStyle: React.CSSProperties = {
-  padding: '20px',
+  // padding: '20px',
 }
 export default function AppLayout() {
   return (

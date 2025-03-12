@@ -70,7 +70,8 @@ const ProductPage = () => {
       id: 1,
       name: 'Laptop Dell XPS 13',
       brand: 'Dell',
-      image: 'https://via.placeholder.com/300x180', // Hình ảnh giả
+      image:
+        'https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653',
       skus: [{ price: 25000000 }, { price: 24000000 }, { price: 26000000 }],
     },
     {

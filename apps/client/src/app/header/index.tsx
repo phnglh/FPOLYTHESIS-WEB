@@ -51,7 +51,10 @@ const AppHeader: React.FC = () => {
         }}
       >
         {/* Thanh tìm kiếm */}
-        <Col flex="auto" style={{ padding: '0 16px', maxWidth: '580px' }}>
+        <Col
+          flex="auto"
+          style={{ padding: '0 16px', maxWidth: '580px', marginLeft: '130px' }}
+        >
           <Input
             placeholder="Tìm kiếm sản phẩm"
             prefix={<SearchOutlined />}
@@ -88,7 +91,14 @@ const AppHeader: React.FC = () => {
         }}
       >
         {/* Menu Điều Hướng */}
-        <Col flex="auto" style={{ display: 'flex', justifyContent: 'center' }}>
+        <Col
+          flex="auto"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginRight: '50px',
+          }}
+        >
           <Menu
             mode="horizontal"
             theme="dark"
@@ -145,7 +155,11 @@ const AppHeader: React.FC = () => {
           }}
         >
           <span
-            style={{ color: '#ff66b2', fontWeight: 'bold', fontSize: '16px' }}
+            style={{
+              color: 'rgb(50, 149, 70)',
+              fontWeight: 'bold',
+              fontSize: '16px',
+            }}
           >
             <PhoneOutlined style={{ marginRight: '5px' }} /> Hotline: 1800.6750
           </span>
