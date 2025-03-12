@@ -55,10 +55,13 @@ const { Content } = Layout
 
 const layoutStyle: React.CSSProperties = {
   minHeight: '100vh',
+  width: '100%',
+  overflowX: 'hidden',
 }
 
 const contentStyle: React.CSSProperties = {
-  // padding: '20px',
+  maxWidth: '100vw',
+  overflowX: 'hidden',
 }
 export default function AppLayout() {
   return (
