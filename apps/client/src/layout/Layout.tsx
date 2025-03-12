@@ -1,47 +1,73 @@
+// import { Outlet } from 'react-router'
+// import { Layout } from 'antd'
+
+// const { Header, Footer, Content } = Layout
+
+// const headerStyle: React.CSSProperties = {
+//   textAlign: 'center',
+//   color: 'black',
+//   height: 64,
+//   paddingInline: 48,
+//   lineHeight: '64px',
+//   backgroundColor: 'white',
+// }
+
+// const contentStyle: React.CSSProperties = {
+//   textAlign: 'center',
+//   minHeight: 120,
+//   lineHeight: '120px',
+//   color: '#fff',
+//   // backgroundColor: '#0958d9',
+//   margin: '0 30px',
+// }
+
+// const footerStyle: React.CSSProperties = {
+//   textAlign: 'center',
+//   color: 'black',
+//   backgroundColor: 'white',
+// }
+// const layoutStyle = {
+//   borderRadius: 8,
+//   overflow: 'hidden',
+//   minHeight: '100vh',
+//   backgroundColor: 'white',
+// }
+// export default function AppLayout() {
+//   return (
+//     <Layout style={layoutStyle}>
+//       <Header style={headerStyle}>Header </Header>
+//       <Content style={contentStyle}>
+//         <Outlet />
+//       </Content>
+//       <Footer style={footerStyle}>
+//         Ant Design ©{new Date().getFullYear()} Created by Ant UED
+//       </Footer>
+//     </Layout>
+//   )
+// }
+
 import { Outlet } from 'react-router'
 import { Layout } from 'antd'
+import AppHeader from '../app/header'
+import Footer from '../app/footer'
 
-const { Header, Footer, Content } = Layout
+const { Content } = Layout
 
-const headerStyle: React.CSSProperties = {
-  textAlign: 'center',
-  color: 'black',
-  height: 64,
-  paddingInline: 48,
-  lineHeight: '64px',
-  backgroundColor: 'white',
+const layoutStyle: React.CSSProperties = {
+  minHeight: '100vh',
 }
 
 const contentStyle: React.CSSProperties = {
-  textAlign: 'center',
-  minHeight: 120,
-  lineHeight: '120px',
-  color: '#fff',
-  // backgroundColor: '#0958d9',
-  margin: '0 30px',
-}
-
-const footerStyle: React.CSSProperties = {
-  textAlign: 'center',
-  color: 'black',
-  backgroundColor: 'white',
-}
-const layoutStyle = {
-  borderRadius: 8,
-  overflow: 'hidden',
-  minHeight: '100vh',
-  backgroundColor: 'white',
+  padding: '20px',
 }
 export default function AppLayout() {
   return (
     <Layout style={layoutStyle}>
-      <Header style={headerStyle}>Header </Header>
+      <AppHeader />
       <Content style={contentStyle}>
         <Outlet />
       </Content>
-      <Footer style={footerStyle}>
-        Ant Design ©{new Date().getFullYear()} Created by Ant UED
-      </Footer>
+      <Footer />
     </Layout>
   )
 }

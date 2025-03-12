@@ -24,7 +24,7 @@ const { Sider } = Layout
 const { Panel } = Collapse
 
 const ProductPage = () => {
-  const { data, error, isLoading } = useGetProductsQuery()
+  // const { data, error, isLoading } = useGetProductsQuery()
 
   const [likedProducts, setLikedProducts] = useState<number[]>([])
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -51,16 +51,57 @@ const ProductPage = () => {
     console.log(`Page: ${page}`)
   }
 
-  console.log(data)
+  // console.log(data)
 
-  if (!data) {
-    return <div>Loading...</div>
-  }
+  // if (!data) {
+  //   return <div>Loading...</div>
+  // }
 
-  const { products, meta } = data
+  // const { products, meta } = data
 
-  const getMinPrice = (skus) =>
+  // const getMinprice = (skus) => skus.length ? Math.min(...skus.map((sku) => sku.price)) : null
+  type Sku = { price: number }
+
+  const getMinPrice = (skus: Sku[] = []): number | null =>
     skus.length ? Math.min(...skus.map((sku) => sku.price)) : null
+
+  const products = [
+    {
+      id: 1,
+      name: 'Laptop Dell XPS 13',
+      brand: 'Dell',
+      image: 'https://via.placeholder.com/300x180', // Hình ảnh giả
+      skus: [{ price: 25000000 }, { price: 24000000 }, { price: 26000000 }],
+    },
+    {
+      id: 2,
+      name: 'MacBook Pro 14 M3',
+      brand: 'Apple',
+      image: 'https://via.placeholder.com/300x180',
+      skus: [{ price: 45000000 }, { price: 44000000 }],
+    },
+    {
+      id: 3,
+      name: 'Asus ROG Strix G15',
+      brand: 'Asus',
+      image: 'https://via.placeholder.com/300x180',
+      skus: [{ price: 32000000 }, { price: 31000000 }, { price: 33000000 }],
+    },
+    {
+      id: 4,
+      name: 'Lenovo ThinkPad X1 Carbon',
+      brand: 'Lenovo',
+      image: 'https://via.placeholder.com/300x180',
+      skus: [{ price: 28000000 }],
+    },
+    {
+      id: 5,
+      name: 'HP Spectre x360',
+      brand: 'HP',
+      image: 'https://via.placeholder.com/300x180',
+      skus: [{ price: 29000000 }, { price: 29500000 }],
+    },
+  ]
 
   return (
     <>
@@ -546,7 +587,7 @@ const ProductPage = () => {
                         src={product.image}
                         preview={false}
                         style={{
-                          height: '180px',
+                          height: '280px',
                           width: '100%',
                           objectFit: 'cover',
                           borderTopLeftRadius: '10px',
@@ -648,7 +689,7 @@ const ProductPage = () => {
                     src={product.image}
                     preview={false}
                     style={{
-                      height: '200px',
+                      height: '280px',
                       width: '100%',
                       objectFit: 'cover',
                     }}
