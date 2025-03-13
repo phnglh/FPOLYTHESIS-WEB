@@ -615,7 +615,7 @@ const ProductPage = () => {
                               border: 'none',
                             }}
                           >
-                            Xem chi tiết
+                            <a href="chi-tiet">Xem chi tiết</a>
                           </Button>
                           <Button
                             style={{
@@ -624,7 +624,7 @@ const ProductPage = () => {
                               border: 'none',
                             }}
                           >
-                            Tùy chọn
+                            <a href="chi-tiet">Tùy chọn</a>
                           </Button>
                         </div>
                       )}
@@ -656,7 +656,11 @@ const ProductPage = () => {
             pageSize={6}
             onChange={onChange}
             showSizeChanger={false}
-            style={{ textAlign: 'center', marginTop: '20px' }}
+            style={{
+              textAlign: 'center',
+              marginTop: '20px',
+              marginLeft: '640px',
+            }}
             className="custom-pagination"
           />
         </Layout>
@@ -715,7 +719,7 @@ const ProductPage = () => {
                           border: 'none',
                         }}
                       >
-                        Xem chi tiết
+                        <a href="chi-tiet"> Xem chi tiết</a>
                       </Button>
                       <Button
                         style={{
@@ -724,7 +728,7 @@ const ProductPage = () => {
                           border: 'none',
                         }}
                       >
-                        Tùy chọn
+                        <a href="chi-tiet">Tùy chọn</a>
                       </Button>
                     </div>
                   )}
