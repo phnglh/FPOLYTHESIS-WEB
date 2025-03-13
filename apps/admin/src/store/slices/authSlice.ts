@@ -29,24 +29,19 @@ export const login = createAsyncThunk(
   'auth/login',
   async (values: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post('/login', values, {
-        withCredentials: true,
-      })
-      const { user, access_token } = res.data
+      const res = await apiClient.post('/login', values)
+      const { user, token } = res.data.data
 
       if (user.role !== 'admin') {
         return rejectWithValue('Tài khoản không có quyền truy cập!')
       }
 
-      // Lưu vào localStorage
       localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('access_token', access_token)
+      localStorage.setItem('access_token', token)
 
-      return { user, token: access_token }
+      return { user, token: token }
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Đăng nhập thất bại',
-      )
+      return rejectWithValue(error.response?.data)
     }
   },
 )
