@@ -5,71 +5,89 @@ import {
   FallOutlined,
   FormatPainterOutlined,
   OrderedListOutlined,
-  ShoppingCartOutlined,
   TagsOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
 import { Menu } from 'antd'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 const items = [
   {
-    key: '1',
+    key: '/dashboard',
     icon: <BarChartOutlined />,
-    label: <Link to="/admin/thong-ke">Thống kê</Link>,
+    label: <Link to="/dashboard">Thống kê</Link>,
   },
   {
-    key: '2',
+    key: '/store',
     icon: <AppstoreOutlined />,
-    label: <Link to="/admin/quan-ly-danh-muc">Tất cả danh mục</Link>,
-  },
-  {
-    key: 'sub2',
-    icon: <ShoppingCartOutlined />,
-    label: 'Quản lý sản phẩm',
+    label: 'Store',
     children: [
       {
-        key: '3',
-        label: <Link to="/admin/quan-ly-san-pham">Tất cả sản phẩm</Link>,
+        key: '/categories',
+        label: 'Danh mục',
+        icon: <AppstoreOutlined />,
+        children: [
+          {
+            key: '/categories/list',
+            label: <Link to="/categories">Tất cả danh mục</Link>,
+          },
+          {
+            key: '/categories/create',
+            label: <Link to="/categories/create">Tạo danh mục</Link>,
+          },
+        ],
       },
       {
-        key: '4',
-        label: <Link to="/admin/quan-ly-san-pham/them">Thêm sản phẩm</Link>,
+        key: '/products',
+        icon: <AppstoreOutlined />,
+        label: 'Sản phẩm',
+        children: [
+          {
+            key: '/products/list',
+            label: <Link to="/products">Tất cả sản phẩm</Link>,
+          },
+          {
+            key: '/products/create',
+            label: <Link to="/products/create">Thêm sản phẩm</Link>,
+          },
+        ],
       },
     ],
   },
   {
-    key: '6',
+    key: '/quan-ly-attr',
     icon: <TagsOutlined />,
-    label: <Link to="/admin/quan-ly-attr">Quản lý thuộc tính</Link>,
+    label: <Link to="/quan-ly-attr">Quản lý thuộc tính</Link>,
   },
   {
-    key: '7',
+    key: '/quan-ly-nguoi-dung',
     icon: <TeamOutlined />,
-    label: <Link to="/admin/quan-ly-nguoi-dung">Quản lý người dùng</Link>,
+    label: <Link to="/quan-ly-nguoi-dung">Quản lý người dùng</Link>,
   },
   {
-    key: '8',
+    key: '/quan-ly-orders',
     icon: <OrderedListOutlined />,
-    label: <Link to="/admin/quan-ly-orders">Quản lý đơn hàng</Link>,
+    label: <Link to="/quan-ly-orders">Quản lý đơn hàng</Link>,
   },
   {
-    key: '9',
+    key: '/quan-ly-sale',
     icon: <FallOutlined />,
-    label: <Link to="/admin/quan-ly-sale">Quản lý sản phẩm giảm giá</Link>,
+    label: <Link to="/quan-ly-sale">Quản lý sản phẩm giảm giá</Link>,
   },
   {
-    key: '10',
+    key: '/voucher',
     icon: <FormatPainterOutlined />,
-    label: <Link to="/admin/voucher">Quản lý mã giảm giá</Link>,
+    label: <Link to="/voucher">Quản lý mã giảm giá</Link>,
   },
   {
-    key: '11',
+    key: '/comment',
     icon: <CommentOutlined />,
-    label: <Link to="/admin/comment">Quản lý đánh giá</Link>,
+    label: <Link to="/comment">Quản lý đánh giá</Link>,
   },
 ]
 
 export function Sidebar() {
-  return <Menu mode="inline" defaultSelectedKeys={['1']} items={items} />
+  const location = useLocation()
+
+  return <Menu mode="inline" selectedKeys={[location.pathname]} items={items} />
 }
