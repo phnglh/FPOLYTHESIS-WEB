@@ -7,6 +7,7 @@ import {
   PhoneOutlined,
 } from '@ant-design/icons'
 import React from 'react'
+import Logo from '../images/logo.flames2.png'
 
 const { Header } = Layout
 
@@ -20,24 +21,24 @@ const AppHeader: React.FC = () => {
         position: 'relative',
       }}
     >
-      {/* Logo (Chiều cao bằng tổng 2 thanh) */}
+      {/* Logo  */}
       <div
         style={{
           position: 'absolute',
           top: '0',
-          left: '20px',
+          left: '60px',
           zIndex: 10,
           background: 'black',
-          padding: '10px 20px',
-          height: '120px',
+          // padding: '10px 20px',
+          height: '144px',
           display: 'flex',
           alignItems: 'center',
         }}
       >
         <img
-          src="/path-to-your-logo/logo.png"
+          src={Logo}
           alt="Logo"
-          style={{ height: '100px' }}
+          style={{ height: '144px', width: '140px' }}
         />
       </div>
 
@@ -65,13 +66,43 @@ const AppHeader: React.FC = () => {
         {/* chức năng */}
         <Col style={{ marginRight: '100px' }}>
           <Space size="middle">
-            <a href="#" style={{ color: 'white', fontSize: '14px' }}>
+            <a href="yeu-thich" style={{ color: 'white', fontSize: '14px' }}>
               <HeartOutlined /> <span>Yêu thích (0)</span>
             </a>
-            <a href="#" style={{ color: 'white', fontSize: '14px' }}>
-              <UserOutlined /> <span>Đăng ký / Đăng nhập</span>
-            </a>
-            <a href="#" style={{ color: 'white', fontSize: '14px' }}>
+            <Col
+              style={{
+                marginLeft: '10px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <UserOutlined
+                style={{ color: 'white', fontSize: '16px', marginRight: '6px' }}
+              />
+              <a
+                href="register"
+                style={{
+                  color: 'white',
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                }}
+              >
+                Đăng ký
+              </a>
+              <span style={{ color: 'white', margin: '0 8px' }}>|</span>
+              <a
+                href="login"
+                style={{
+                  color: 'white',
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                }}
+              >
+                Đăng nhập
+              </a>
+            </Col>
+
+            <a href="carts" style={{ color: 'white', fontSize: '14px' }}>
               <ShoppingCartOutlined /> <span>Giỏ hàng</span>
             </a>
           </Space>
