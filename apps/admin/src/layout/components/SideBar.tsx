@@ -38,6 +38,21 @@ const items = [
         ],
       },
       {
+        key: '/brands',
+        label: 'Thương hiệu',
+        icon: <AppstoreOutlined />,
+        children: [
+          {
+            key: '/brands/list',
+            label: <Link to="/brands">Tất cả thương hiệu</Link>,
+          },
+          {
+            key: '/brands/create',
+            label: <Link to="/brands/create">Thêm thương hiệu</Link>,
+          },
+        ],
+      },
+      {
         key: '/products',
         icon: <AppstoreOutlined />,
         label: 'Sản phẩm',

@@ -1,21 +1,8 @@
+import { ApiErrorResponse } from '#types/api'
+import { AuthState } from '#types/auth'
+import { User } from '#types/user'
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
-
-interface User {
-  id: number
-  name: string
-  email: string
-  role: string
-  avatar?: string
-}
-
-interface AuthState {
-  user: User | null
-  token: string | null
-  isInitialized: boolean
-  loading: boolean
-  error: string | null
-}
 
 const initialState: AuthState = {
   user: null,
@@ -40,8 +27,13 @@ export const login = createAsyncThunk(
       localStorage.setItem('access_token', token)
 
       return { user, token: token }
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message)
+      }
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Đăng nhập không thành công!'
+      return rejectWithValue(errMsg)
     }
   },
 )
@@ -52,10 +44,13 @@ export const logout = createAsyncThunk(
     try {
       const response = await apiClient.post('/logout')
       return response.data
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Đăng xuất thất bại',
-      )
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message)
+      }
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Đăng xuất thất bại!'
+      return rejectWithValue(errMsg)
     }
   },
 )
@@ -69,7 +64,7 @@ const authSlice = createSlice({
       const storedToken = localStorage.getItem('access_token')
 
       state.user = storedUser ? JSON.parse(storedUser) : null
-      state.token = storedToken || null
+      state.token = storedToken || ''
       state.isInitialized = true
     },
   },
