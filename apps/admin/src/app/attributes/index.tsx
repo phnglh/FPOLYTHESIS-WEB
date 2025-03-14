@@ -1,4 +1,4 @@
-import { Attribute, AttributeValue } from '@/@types/product'
+import { Attribute, AttributeValue } from '#types/product'
 import {
   createAttribute,
   createAttributeValue,
@@ -35,7 +35,7 @@ const AttributeManagement = () => {
     }
   }
 
-  const fetchAttributesId = async (id: any) => {
+  const fetchAttributesId = async (id: number) => {
     try {
       const data = await getAttributeById(id)
       setAttributesid(data)

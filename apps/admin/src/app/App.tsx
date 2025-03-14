@@ -14,6 +14,8 @@ import CreateCategory from '@app/categories/create'
 import UpdateCategory from '@app/categories/update'
 import CreateProduct from '@app/products/add'
 import UpdateProduct from '@app/products/update'
+import BrandManagement from '@app/brands'
+import CreateBrand from '@app/brands/create'
 
 function App() {
   const dispatch = useDispatch()
@@ -42,6 +44,11 @@ function App() {
           <Route index element={<CategoryManagement />} />
           <Route path="create" element={<CreateCategory />} />
           <Route path="update/:id" element={<UpdateCategory />} />
+        </Route>
+        <Route path="brands">
+          <Route index element={<BrandManagement />} />
+          <Route path="create" element={<CreateBrand />} />
+          <Route path="update/:id" element={<h1>update</h1>} />
         </Route>
         <Route path="quan-ly-san-pham" element={<ProductPage />} />
         <Route path="products">

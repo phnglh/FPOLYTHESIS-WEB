@@ -3,6 +3,7 @@ import productReducer from '@store/slices/productSlice'
 import { productApi } from '@store/api/productApi'
 import categoryReducer from '@store/slices/categorySlice'
 import authReducer from '@store/slices/authSlice'
+import brandReducer from '@store/slices/brandSlice'
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     [productApi.reducerPath]: productApi.reducer,
     categories: categoryReducer,
     auth: authReducer,
+    brands: brandReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(productApi.middleware),
