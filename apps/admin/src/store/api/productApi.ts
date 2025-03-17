@@ -1,41 +1,11 @@
 import {
-  BaseQueryFn,
   createApi,
   fetchBaseQuery,
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react'
-import axios, { AxiosError } from 'axios'
-import { GetProductsResponse, Product } from '../../types/product'
-import { ApiError, ApiRequest, ApiResponse } from '../../types/api'
+import { Product } from '../../types/product'
 import { getErrorMessage } from '../../utils/error'
-import { transformResponse } from '#types/api'
-
-export const axiosBaseQuery =
-  <T>({
-    baseUrl,
-  }: {
-    baseUrl: string
-  }): BaseQueryFn<Partial<ApiRequest<T>>, ApiResponse<T>, ApiError> =>
-  async ({ url, method = 'GET', data, params }) => {
-    try {
-      const { data: result } = await axios<T>({
-        url: baseUrl + url,
-        method,
-        data,
-        params,
-      })
-      return { data: { data: result } }
-    } catch (error) {
-      const err = error as AxiosError
-      return {
-        error: {
-          status: err.response?.status ?? 500,
-          message: err.message,
-          data: err.response?.data,
-        },
-      }
-    }
-  }
+import { ApiResponse } from '#types/api'
 
 export const productApi = createApi({
   reducerPath: 'productApi',
@@ -44,9 +14,9 @@ export const productApi = createApi({
   refetchOnReconnect: true,
   tagTypes: ['Products'],
   endpoints: (builder) => ({
-    getProducts: builder.query<GetProductsResponse, void>({
+    getProducts: builder.query<Product[], void>({
       query: () => '/products',
-      transformResponse,
+      transformResponse: (response: ApiResponse<Product[]>) => response.data,
       transformErrorResponse: (response) => {
         return {
           message: getErrorMessage(response as FetchBaseQueryError),
@@ -55,9 +25,10 @@ export const productApi = createApi({
       },
       providesTags: ['Products'],
     }),
-    getProduct: builder.query<GetProductsResponse, number>({
+
+    getProduct: builder.query<Product, number>({
       query: (id) => `/products/${id}`,
-      transformResponse,
+      transformResponse: (response: ApiResponse<Product>) => response.data,
       transformErrorResponse: (response) => {
         return {
           message: getErrorMessage(response as FetchBaseQueryError),

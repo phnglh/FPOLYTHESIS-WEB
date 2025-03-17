@@ -7,10 +7,41 @@ export interface ApiRequest<T, P = Record<string, unknown>> {
   params?: P
 }
 
+export interface PaginationLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+export interface Meta {
+  current_page: number
+  from: number
+  last_page: number
+  links: PaginationLink[]
+  path: string
+  per_page: number
+  to: number
+  total: number
+}
+
+export interface Links {
+  first: string
+  last: string
+  prev: string | null
+  next: string | null
+}
+
 export interface ApiResponse<T> {
   data: T
-  message?: string
-  status?: string
+  status: string
+  status_code: number
+  message: string
+  links: Links
+  meta: Meta
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errors: any
+  error_code: string | null
+  timestamp: number
 }
 
 export interface ValidationErrorResponse {

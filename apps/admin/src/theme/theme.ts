@@ -3,9 +3,9 @@ import type { ThemeConfig } from 'antd/es/config-provider'
 const primaryColor = '#46694f'
 const primaryColorHover = '#5b7f63'
 const primaryColorActive = '#3a5c44'
-const primaryColorBg = '#f0f5f2'
-const primaryColorBgHover = '#d9e4dc'
-const borderRadiusBase = 8
+const primaryColorBg = '#f5f8f6'
+const primaryColorBgHover = '#e6efe8'
+const borderRadiusBase = 10
 
 const theme: ThemeConfig = {
   token: {
@@ -17,26 +17,34 @@ const theme: ThemeConfig = {
     colorPrimaryBg: primaryColorBg,
     colorPrimaryBgHover: primaryColorBgHover,
 
-    colorBgLayout: '#ffffff',
+    colorBgLayout: '#fafafa',
     colorBgContainer: '#ffffff',
     colorBgBase: '#ffffff',
 
+    colorText: '#333333',
+    colorTextSecondary: '#666666',
+
     borderRadius: borderRadiusBase,
 
-    paddingSM: 8,
-    padding: 12,
-    paddingLG: 16,
+    paddingSM: 10,
+    padding: 14,
+    paddingLG: 18,
 
-    fontSize: 14,
-    fontFamily: "'Roboto', 'Arial', sans-serif",
+    fontSize: 15,
+    fontFamily: "'Inter', 'Roboto', 'Arial', sans-serif",
   },
   components: {
-    Menu: {
-      itemBorderRadius: 8,
-      itemSelectedBg: '#46694f',
-      itemSelectedColor: '#ffffff',
-      itemHoverColor: '#3a5c44',
-      itemHoverBg: '#f0f5f2',
+    Input: {
+      borderRadius: borderRadiusBase,
+      colorBgContainer: '#ffffff',
+      colorBorder: '#d9d9d9',
+      controlHeight: 42,
+    },
+    Select: {
+      borderRadius: borderRadiusBase,
+      colorBgContainer: '#ffffff',
+      colorBorder: '#d9d9d9',
+      controlHeight: 42,
     },
     Button: {
       borderRadius: borderRadiusBase,
@@ -44,20 +52,39 @@ const theme: ThemeConfig = {
       colorPrimaryHover: primaryColorHover,
       colorPrimaryActive: primaryColorActive,
       colorPrimaryBorder: primaryColor,
+      paddingInlineLG: 24,
+      paddingBlockLG: 12,
+      controlHeight: 42,
     },
-    Input: {
-      borderRadius: borderRadiusBase,
+    Menu: {
+      itemBorderRadius: 8,
+      itemSelectedBg: primaryColor,
+      itemSelectedColor: '#ffffff',
+      itemHoverColor: primaryColorActive,
+      itemHoverBg: primaryColorBg,
+      itemHeight: 48,
+      horizontalItemBorderRadius: 8,
     },
-    Select: {
-      borderRadius: borderRadiusBase,
+    Card: {
+      borderRadius: 16,
+      padding: 20,
     },
     Table: {
       borderRadius: borderRadiusBase,
+      headerBg: '#f8faf9',
+      rowHoverBg: '#f5f8f6',
     },
-    Card: {
-      borderRadius: 12,
+    Drawer: {
+      colorBgElevated: '#ffffff',
+      paddingLG: 24,
+      padding: 18,
     },
-    Layout: {},
+    Layout: {
+      headerBg: '#ffffff',
+      bodyBg: '#fafafa',
+      footerBg: '#ffffff',
+      siderBg: '#ffffff',
+    },
   },
 }
 

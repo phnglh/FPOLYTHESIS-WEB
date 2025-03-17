@@ -1,5 +1,23 @@
-import { ArrowRightOutlined } from '@ant-design/icons'
-import { Button, Descriptions, Input, Modal, Space, Table } from 'antd'
+import {
+  ArrowRightOutlined,
+  EyeOutlined,
+  FilterOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from '@ant-design/icons'
+import {
+  Button,
+  Col,
+  Descriptions,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from 'antd'
 
 import { ColumnGroupType, ColumnType } from 'antd/es/table'
 import { useNavigate } from 'react-router'
@@ -8,41 +26,45 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from '@store/store'
 import { deleteProduct } from '@store/slices/productSlice'
 import { useProductList } from '@hooks/useProductQuery'
-import type { Product } from '#types/product'
+import type { Product, Attribute, Sku } from '#types/product'
+import NotFound from '@layout/components/NotFound'
+
+const { Title } = Typography
 
 const ProductPage = () => {
-  const [filter, setfilter] = useState<any>()
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product>()
   const [isModalVisible, setIsModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   const { data, errorMessage } = useProductList()
   const navigate = useNavigate()
-  if (errorMessage || !data) return <div>{errorMessage}</div>
-  const { products } = data
+
   console.log(data)
+  if (!data) return <NotFound />
+
+  if (errorMessage || !data) return <div>{errorMessage}</div>
+
   const handleDelete = (id: number) => {
     if (confirm('Bạn có chắc chắn muốn xoá không?')) {
       dispatch(deleteProduct(id))
     }
   }
-  const handleUpdate = (id: number) => {
-    navigate(`/admin/quan-ly-san-pham/sua/${id}`)
+  const handleUpdateProduct = (id: number) => {
+    navigate(`/admin/products/update/${id}`)
   }
 
   const handleViewProduct = async (id: number) => {
     console.log(id)
-    const product = products?.find((p: Product) => p.id === id)
-    console.log(product)
+    const product = data.find((p) => p.id === id)
     setSelectedProduct(product)
     setIsModalVisible(true)
   }
   const columns: (ColumnGroupType<Product> | ColumnType<Product>)[] = [
-    {
-      title: 'STT',
-      dataIndex: 'id',
-      key: 'id',
-      render: (_text: string, _record: Product, index: number) => index + 1,
-    },
+    // {
+    //   title: 'STT',
+    //   dataIndex: 'id',
+    //   key: 'id',
+    //   render: (_text: string, _record: Product, index: number) => index + 1,
+    // },
     {
       title: 'Tên sản phẩm',
       dataIndex: 'name',
@@ -62,15 +84,20 @@ const ProductPage = () => {
       ),
     },
     {
-      title: 'Danh mục',
-      dataIndex: ['category', 'name'],
-      key: 'category_name',
+      title: 'Publish',
+      dataIndex: ['is_published'],
+      key: 'publish',
+      render: (value: number) =>
+        value === 1 ? (
+          <Tag color="green">Đã xuất bản</Tag>
+        ) : (
+          <Tag color="red">Chưa xuất bản</Tag>
+        ),
     },
     {
-      title: 'Thương hiệu',
-      dataIndex: 'brand',
-      key: 'brand',
-      render: (text: string) => <p>{text}</p>,
+      title: 'Số lượng kho',
+      dataIndex: 'stock',
+      key: 'stock',
     },
     {
       title: 'Hành động',
@@ -83,7 +110,7 @@ const ProductPage = () => {
           </Button>
           <Button
             type="primary"
-            onClick={() => handleUpdate(record.id)}
+            onClick={() => handleUpdateProduct(record.id)}
             icon={<ArrowRightOutlined />}
           >
             Sửa
@@ -97,66 +124,123 @@ const ProductPage = () => {
   ]
   const variantColumns = [
     {
-      title: 'Mã số',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'Mã SKU',
+      dataIndex: 'sku',
+      key: 'sku',
     },
     {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
+      render: (price: string) => Number(price).toLocaleString('vi-VN') + ' ₫',
     },
     {
-      title: 'Giá khuyến mãi',
-      dataIndex: 'price',
-      key: 'price',
-    },
-    {
-      title: 'Số lượng',
-      dataIndex: 'quantity',
-      key: 'quantity',
+      title: 'Số lượng kho',
+      dataIndex: 'stock',
+      key: 'stock',
     },
     {
       title: 'Thuộc tính',
-      key: 'attribute_values',
-      render: (record: any) =>
-        record.attribute_values.map((attribute: AttributeValue) => (
-          <p key={attribute.id}>{attribute.value}</p>
+      key: 'attributes',
+      render: (_: string, record: Sku) =>
+        record.attributes.map((attr: Attribute) => (
+          <p key={attr.id} className="m-0">
+            {attr.name}: {attr.value}
+          </p>
         )),
     },
   ]
 
-  const { Search } = Input
-  const handleSearch = (e: any) => {
-    const searchValue = e.toLowerCase()
-
-    if (searchValue === '') {
-      setfilter([])
-    } else {
-      const filter = products?.filter((data: any) =>
-        data?.name.toLowerCase().includes(searchValue),
-      )
-      setfilter(filter)
-    }
-  }
-  // console.log(filter)
-
   return (
-    <>
-      <Search
-        placeholder="Tìm kiếm theo tên sản phẩm"
-        onSearch={handleSearch}
-        className="m-2 ml-auto flex w-1/4"
-      />
-      <Table
-        columns={columns}
-        dataSource={filter?.length > 0 ? filter : products}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={3} style={{ margin: 0 }}>
+            Danh sách sản phẩm
+          </Title>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/products/create')}
+          >
+            Thêm sản phẩm
+          </Button>
+        </Col>
+      </Row>
+
+      <Row>
+        <Col span={24}>
+          <Table<Product>
+            rowSelection={{
+              type: 'checkbox', // có thể đổi thành 'radio' nếu chỉ muốn chọn 1
+              onChange: (selectedRowKeys, selectedRows) => {
+                console.log('Selected Row Keys:', selectedRowKeys)
+                console.log('Selected Rows:', selectedRows)
+              },
+            }}
+            columns={columns}
+            dataSource={data}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            title={() => (
+              <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                <Col>
+                  <Row gutter={8}>
+                    <Col>
+                      <Select defaultValue="Stock" style={{ width: 120 }}>
+                        <Select.Option value="in_stock">In Stock</Select.Option>
+                        <Select.Option value="out_stock">
+                          Out of Stock
+                        </Select.Option>
+                      </Select>
+                    </Col>
+                    <Col>
+                      <Select defaultValue="Publish" style={{ width: 120 }}>
+                        <Select.Option value="published">
+                          Published
+                        </Select.Option>
+                        <Select.Option value="draft">Draft</Select.Option>
+                      </Select>
+                    </Col>
+                    <Col>
+                      <Input.Search placeholder="Search..." allowClear />
+                    </Col>
+                  </Row>
+                </Col>
+
+                <Col>
+                  <Row gutter={16}>
+                    <Col>
+                      <Button type="link" icon={<EyeOutlined />}>
+                        Columns
+                      </Button>
+                    </Col>
+                    <Col>
+                      <Button type="link" icon={<FilterOutlined />}>
+                        Filters
+                      </Button>
+                    </Col>
+                    <Col>
+                      <Button type="link" icon={<UploadOutlined />}>
+                        Export
+                      </Button>
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
+            )}
+          />
+        </Col>
+      </Row>
       {selectedProduct && (
         <Modal
-          title="Chi tiết sản phẩm"
+          title={`Chi tiết sản phẩm: ${selectedProduct.name}`}
           open={isModalVisible}
           onCancel={() => setIsModalVisible(false)}
           footer={[
@@ -171,28 +255,30 @@ const ProductPage = () => {
               {selectedProduct.id}
             </Descriptions.Item>
             <Descriptions.Item label="Tên sản phẩm">
-              {selectedProduct?.name}
-            </Descriptions.Item>
-            {/* <Descriptions.Item label="Danh mục">
-              {selectedProduct.category.name}
-            </Descriptions.Item> */}
-            <Descriptions.Item label="Thương hiệu">
-              {selectedProduct.brand}
+              {selectedProduct.name}
             </Descriptions.Item>
             <Descriptions.Item label="Mô tả">
               {selectedProduct.description}
             </Descriptions.Item>
+            <Descriptions.Item label="Danh mục">
+              {selectedProduct.category_name || 'Chưa có'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Thương hiệu">
+              {selectedProduct.brand_name || 'Chưa có'}
+            </Descriptions.Item>
           </Descriptions>
+
+          <h3 className="mt-4">Biến thể (SKU)</h3>
           <Table
             columns={variantColumns}
-            dataSource={selectedProduct.variants}
+            dataSource={selectedProduct.skus}
             rowKey="id"
             pagination={false}
             style={{ marginTop: 20 }}
           />
         </Modal>
       )}
-    </>
+    </Space>
   )
 }
 

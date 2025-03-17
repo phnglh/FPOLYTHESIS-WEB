@@ -1,23 +1,21 @@
-import { getAllUser } from '@/api/services/UserService'
+import { fetchUsers } from '@store/slices/userSlice'
+import { AppDispatch, RootState } from '@store/store'
 import { Button, Table } from 'antd'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router'
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<any>([])
+  const dispatch = useDispatch<AppDispatch>()
+  const { data } = useSelector((state: RootState) => state.users)
 
   const navigate = useNavigate()
 
-  const fetchUser = async () => {
-    const response = await getAllUser()
-
-    setUsers(response)
-  }
-
   useEffect(() => {
-    fetchUser()
-  }, [])
+    dispatch(fetchUsers())
+  }, [dispatch])
 
+  console.log(data)
   const columns = [
     {
       title: 'Tên',
@@ -51,14 +49,11 @@ const UserManagement = () => {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl">Quản lý người dùng</h2>
-        <Button
-          type="primary"
-          onClick={() => navigate('/admin/quan-ly-nguoi-dung/them')}
-        >
+        <Button type="primary" onClick={() => navigate('/users/create')}>
           Thêm
         </Button>
       </div>
-      <Table dataSource={users?.data} columns={columns} rowKey="id" />
+      <Table dataSource={data} columns={columns} rowKey="id" />
     </div>
   )
 }

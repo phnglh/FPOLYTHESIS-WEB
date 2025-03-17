@@ -1,11 +1,17 @@
 import { BaseState } from '#types/api'
 
 export interface Category {
-  id: number
+  id: number | string
   name: string
   description: string
-  image_url?: string
-  parent_id?: number
+  image_url: string | null
+  parent_id: number | null
+  children?: Category[]
+}
+
+export interface CategoryWithKey extends Category {
+  key: string | number
+  children?: CategoryWithKey[]
 }
 
 export interface CategoryResponse {

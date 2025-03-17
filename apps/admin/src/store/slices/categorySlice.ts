@@ -85,7 +85,7 @@ export const updateCategory = createAsyncThunk(
 
 export const deleteCategory = createAsyncThunk(
   'categories/deleteCategory',
-  async (id: number, { rejectWithValue }) => {
+  async (id: number | string, { rejectWithValue }) => {
     try {
       await apiClient.delete(`/categories/${id}`)
       return id
@@ -112,7 +112,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false
-        state.data = action.payload.data // xác định lại kiểu dữ liệu trả về từ API
+        state.data = action.payload.data
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false
@@ -136,7 +136,7 @@ const categorySlice = createSlice({
       })
       .addCase(
         deleteCategory.fulfilled,
-        (state, action: PayloadAction<number>) => {
+        (state, action: PayloadAction<number | string>) => {
           state.data = state.data.filter(
             (category) => category.id !== action.payload,
           )
