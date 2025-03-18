@@ -1,4 +1,4 @@
-import { Layout, Input, Space, Menu, Row, Col } from 'antd'
+import { Layout, Input, Space, Menu, Row, Col, Dropdown, Avatar } from 'antd'
 import {
   SearchOutlined,
   HeartOutlined,
@@ -6,12 +6,50 @@ import {
   ShoppingCartOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Logo from '../images/logo.flames2.png'
 
 const { Header } = Layout
 
-const AppHeader: React.FC = () => {
+const AppHeader = () => {
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+  }, [])
+
+  const userMenu = (
+    <div
+      style={{ width: 280, padding: 16, background: 'white', borderRadius: 8 }}
+    >
+      <div style={{ textAlign: 'center', marginBottom: 12 }}>
+        <Avatar size={64} icon={<UserOutlined />} src={user?.avatar} />
+        <h3 style={{ margin: '8px 0' }}>{user?.name}</h3>
+        <p style={{ color: 'gray' }}>Chưa phân hạng</p>
+      </div>
+      <Menu style={{ border: 'none' }}>
+        <Menu.Item key="profile">Ví Của Tôi</Menu.Item>
+        <Menu.Item key="orders">Lịch Sử Đặt Hàng</Menu.Item>
+        <Menu.Item key="favorites">Yêu Thích</Menu.Item>
+        <Menu.Item key="gift-codes">Mã Quà Tặng</Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          key="logout"
+          onClick={() => {
+            localStorage.removeItem('user')
+            setUser(null)
+          }}
+          style={{ color: 'red' }}
+        >
+          Đăng xuất
+        </Menu.Item>
+      </Menu>
+    </div>
+  )
+
   return (
     <Header
       style={{
@@ -29,7 +67,6 @@ const AppHeader: React.FC = () => {
           left: '60px',
           zIndex: 10,
           background: 'black',
-          // padding: '10px 20px',
           height: '144px',
           display: 'flex',
           alignItems: 'center',
@@ -76,30 +113,63 @@ const AppHeader: React.FC = () => {
                 alignItems: 'center',
               }}
             >
-              <UserOutlined
-                style={{ color: 'white', fontSize: '16px', marginRight: '6px' }}
-              />
-              <a
-                href="register"
-                style={{
-                  color: 'white',
-                  fontSize: '14px',
-                  textDecoration: 'none',
-                }}
-              >
-                Đăng ký
-              </a>
-              <span style={{ color: 'white', margin: '0 8px' }}>|</span>
-              <a
-                href="login"
-                style={{
-                  color: 'white',
-                  fontSize: '14px',
-                  textDecoration: 'none',
-                }}
-              >
-                Đăng nhập
-              </a>
+              {user ? (
+                <Dropdown
+                  overlay={userMenu}
+                  trigger={['click']}
+                  placement="bottomRight"
+                  arrow
+                >
+                  <div
+                    style={{
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Avatar
+                      size={24}
+                      icon={<UserOutlined />}
+                      src={user?.avatar}
+                      style={{ marginRight: '6px' }}
+                    />
+                    <span style={{ color: 'white', fontSize: '14px' }}>
+                      Xin chào, <b>{user?.name}</b>
+                    </span>
+                  </div>
+                </Dropdown>
+              ) : (
+                <>
+                  <UserOutlined
+                    style={{
+                      color: 'white',
+                      fontSize: '16px',
+                      marginRight: '6px',
+                    }}
+                  />
+                  <a
+                    href="register"
+                    style={{
+                      color: 'white',
+                      fontSize: '14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Đăng ký
+                  </a>
+                  <span style={{ color: 'white', margin: '0 8px' }}>|</span>
+                  <a
+                    href="login"
+                    style={{
+                      color: 'white',
+                      fontSize: '14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Đăng nhập
+                  </a>
+                </>
+              )}
             </Col>
 
             <a href="carts" style={{ color: 'white', fontSize: '14px' }}>

@@ -1,18 +1,23 @@
 import React, { useState } from 'react'
-import { Form, Input, Button, Typography } from 'antd'
+import { Form, Input, Button, Typography, message } from 'antd'
 import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 
-const Login = () => {
+const Login = ({ setUser }: { setUser: (user: any) => void }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   const handleLogin = (values: any) => {
-    console.log('Đăng nhập với:', values)
-  }
+    const userData = {
+      name: 'Đặng Trần Việt',
+      email: values.email,
+      avatar: 'https://i.pravatar.cc/150?img=12',
+    }
 
-  const handleForgotPassword = (values: any) => {
-    console.log('Email lấy lại mật khẩu:', values.email)
+    // Lưu thông tin user vào localStorage
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+    message.success('Đăng nhập thành công!')
   }
 
   return (
@@ -72,6 +77,7 @@ const Login = () => {
             </Button>
           </Form.Item>
         </Form>
+
         <a
           style={{ display: 'block', marginBottom: 10, cursor: 'pointer' }}
           onClick={() => setShowForgotPassword(!showForgotPassword)}
@@ -89,11 +95,7 @@ const Login = () => {
             }}
           >
             <Text>Nhập email của bạn để đặt lại mật khẩu.</Text>
-            <Form
-              layout="vertical"
-              onFinish={handleForgotPassword}
-              style={{ marginTop: 10 }}
-            >
+            <Form layout="vertical" style={{ marginTop: 10 }}>
               <Form.Item
                 name="email"
                 rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
@@ -113,6 +115,7 @@ const Login = () => {
             </Form>
           </div>
         )}
+
         <Text>Hoặc đăng nhập bằng</Text>
         <div
           style={{
