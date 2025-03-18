@@ -1,4 +1,15 @@
-import { Layout, Input, Space, Menu, Row, Col, Dropdown, Avatar } from 'antd'
+import {
+  Layout,
+  Input,
+  Space,
+  Menu,
+  Row,
+  Col,
+  Dropdown,
+  Avatar,
+  Popover,
+  Badge,
+} from 'antd'
 import {
   SearchOutlined,
   HeartOutlined,
@@ -13,6 +24,33 @@ const { Header } = Layout
 
 const AppHeader = () => {
   const [user, setUser] = useState<any>(null)
+  const [cartVisible, setCartVisible] = useState(false)
+  const [cartItems, setCartItems] = useState([
+    {
+      id: 1,
+      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
+      size: 'XL',
+      quantity: 1,
+      price: 395000,
+      image: 'https://via.placeholder.com/50',
+    },
+    {
+      id: 2,
+      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
+      size: 'S',
+      quantity: 4,
+      price: 395000,
+      image: 'https://via.placeholder.com/50',
+    },
+    {
+      id: 3,
+      name: 'Áo giữ nhiệt nam - Áo thun tập GYM thể thao dài tay nam',
+      size: 'S',
+      quantity: 2,
+      price: 200000,
+      image: 'https://via.placeholder.com/50',
+    },
+  ])
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
@@ -20,6 +58,61 @@ const AppHeader = () => {
       setUser(JSON.parse(storedUser))
     }
   }, [])
+
+  const totalPrice = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0,
+  )
+
+  const cartContent = (
+    <div
+      style={{ width: 300, padding: 16, background: 'white', borderRadius: 8 }}
+    >
+      {cartItems.map((item) => (
+        <div
+          key={item.id}
+          style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
+        >
+          <img
+            src={item.image}
+            alt={item.name}
+            style={{ width: 50, height: 50, marginRight: 12 }}
+          />
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0 }}>{item.name}</p>
+            <p style={{ margin: '4px 0', color: 'gray' }}>Size: {item.size}</p>
+            <p style={{ margin: 0, color: 'red' }}>
+              {item.price.toLocaleString()}đ
+            </p>
+          </div>
+        </div>
+      ))}
+      <div
+        style={{
+          borderTop: '1px solid #ddd',
+          paddingTop: 12,
+          textAlign: 'right',
+        }}
+      >
+        <strong>Tổng tiền: {totalPrice.toLocaleString()}đ</strong>
+      </div>
+      <button
+        style={{
+          marginTop: 12,
+          width: '100%',
+          padding: 8,
+          background: 'green',
+          color: 'white',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+        }}
+        onClick={() => (window.location.href = '/thanh-toan')}
+      >
+        Thanh toán
+      </button>
+    </div>
+  )
 
   const userMenu = (
     <div
@@ -101,7 +194,7 @@ const AppHeader = () => {
         </Col>
 
         {/* chức năng */}
-        <Col style={{ marginRight: '100px' }}>
+        <Col style={{ marginLeft: '100px' }}>
           <Space size="middle">
             <a href="yeu-thich" style={{ color: 'white', fontSize: '14px' }}>
               <HeartOutlined /> <span>Yêu thích (0)</span>
@@ -172,9 +265,41 @@ const AppHeader = () => {
               )}
             </Col>
 
-            <a href="carts" style={{ color: 'white', fontSize: '14px' }}>
-              <ShoppingCartOutlined /> <span>Giỏ hàng</span>
-            </a>
+            <Row
+              align="middle"
+              style={{
+                padding: '10px 24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Col style={{ marginRight: '100px' }}>
+                <Space size="middle">
+                  <Popover
+                    content={cartContent}
+                    visible={cartVisible}
+                    onVisibleChange={setCartVisible}
+                    trigger="hover"
+                  >
+                    <Badge count={cartItems.length}>
+                      <a
+                        href="carts"
+                        style={{ color: 'white', fontSize: '14px' }}
+                      >
+                        <ShoppingCartOutlined
+                          style={{
+                            color: 'white',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                          }}
+                        />{' '}
+                        <span>Giỏ hàng</span>
+                      </a>
+                    </Badge>
+                  </Popover>
+                </Space>
+              </Col>
+            </Row>
           </Space>
         </Col>
       </Row>
@@ -197,7 +322,7 @@ const AppHeader = () => {
           style={{
             display: 'flex',
             justifyContent: 'center',
-            marginRight: '50px',
+            marginLeft: '110px',
           }}
         >
           <Menu
