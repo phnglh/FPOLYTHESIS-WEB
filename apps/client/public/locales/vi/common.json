@@ -1,7 +1,13 @@
 {
-  "hello": "Xin chào",
-  "customer": {
-    "name": "Tên khách hàng",
-    "age": "Tuổi"
+  "menu": {
+    "homepage": "Trang chủ",
+    "products": "Sản phẩm",
+    "news": "Tin tức",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ",
+    "stores": "Cửa hàng",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất"
   }
 }

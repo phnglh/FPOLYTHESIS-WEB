@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router'
-import Layout from '../layout/Layout'
+import AppLayout from '../layout/Layout'
 import Home from './home'
 import Login from './login/Login'
 import Register from './login/Register'
@@ -17,15 +17,19 @@ import NotFound from '../layout/components/NotFound'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route path="/" element={<AppLayout />}>
         <Route index element={<Home />} />
-        <Route path="products" element={<ProductPage />} />
+        <Route path="products">
+          <Route index element={<ProductPage />} />
+          <Route path=":slug" element={<ProductPage />} />
+          <Route path=":id" element={<ProductDetailPage />} />
+        </Route>
         <Route path="carts" element={<CartPage />} />
-        <Route path="gioi-thieu" element={<AboutUsPage />} />
-        <Route path="lien-he" element={<ContactPage />} />
-        <Route path="tin-tuc" element={<NewsPage />} />
-        <Route path="he-thong-cua-hang" element={<StoresPage />} />
-        <Route path="chi-tiet" element={<ProductDetailPage />} />
+        <Route path="about" element={<AboutUsPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="news" element={<NewsPage />} />
+        <Route path="stores" element={<StoresPage />} />
+
         <Route path="yeu-thich" element={<FavoriteProducts />} />
         <Route path="thanh-toan" element={<CheckoutPage />} />
         <Route path="login" element={<Login />} />

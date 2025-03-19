@@ -1,76 +1,69 @@
-// import { Outlet } from 'react-router'
-// import { Layout } from 'antd'
+import { Layout, Menu } from 'antd'
+import {
+  HeartOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
+import { Outlet, Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
-// const { Header, Footer, Content } = Layout
+const { Header, Content, Footer } = Layout
 
-// const headerStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   color: 'black',
-//   height: 64,
-//   paddingInline: 48,
-//   lineHeight: '64px',
-//   backgroundColor: 'white',
-// }
-
-// const contentStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   minHeight: 120,
-//   lineHeight: '120px',
-//   color: '#fff',
-//   // backgroundColor: '#0958d9',
-//   margin: '0 30px',
-// }
-
-// const footerStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   color: 'black',
-//   backgroundColor: 'white',
-// }
-// const layoutStyle = {
-//   borderRadius: 8,
-//   overflow: 'hidden',
-//   minHeight: '100vh',
-//   backgroundColor: 'white',
-// }
-// export default function AppLayout() {
-//   return (
-//     <Layout style={layoutStyle}>
-//       <Header style={headerStyle}>Header </Header>
-//       <Content style={contentStyle}>
-//         <Outlet />
-//       </Content>
-//       <Footer style={footerStyle}>
-//         Ant Design ©{new Date().getFullYear()} Created by Ant UED
-//       </Footer>
-//     </Layout>
-//   )
-// }
-
-import { Outlet } from 'react-router'
-import { Layout } from 'antd'
-import AppHeader from '../app/header'
-import Footer from '../app/footer'
-
-const { Content } = Layout
-
-const layoutStyle: React.CSSProperties = {
-  minHeight: '100vh',
-  width: '100%',
-  overflowX: 'hidden',
-}
-
-const contentStyle: React.CSSProperties = {
-  maxWidth: '100vw',
-  overflowX: 'hidden',
-}
 export default function AppLayout() {
+  const { t } = useTranslation()
   return (
-    <Layout style={layoutStyle}>
-      <AppHeader />
-      <Content style={contentStyle}>
+    <Layout className="layout">
+      <Header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          maxWidth: '1200px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '0 20px',
+        }}
+      >
+        <Link to="/">
+          <img
+            src="/assets/images/logo/logo.png"
+            alt="logo"
+            style={{ height: 60 }}
+          />
+        </Link>
+
+        <Menu
+          mode="horizontal"
+          defaultSelectedKeys={['1']}
+          style={{ flexGrow: 1, minWidth: 0, justifyContent: 'center' }}
+        >
+          <Menu.Item key="1">
+            <Link to="/">{t('menu.homepage')}</Link>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <Link to="/about">{t('menu.about')}</Link>
+          </Menu.Item>
+          <Menu.Item key="3">
+            <Link to="/products">{t('menu.products')}</Link>
+          </Menu.Item>
+          <Menu.Item key="4">
+            <Link to="/contact">{t('menu.contact')}</Link>
+          </Menu.Item>
+          <Menu.Item key="5">
+            <Link to="/stores">{t('menu.stores')}</Link>
+          </Menu.Item>
+        </Menu>
+        <Menu mode="horizontal" style={{ flexShrink: 0 }}>
+          <Menu.Item icon={<HeartOutlined />} />
+          <Menu.Item icon={<ShoppingCartOutlined />} />
+          <Menu.Item icon={<UserOutlined />} />
+        </Menu>
+      </Header>
+      <Content>
         <Outlet />
       </Content>
-      <Footer />
+      <Footer style={{ textAlign: 'center' }}>
+        Bản quyền ©2023 Cửa hàng của tôi
+      </Footer>
     </Layout>
   )
 }
