@@ -1,0 +1,97 @@
+{
+    "products": [
+        {
+            "id": 1,
+            "name": "MacBook Pro 16",
+            "price": 2500,
+            "stock": 5,
+            "category": "laptop",
+            "image": "macbook.jpg"
+        },
+        {
+            "id": 2,
+            "name": "Dell XPS 13",
+            "price": 1500,
+            "stock": 8,
+            "category": "laptop",
+            "image": "dell-xps.jpg"
+        },
+        {
+            "id": 3,
+            "name": "iPhone 14 Pro",
+            "price": 1200,
+            "stock": 10,
+            "category": "smartphone",
+            "image": "iphone14pro.jpg"
+        },
+        {
+            "id": 4,
+            "name": "Samsung Galaxy S23",
+            "price": 1000,
+            "stock": 12,
+            "category": "smartphone",
+            "image": "galaxy-s23.jpg"
+        },
+        {
+            "id": 5,
+            "name": "AirPods Pro",
+            "price": 250,
+            "stock": 15,
+            "category": "accessory",
+            "image": "airpods.jpg"
+        },
+        {
+            "id": 6,
+            "name": "Apple Watch Ultra",
+            "price": 800,
+            "stock": 7,
+            "category": "smartwatch",
+            "image": "watch-ultra.jpg"
+        },
+        {
+            "id": 7,
+            "name": "Asus ROG Strix G15",
+            "price": 1800,
+            "stock": 6,
+            "category": "laptop",
+            "image": "rog-strix.jpg"
+        },
+        {
+            "id": 8,
+            "name": "Google Pixel 7",
+            "price": 900,
+            "stock": 9,
+            "category": "smartphone",
+            "image": "pixel7.jpg"
+        }
+    ],
+    "cart": [
+        {
+            "id": 1,
+            "userId": 1,
+            "productId": 1,
+            "quantity": 1
+        }
+    ],
+    "orders": [
+        {
+            "id": 1,
+            "userId": 1,
+            "items": [
+                {
+                    "productId": 1,
+                    "quantity": 1
+                }
+            ],
+            "total": 1200,
+            "status": "pending"
+        }
+    ],
+    "users": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "email": "john@example.com"
+        }
+    ]
+}
