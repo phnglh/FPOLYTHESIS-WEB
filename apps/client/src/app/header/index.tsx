@@ -1,4 +1,15 @@
-import { Layout, Input, Space, Menu, Row, Col } from 'antd'
+import {
+  Layout,
+  Input,
+  Space,
+  Menu,
+  Row,
+  Col,
+  Dropdown,
+  Avatar,
+  Popover,
+  Badge,
+} from 'antd'
 import {
   SearchOutlined,
   HeartOutlined,
@@ -6,12 +17,132 @@ import {
   ShoppingCartOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import Logo from '../images/logo.flames2.png'
 
 const { Header } = Layout
 
-const AppHeader: React.FC = () => {
+const AppHeader = () => {
+  const [user, setUser] = useState<any>(null)
+  const [cartVisible, setCartVisible] = useState(false)
+  const [cartItems, setCartItems] = useState([
+    {
+      id: 1,
+      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
+      size: 'XL',
+      quantity: 1,
+      price: 395000,
+      image: 'https://via.placeholder.com/50',
+    },
+    {
+      id: 2,
+      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
+      size: 'S',
+      quantity: 4,
+      price: 395000,
+      image: 'https://via.placeholder.com/50',
+    },
+    {
+      id: 3,
+      name: 'Áo giữ nhiệt nam - Áo thun tập GYM thể thao dài tay nam',
+      size: 'S',
+      quantity: 2,
+      price: 200000,
+      image: 'https://via.placeholder.com/50',
+    },
+  ])
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+  }, [])
+
+  const totalPrice = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0,
+  )
+
+  const cartContent = (
+    <div
+      style={{ width: 300, padding: 16, background: 'white', borderRadius: 8 }}
+    >
+      {cartItems.map((item) => (
+        <div
+          key={item.id}
+          style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
+        >
+          <img
+            src={item.image}
+            alt={item.name}
+            style={{ width: 50, height: 50, marginRight: 12 }}
+          />
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0 }}>{item.name}</p>
+            <p style={{ margin: '4px 0', color: 'gray' }}>Size: {item.size}</p>
+            <p style={{ margin: 0, color: 'red' }}>
+              {item.price.toLocaleString()}đ
+            </p>
+          </div>
+        </div>
+      ))}
+      <div
+        style={{
+          borderTop: '1px solid #ddd',
+          paddingTop: 12,
+          textAlign: 'right',
+        }}
+      >
+        <strong>Tổng tiền: {totalPrice.toLocaleString()}đ</strong>
+      </div>
+      <button
+        style={{
+          marginTop: 12,
+          width: '100%',
+          padding: 8,
+          background: 'green',
+          color: 'white',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+        }}
+        onClick={() => (window.location.href = '/thanh-toan')}
+      >
+        Thanh toán
+      </button>
+    </div>
+  )
+
+  const userMenu = (
+    <div
+      style={{ width: 280, padding: 16, background: 'white', borderRadius: 8 }}
+    >
+      <div style={{ textAlign: 'center', marginBottom: 12 }}>
+        <Avatar size={64} icon={<UserOutlined />} src={user?.avatar} />
+        <h3 style={{ margin: '8px 0' }}>{user?.name}</h3>
+        <p style={{ color: 'gray' }}>Chưa phân hạng</p>
+      </div>
+      <Menu style={{ border: 'none' }}>
+        <Menu.Item key="profile">Ví Của Tôi</Menu.Item>
+        <Menu.Item key="orders">Lịch Sử Đặt Hàng</Menu.Item>
+        <Menu.Item key="favorites">Yêu Thích</Menu.Item>
+        <Menu.Item key="gift-codes">Mã Quà Tặng</Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          key="logout"
+          onClick={() => {
+            localStorage.removeItem('user')
+            setUser(null)
+          }}
+          style={{ color: 'red' }}
+        >
+          Đăng xuất
+        </Menu.Item>
+      </Menu>
+    </div>
+  )
+
   return (
     <Header
       style={{
@@ -29,7 +160,6 @@ const AppHeader: React.FC = () => {
           left: '60px',
           zIndex: 10,
           background: 'black',
-          // padding: '10px 20px',
           height: '144px',
           display: 'flex',
           alignItems: 'center',
@@ -64,7 +194,7 @@ const AppHeader: React.FC = () => {
         </Col>
 
         {/* chức năng */}
-        <Col style={{ marginRight: '100px' }}>
+        <Col style={{ marginLeft: '100px' }}>
           <Space size="middle">
             <a href="yeu-thich" style={{ color: 'white', fontSize: '14px' }}>
               <HeartOutlined /> <span>Yêu thích (0)</span>
@@ -76,35 +206,101 @@ const AppHeader: React.FC = () => {
                 alignItems: 'center',
               }}
             >
-              <UserOutlined
-                style={{ color: 'white', fontSize: '16px', marginRight: '6px' }}
-              />
-              <a
-                href="register"
-                style={{
-                  color: 'white',
-                  fontSize: '14px',
-                  textDecoration: 'none',
-                }}
-              >
-                Đăng ký
-              </a>
-              <span style={{ color: 'white', margin: '0 8px' }}>|</span>
-              <a
-                href="login"
-                style={{
-                  color: 'white',
-                  fontSize: '14px',
-                  textDecoration: 'none',
-                }}
-              >
-                Đăng nhập
-              </a>
+              {user ? (
+                <Dropdown
+                  overlay={userMenu}
+                  trigger={['click']}
+                  placement="bottomRight"
+                  arrow
+                >
+                  <div
+                    style={{
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Avatar
+                      size={24}
+                      icon={<UserOutlined />}
+                      src={user?.avatar}
+                      style={{ marginRight: '6px' }}
+                    />
+                    <span style={{ color: 'white', fontSize: '14px' }}>
+                      Xin chào, <b>{user?.name}</b>
+                    </span>
+                  </div>
+                </Dropdown>
+              ) : (
+                <>
+                  <UserOutlined
+                    style={{
+                      color: 'white',
+                      fontSize: '16px',
+                      marginRight: '6px',
+                    }}
+                  />
+                  <a
+                    href="register"
+                    style={{
+                      color: 'white',
+                      fontSize: '14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Đăng ký
+                  </a>
+                  <span style={{ color: 'white', margin: '0 8px' }}>|</span>
+                  <a
+                    href="login"
+                    style={{
+                      color: 'white',
+                      fontSize: '14px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Đăng nhập
+                  </a>
+                </>
+              )}
             </Col>
 
-            <a href="carts" style={{ color: 'white', fontSize: '14px' }}>
-              <ShoppingCartOutlined /> <span>Giỏ hàng</span>
-            </a>
+            <Row
+              align="middle"
+              style={{
+                padding: '10px 24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Col style={{ marginRight: '100px' }}>
+                <Space size="middle">
+                  <Popover
+                    content={cartContent}
+                    visible={cartVisible}
+                    onVisibleChange={setCartVisible}
+                    trigger="hover"
+                  >
+                    <Badge count={cartItems.length}>
+                      <a
+                        href="carts"
+                        style={{ color: 'white', fontSize: '14px' }}
+                      >
+                        <ShoppingCartOutlined
+                          style={{
+                            color: 'white',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                          }}
+                        />{' '}
+                        <span>Giỏ hàng</span>
+                      </a>
+                    </Badge>
+                  </Popover>
+                </Space>
+              </Col>
+            </Row>
+
           </Space>
         </Col>
       </Row>
@@ -127,7 +323,7 @@ const AppHeader: React.FC = () => {
           style={{
             display: 'flex',
             justifyContent: 'center',
-            marginRight: '50px',
+            marginLeft: '110px',
           }}
         >
           <Menu
