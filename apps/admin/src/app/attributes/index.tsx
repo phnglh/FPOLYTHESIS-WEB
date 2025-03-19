@@ -1,5 +1,4 @@
 import { Attribute, AttributeValue } from '#types/product'
-
 import { EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { fetchAttributes } from '@store/slices/attributeSlice'
 import { AppDispatch, RootState } from '@store/store'

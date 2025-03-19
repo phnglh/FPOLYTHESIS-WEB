@@ -9,3 +9,4 @@ export interface User {
 }
 
 export type UserState = BaseState<User[], User>
+
