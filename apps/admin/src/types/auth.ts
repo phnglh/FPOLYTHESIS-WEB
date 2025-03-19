@@ -7,3 +7,9 @@ export interface AuthState {
   loading: boolean
   error: string | null
 }
+
+export interface Login {
+  email: string
+  password: string
+}
+

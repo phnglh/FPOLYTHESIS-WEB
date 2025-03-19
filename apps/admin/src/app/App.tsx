@@ -16,6 +16,10 @@ import CreateProduct from '@app/products/add'
 import UpdateProduct from '@app/products/update'
 import BrandManagement from '@app/brands'
 import CreateBrand from '@app/brands/create'
+import AttributeManagement from '@app/attributes'
+import UserManagement from '@app/users'
+import CreateUser from '@app/users/create'
+
 
 function App() {
   const dispatch = useDispatch()
@@ -26,7 +30,7 @@ function App() {
     dispatch(initializeAuth())
   }, [dispatch])
 
-  if (!isInitialized) return null
+  if (!isInitialized) return <NotFound />
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -50,11 +54,17 @@ function App() {
           <Route path="create" element={<CreateBrand />} />
           <Route path="update/:id" element={<h1>update</h1>} />
         </Route>
-        <Route path="quan-ly-san-pham" element={<ProductPage />} />
         <Route path="products">
           <Route index element={<ProductPage />} />
           <Route path="create" element={<CreateProduct />} />
           <Route path="update" element={<UpdateProduct />} />
+        </Route>
+        <Route path="attributes">
+          <Route index element={<AttributeManagement />} />
+        </Route>
+        <Route path="users">
+          <Route index element={<UserManagement />} />
+          <Route path="create" element={<CreateUser />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -1,6 +1,7 @@
+import { Login } from '#types/auth'
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { login } from '@store/slices/authSlice'
-import { RootState } from '@store/store'
+import { AppDispatch, RootState } from '@store/store'
 import { Button, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -12,9 +13,10 @@ const { Title } = Typography
 const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
-  const dispatch = useDispatch<RootState>()
+  const dispatch = useDispatch<AppDispatch>()
 
-  const handleLogin = (values) => {
+  const handleLogin = (values: Login) => {
+    setLoading(true)
     dispatch(login(values))
       .unwrap()
       .then(() => {

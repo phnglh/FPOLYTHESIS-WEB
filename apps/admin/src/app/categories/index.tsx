@@ -1,7 +1,7 @@
 // src/pages/categories/CategoryList.tsx
 
-import { Category } from '#types/category'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Category, CategoryWithKey } from '#types/category'
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Button, Modal, Space, Table } from 'antd'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -19,7 +19,7 @@ const CategoryManagement = () => {
     dispatch(fetchCategories())
   }, [dispatch])
 
-  const handleDeleteCategory = async (categoryId: number) => {
+  const handleDeleteCategory = async (categoryId: number | string) => {
     try {
       await dispatch(deleteCategory(categoryId))
       toast.success('Xóa danh mục thành công!')
@@ -28,7 +28,7 @@ const CategoryManagement = () => {
     }
   }
 
-  const showDeleteConfirm = (categoryId: number) => {
+  const showDeleteConfirm = (categoryId: number | string) => {
     Modal.confirm({
       title: 'Xác nhận xóa',
       content: 'Bạn có chắc muốn xóa danh mục này?',
@@ -39,11 +39,22 @@ const CategoryManagement = () => {
     })
   }
 
+  const normalizeCategories = (categories: Category[]): CategoryWithKey[] => {
+    return categories.map((item) => ({
+      ...item,
+      key: item.id,
+      children:
+        item.children && item.children.length > 0
+          ? normalizeCategories(item.children)
+          : undefined,
+    }))
+  }
+
   const columns = [
     {
       title: 'STT',
       dataIndex: 'id',
-      render: (_: number, __: Category, i: number) => i + 1,
+      render: (_: number, __: Category, index: number) => index + 1,
     },
     { title: 'Tên Danh Mục', dataIndex: 'name' },
     {
@@ -66,15 +77,12 @@ const CategoryManagement = () => {
 
   return (
     <div>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => navigate('/categories/create')}
-      >
-        Thêm Danh Mục
-      </Button>
-
-      <Table columns={columns} dataSource={data} rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={normalizeCategories(data)}
+        rowKey="id"
+        expandable={{ childrenColumnName: 'children' }}
+      />
     </div>
   )
 }

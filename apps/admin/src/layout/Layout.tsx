@@ -1,54 +1,31 @@
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
-import { Avatar, Button, Dropdown, Layout, Typography, Space, Flex } from 'antd'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { Avatar, Button, Layout, Typography, Flex } from 'antd'
 import React, { useState } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet } from 'react-router'
 import { Sidebar } from './components/SideBar'
-import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '@store/store'
-import { logout } from '@store/slices/authSlice'
-import { useAppToast } from '@hooks/useAppToast'
+import ProfileTab from '@layout/Profile'
+import { useSelector } from 'react-redux'
+import { RootState } from '@store/store'
+import AppBreadcrumb from '@layout/components/common/AppBreadcrumb'
 
-const { Title, Text } = Typography
+const { Title } = Typography
 const { Header, Sider, Content } = Layout
 
 const AdminLayout: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
-  const { success } = useAppToast()
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
+  const [open, setOpen] = useState(false)
+
   const avatarSrc =
     user?.avatar ||
     'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg'
 
-  // Xử lý logout
-  const handleMenuClick = async ({ key }: { key: string }) => {
-    if (key === 'logout') {
-      try {
-        await dispatch(logout()).unwrap()
-        success('Đăng xuất thành công!', { onClose: () => navigate('/login') })
-      } catch (error) {
-        console.error('Logout failed:', error)
-      }
-    }
+  const showDrawer = () => {
+    setOpen(true)
   }
 
-  const profileMenu = {
-    items: [
-      {
-        key: 'profile',
-        label: <span>Hồ sơ</span>,
-      },
-      {
-        key: 'logout',
-        label: <span>Đăng xuất</span>,
-      },
-    ],
-    onClick: handleMenuClick,
+  const onClose = () => {
+    setOpen(false)
   }
 
   return (
@@ -94,7 +71,6 @@ const AdminLayout: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid #f0f0f0',
           }}
         >
           <Button
@@ -103,16 +79,16 @@ const AdminLayout: React.FC = () => {
             onClick={() => setCollapsed(!collapsed)}
             style={{ fontSize: '18px' }}
           />
-
-          <Dropdown menu={profileMenu} placement="bottomRight" arrow>
-            <Space align="center" size="middle" style={{ cursor: 'pointer' }}>
-              <Avatar size="large" src={avatarSrc} icon={<UserOutlined />} />
-              {!collapsed && <Text strong>{user?.name || ''}</Text>}
-            </Space>
-          </Dropdown>
+          <Avatar
+            src={avatarSrc}
+            size="large"
+            style={{ cursor: 'pointer' }}
+            onClick={showDrawer}
+          />
+          <ProfileTab open={open} onClose={onClose} user={user} />
         </Header>
-
-        <Content style={{ padding: '24px', background: '#f5f5f5' }}>
+        <Content style={{ padding: '24px', background: '#fff' }}>
+          <AppBreadcrumb />
           <Outlet />
         </Content>
       </Layout>

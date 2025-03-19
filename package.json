@@ -7,6 +7,7 @@
     "dev": "pnpm -C apps/client dev & pnpm -C apps/admin dev",
     "build": "pnpm -C apps/client build && pnpm -C apps/admin build",
     "preview": "pnpm -C apps/client preview & pnpm -C apps/admin preview",
+     "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
   "devDependencies": {

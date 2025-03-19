@@ -1,3 +1,5 @@
+import { BaseState } from '#types/api'
+
 export interface User {
   id: number
   name: string
@@ -5,3 +7,6 @@ export interface User {
   role: string
   avatar?: string
 }
+
+export type UserState = BaseState<User[], User>
+
