@@ -8,6 +8,9 @@ import './styles/global.css'
 import ErrorFallback from './layout/components/ErrorFallback.tsx'
 import { Provider } from 'react-redux'
 import { store } from './store/store.ts'
+import { ConfigProvider } from 'antd'
+import theme from './theme/theme'
+import { ToastContainer } from 'react-toastify'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,7 +18,10 @@ createRoot(document.getElementById('root')!).render(
       <Suspense fallback={<div>Loading...</div>}>
         <Provider store={store}>
           <BrowserRouter>
-            <App />
+            <ConfigProvider theme={theme}>
+              <App />
+              <ToastContainer />
+            </ConfigProvider>
           </BrowserRouter>
         </Provider>
       </Suspense>

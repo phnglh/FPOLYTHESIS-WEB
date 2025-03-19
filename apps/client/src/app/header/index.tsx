@@ -17,7 +17,7 @@ import {
   ShoppingCartOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Logo from '../images/logo.flames2.png'
 
 const { Header } = Layout
@@ -300,6 +300,7 @@ const AppHeader = () => {
                 </Space>
               </Col>
             </Row>
+
           </Space>
         </Col>
       </Row>
