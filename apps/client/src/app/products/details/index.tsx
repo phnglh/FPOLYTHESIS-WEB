@@ -13,6 +13,7 @@ import {
   Typography,
 } from 'antd'
 import { HeartOutlined, ShoppingCartOutlined } from '@ant-design/icons'
+import { useParams } from 'react-router'
 
 const { TabPane } = Tabs
 const { Title, Text } = Typography
@@ -48,6 +49,7 @@ const products = [
 ]
 
 const ProductDetailPage = () => {
+  const { id } = useParams()
   const [size, setSize] = useState('S')
   const [quantity, setQuantity] = useState(1)
   const [selectedColor, setSelectedColor] = useState(colors[0])

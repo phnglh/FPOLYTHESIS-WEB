@@ -9,7 +9,7 @@
     "preview": "pnpm -C apps/client preview & pnpm -C apps/admin preview",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
-    "server": "json-server --watch db.json --port 8080"
+    "server": "json-server db.json -m ./node_modules/json-server-auth --port 8080"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
@@ -17,7 +17,8 @@
     "@commitlint/types": "^19.8.0",
     "concurrently": "^9.1.0",
     "husky": "^9.1.7",
-    "json-server": "1.0.0-beta.3",
+    "json-server": "0.17.4",
+    "json-server-auth": "^2.1.0",
     "lint-staged": "^15.2.10",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.4.1",
