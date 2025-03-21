@@ -1,12 +1,15 @@
-import React from 'react'
 import { Form, Input, Button, Card, Typography } from 'antd'
 import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from '@store/store'
+import { register } from '@store/slices/authSlice'
 
 const { Title, Text } = Typography
 
 const Register = () => {
+  const dispatch = useDispatch<AppDispatch>()
   const onFinish = (values: any) => {
-    console.log('Received values:', values)
+    dispatch(register(values))
   }
 
   return (
@@ -42,24 +45,21 @@ const Register = () => {
 
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
-            name="firstName"
-            label="Họ"
+            name="name"
             rules={[{ required: true, message: 'Vui lòng nhập họ' }]}
           >
-            <Input placeholder="Họ" />
+            <Input placeholder="Ten" />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="lastName"
-            label="Tên"
             rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
           >
             <Input placeholder="Tên" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="email"
-            label="Email"
             rules={[
               {
                 required: true,
@@ -71,17 +71,15 @@ const Register = () => {
             <Input placeholder="Email" />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="phone"
-            label="Số điện thoại"
             rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
           >
             <Input placeholder="Số điện thoại" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="password"
-            label="Mật khẩu"
             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
           >
             <Input.Password placeholder="Mật khẩu" />

@@ -17,73 +17,61 @@ import {
   ShoppingCartOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import Logo from '../images/logo.flames2.png'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@store/store'
+import { getUser, logout } from '@store/slices/authSlice'
+import { fetchCart } from '@store/slices/cartSlice'
 
 const { Header } = Layout
 
 const AppHeader = () => {
-  const [user, setUser] = useState<any>(null)
-  const [cartVisible, setCartVisible] = useState(false)
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
-      size: 'XL',
-      quantity: 1,
-      price: 395000,
-      image: 'https://via.placeholder.com/50',
-    },
-    {
-      id: 2,
-      name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
-      size: 'S',
-      quantity: 4,
-      price: 395000,
-      image: 'https://via.placeholder.com/50',
-    },
-    {
-      id: 3,
-      name: 'Áo giữ nhiệt nam - Áo thun tập GYM thể thao dài tay nam',
-      size: 'S',
-      quantity: 2,
-      price: 200000,
-      image: 'https://via.placeholder.com/50',
-    },
-  ])
+  const dispatch = useDispatch<AppDispatch>()
+  const { user, token } = useSelector((state: RootState) => state.auth)
+
+  const cart = useSelector((state: RootState) => state.cart)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    if (token && user) {
+      dispatch(fetchCart())
     }
-  }, [])
+  }, [token, user, dispatch])
 
-  const totalPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  )
+  console.log('cart', cart)
+  const cartItems = cart.data?.items || []
+
+  const cartTotal = cartItems.reduce((total, item) => {
+    const price = item.unit_price
+    return total + item.quantity * (isNaN(price) ? 0 : price)
+  }, 0)
+
+  useEffect(() => {
+    if (token && !user) {
+      dispatch(getUser())
+    }
+  }, [token, user, dispatch])
 
   const cartContent = (
     <div
       style={{ width: 300, padding: 16, background: 'white', borderRadius: 8 }}
     >
-      {cartItems.map((item) => (
+      {cartItems?.map((item) => (
         <div
           key={item.id}
           style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
         >
           <img
-            src={item.image}
-            alt={item.name}
+            src={item.product.image_url}
+            alt={item.product.name}
             style={{ width: 50, height: 50, marginRight: 12 }}
           />
           <div style={{ flex: 1 }}>
-            <p style={{ margin: 0 }}>{item.name}</p>
-            <p style={{ margin: '4px 0', color: 'gray' }}>Size: {item.size}</p>
-            <p style={{ margin: 0, color: 'red' }}>
-              {item.price.toLocaleString()}đ
+            <p style={{ margin: 0 }}>{item.product.name}</p>
+            <p style={{ margin: '4px 0', color: 'gray' }}>
+              So luong: {item.quantity}
             </p>
+            <p style={{ margin: 0, color: 'red' }}>{item.unit_price} VND</p>
           </div>
         </div>
       ))}
@@ -94,7 +82,7 @@ const AppHeader = () => {
           textAlign: 'right',
         }}
       >
-        <strong>Tổng tiền: {totalPrice.toLocaleString()}đ</strong>
+        <strong>Tổng tiền: {cartTotal.toLocaleString()} VND</strong>
       </div>
       <button
         style={{
@@ -132,8 +120,7 @@ const AppHeader = () => {
         <Menu.Item
           key="logout"
           onClick={() => {
-            localStorage.removeItem('user')
-            setUser(null)
+            dispatch(logout())
           }}
           style={{ color: 'red' }}
         >
@@ -275,12 +262,7 @@ const AppHeader = () => {
             >
               <Col style={{ marginRight: '100px' }}>
                 <Space size="middle">
-                  <Popover
-                    content={cartContent}
-                    visible={cartVisible}
-                    onVisibleChange={setCartVisible}
-                    trigger="hover"
-                  >
+                  <Popover content={cartContent} trigger="hover">
                     <Badge count={cartItems.length}>
                       <a
                         href="carts"
@@ -300,12 +282,10 @@ const AppHeader = () => {
                 </Space>
               </Col>
             </Row>
-
           </Space>
         </Col>
       </Row>
 
-      {/* Thanh điều hướng + Hotline */}
       <Row
         style={{
           background: 'black',
@@ -317,7 +297,6 @@ const AppHeader = () => {
           marginTop: '-5px',
         }}
       >
-        {/* Menu Điều Hướng */}
         <Col
           flex="auto"
           style={{

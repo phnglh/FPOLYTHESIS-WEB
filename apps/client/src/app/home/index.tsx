@@ -317,9 +317,6 @@ export default function Home() {
     },
   ]
 
-  useEffect(() => {
-    console.log('value', value)
-  }, [value])
   return (
     <>
       <div>

@@ -54,15 +54,11 @@ import Footer from '../app/footer'
 const { Content } = Layout
 
 const layoutStyle: React.CSSProperties = {
-  minHeight: '100vh',
   width: '100%',
   overflowX: 'hidden',
 }
 
-const contentStyle: React.CSSProperties = {
-  maxWidth: '100vw',
-  overflowX: 'hidden',
-}
+const contentStyle: React.CSSProperties = {}
 export default function AppLayout() {
   return (
     <Layout style={layoutStyle}>

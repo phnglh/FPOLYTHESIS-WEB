@@ -1,97 +1,133 @@
 {
-    "products": [
+  "products": [
+    {
+      "id": 1,
+      "name": "Áo Thun Nam Basic",
+      "price": 250,
+      "stock": 20,
+      "category": "T-shirt",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 2,
+      "name": "Quần Jean Slimfit",
+      "price": 500,
+      "stock": 15,
+      "category": "Jeans",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 3,
+      "name": "Áo Sơ Mi Trắng",
+      "price": 350,
+      "stock": 18,
+      "category": "Shirt",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 4,
+      "name": "Áo Khoác Hoodie",
+      "price": 600,
+      "stock": 10,
+      "category": "Hoodie",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 5,
+      "name": "Giày Sneaker Trắng",
+      "price": 800,
+      "stock": 12,
+      "category": "Shoes",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 6,
+      "name": "Quần Short Thể Thao",
+      "price": 400,
+      "stock": 14,
+      "category": "Shorts",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 7,
+      "name": "Mũ Lưỡi Trai Basic",
+      "price": 150,
+      "stock": 25,
+      "category": "Accessories",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    },
+    {
+      "id": 8,
+      "name": "Túi Đeo Chéo Nam",
+      "price": 700,
+      "stock": 8,
+      "category": "Bags",
+      "image_url": "https://bizweb.dktcdn.net/thumb/large/100/494/200/products/1-f1e09f60-0981-400d-8579-345d8a38e83d.jpg?v=1696523277653"
+    }
+  ],
+  "cart": [
+    {
+      "id": 1,
+      "userId": 1,
+      "productId": 1,
+      "quantity": 2
+    },
+    {
+      "productId": 2,
+      "quantity": 1,
+      "id": 2
+    },
+    {
+      "productId": 1,
+      "quantity": 1,
+      "id": 3
+    },
+    {
+      "productId": 1,
+      "quantity": 1,
+      "id": 4
+    },
+    {
+      "productId": 1,
+      "quantity": 1,
+      "id": 5
+    },
+    {
+      "productId": 4,
+      "quantity": 1,
+      "id": 6
+    },
+    {
+      "productId": 3,
+      "quantity": 1,
+      "id": 7
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "userId": 1,
+      "items": [
         {
-            "id": 1,
-            "name": "MacBook Pro 16",
-            "price": 2500,
-            "stock": 5,
-            "category": "laptop",
-            "image": "macbook.jpg"
-        },
-        {
-            "id": 2,
-            "name": "Dell XPS 13",
-            "price": 1500,
-            "stock": 8,
-            "category": "laptop",
-            "image": "dell-xps.jpg"
-        },
-        {
-            "id": 3,
-            "name": "iPhone 14 Pro",
-            "price": 1200,
-            "stock": 10,
-            "category": "smartphone",
-            "image": "iphone14pro.jpg"
-        },
-        {
-            "id": 4,
-            "name": "Samsung Galaxy S23",
-            "price": 1000,
-            "stock": 12,
-            "category": "smartphone",
-            "image": "galaxy-s23.jpg"
-        },
-        {
-            "id": 5,
-            "name": "AirPods Pro",
-            "price": 250,
-            "stock": 15,
-            "category": "accessory",
-            "image": "airpods.jpg"
-        },
-        {
-            "id": 6,
-            "name": "Apple Watch Ultra",
-            "price": 800,
-            "stock": 7,
-            "category": "smartwatch",
-            "image": "watch-ultra.jpg"
-        },
-        {
-            "id": 7,
-            "name": "Asus ROG Strix G15",
-            "price": 1800,
-            "stock": 6,
-            "category": "laptop",
-            "image": "rog-strix.jpg"
-        },
-        {
-            "id": 8,
-            "name": "Google Pixel 7",
-            "price": 900,
-            "stock": 9,
-            "category": "smartphone",
-            "image": "pixel7.jpg"
+          "productId": 2,
+          "quantity": 1
         }
-    ],
-    "cart": [
-        {
-            "id": 1,
-            "userId": 1,
-            "productId": 1,
-            "quantity": 1
-        }
-    ],
-    "orders": [
-        {
-            "id": 1,
-            "userId": 1,
-            "items": [
-                {
-                    "productId": 1,
-                    "quantity": 1
-                }
-            ],
-            "total": 1200,
-            "status": "pending"
-        }
-    ],
-    "users": [
-        {
-            "id": 1,
-            "name": "John Doe",
-            "email": "john@example.com"
-        }
-    ]
+      ],
+      "total": 500,
+      "status": "pending"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    {
+      "email": "phonghngle@gmail.com",
+      "password": "$2a$10$3Vhh0t1PKgKmuLRzIH78tOlPqTnPJy8ddj3coxulCWk0zZZfWNC7m",
+      "name": "Le Hong Phong",
+      "id": 2
+    }
+  ]
 }
