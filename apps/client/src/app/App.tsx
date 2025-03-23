@@ -7,7 +7,7 @@ import AboutUsPage from './about'
 import ContactPage from './contact'
 import NewsPage from './news'
 import StoresPage from './stores'
-import CartPage from './carts'
+import CartPage from './cart'
 import ProductPage from './products'
 import FavoriteProducts from './wishlist'
 import CheckoutPage from './checkout'
@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
 import { AppDispatch, RootState } from '@store/store'
+import ProtectedRoute from '../routes/ProtectedRoute'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -45,9 +46,23 @@ function App() {
         <Route path="he-thong-cua-hang" element={<StoresPage />} />
         <Route path="chi-tiet" element={<ProductDetailPage />} />
         <Route path="yeu-thich" element={<FavoriteProducts />} />
-        <Route path="thanh-toan" element={<CheckoutPage />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route
+          path="login"
+          element={
+            <ProtectedRoute>
+              <Login />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="register"
+          element={
+            <ProtectedRoute>
+              <Register />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

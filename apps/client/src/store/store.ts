@@ -8,13 +8,22 @@ import attributeSlice from '@store/slices/attributeSlice'
 import userSlice from '@store/slices/userSlice'
 import cartReducer from '@store/slices/cartSlice'
 import orderReducer from '@store/slices/orderSlice'
-import { persistStore, persistReducer } from 'redux-persist'
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
 const persistConfig = {
-  key: 'auth',
+  key: 'root',
   storage: storage,
-  whitelist: ['access_token'],
+  whitelist: ['auth'],
 }
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer)
@@ -33,7 +42,11 @@ export const store = configureStore({
     order: orderReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(productApi.middleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(productApi.middleware),
 })
 
 export const persistor = persistStore(store)

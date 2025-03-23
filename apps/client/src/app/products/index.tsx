@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Layout,
   Select,
@@ -13,13 +13,11 @@ import {
   Image,
 } from 'antd'
 
-import { HeartOutlined } from '@ant-design/icons'
 import { useProductList } from '@hooks/useProductQuery'
-import { Link } from 'react-router'
-import { toast } from 'react-toastify'
-import { addToCart, updateCart } from '@store/slices/cartSlice'
-import { AppDispatch, store } from '@store/store'
+import { addToCart, fetchCart } from '@store/slices/cartSlice'
+import { AppDispatch } from '@store/store'
 import { useDispatch } from 'react-redux'
+import { Sku } from '#types/products'
 
 const { Title, Text } = Typography
 
@@ -41,7 +39,7 @@ const FilterSection = ({ title, options, selected, setSelected }) => (
 
 const ProductPage = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { data, error, isLoading } = useProductList()
+  const { data } = useProductList()
   const [selectedPrices, setSelectedPrices] = useState<string[]>([])
 
   const handleSizeChange = (size: string, checked: boolean) => {
@@ -50,7 +48,26 @@ const ProductPage = () => {
     )
   }
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [selectedSkus, setSelectedSkus] = useState<{ [key: string]: any }>({})
+
+  const handleSelectSku = (productId: string, sku: Sku) => {
+    setSelectedSkus((prev) => ({
+      ...prev,
+      [productId]: sku,
+    }))
+  }
+
+  const handleAddToCart = (productId: string) => {
+    const selectedSku = selectedSkus[productId]
+    if (!selectedSku)
+      return alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
+
+    dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchCart())
+      })
+  }
 
   const categories = [
     {
@@ -122,16 +139,6 @@ const ProductPage = () => {
     '42',
     '42.5',
   ]
-
-  const handleAddToCart = async (productId, quantity) => {
-    console.log('Thêm vào giỏ hàng:', productId)
-    try {
-      await dispatch(addToCart({ product_id: productId, quantity }))
-      toast.success('Thêm vào giỏ hàng thành công')
-    } catch (error) {
-      toast.error('Thêm vào giỏ hàng thất bại')
-    }
-  }
 
   return (
     <Layout style={{ margin: '0 200px', padding: '10px' }}>
@@ -237,124 +244,35 @@ const ProductPage = () => {
           ))}
         </div>
       </Sider>
-      <Layout style={{ paddingLeft: '20px', marginTop: '10px' }}>
-        <Row
-          justify="space-between"
-          align="middle"
-          style={{
-            backgroundColor: '#3f573b',
-            borderRadius: '5px',
-            height: '50px',
-            padding: '0 15px',
-            display: 'flex',
-            alignItems: 'center',
-            overflow: 'hidden',
-          }}
-        >
-          <Col
-            style={{ display: 'flex', alignItems: 'center', height: '100%' }}
-          >
-            <Title
-              level={2}
-              style={{ alignItems: 'center', textAlign: 'center' }}
-            >
-              Tất cả sản phẩm
-            </Title>
-          </Col>
-          <Col
-            style={{ display: 'flex', alignItems: 'center', height: '100%' }}
-          >
-            <Select defaultValue="Sắp xếp theo" style={{ width: 150 }}>
-              <Select.Option value="default">Mặc định</Select.Option>
-              <Select.Option value="az">A — Z</Select.Option>
-              <Select.Option value="za">Z — A</Select.Option>
-              <Select.Option value="priceAsc">Giá tăng dần</Select.Option>
-              <Select.Option value="priceDesc">Giá giảm dần</Select.Option>
-              <Select.Option value="newest">Mới nhất</Select.Option>
-              <Select.Option value="oldest">Cũ nhất</Select.Option>
-            </Select>
-          </Col>
-        </Row>
-        <Row
-          gutter={[30, 30]}
-          justify="center"
-          style={{ padding: '20px 20px' }}
-        >
-          {data?.slice(0, 9).map((product, index) => (
-            <Col xs={24} sm={12} md={8} lg={8} key={index}>
+      <Layout style={{ margin: '0 200px', padding: '10px' }}>
+        <Row gutter={[30, 30]} justify="center" style={{ padding: '20px' }}>
+          {data?.map((product) => (
+            <Col xs={24} sm={12} md={8} lg={8} key={product.id}>
               <Card
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
                 hoverable
                 cover={
-                  <div style={{ position: 'relative' }}>
-                    <HeartOutlined
-                      style={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        fontSize: '20px',
-                        color: '#000',
-                        zIndex: 10,
-                      }}
-                    />
-                    <Image
-                      src={product.image_url}
-                      preview={false}
-                      style={{
-                        width: '100%',
-                        borderTopLeftRadius: '10px',
-                        borderTopRightRadius: '10px',
-                      }}
-                    />
-                    {hoveredIndex === index && (
-                      <div className="absolute bottom-0 w-full flex bg-black/70 transition-opacity duration-300">
-                        <Button
-                          style={{
-                            backgroundColor: '#A4C49E',
-                            color: 'white',
-                            border: 'none',
-                            flex: 1,
-                            borderRadius: '0',
-                          }}
-                        >
-                          <Link
-                            to={`/products/${product.id}`}
-                            style={{ color: 'white', textDecoration: 'none' }}
-                          >
-                            Xem chi tiết
-                          </Link>
-                        </Button>
-                        <Button
-                          style={{
-                            backgroundColor: '#3C6255',
-                            color: 'white',
-                            border: 'none',
-                            flex: 1,
-                            borderRadius: '0',
-                          }}
-                          onClick={() => handleAddToCart(product.id, 1)}
-                        >
-                          Thêm vào giỏ hàng
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <Image
+                    src={product.image_url}
+                    preview={false}
+                    style={{
+                      width: '100%',
+                      borderTopLeftRadius: '10px',
+                      borderTopRightRadius: '10px',
+                    }}
+                  />
                 }
                 style={{
                   textAlign: 'center',
                   borderRadius: '10px',
-                  minHeight: '350px',
+                  minHeight: '420px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                 }}
               >
-                <Text type="secondary">{product.category_name}</Text>
                 <Title
                   level={5}
                   style={{
-                    marginTop: '5px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -364,8 +282,33 @@ const ProductPage = () => {
                 </Title>
 
                 <Text strong style={{ fontSize: '16px', color: '#D92D20' }}>
-                  {product.price} VND
+                  {selectedSkus[product.id]?.price || 'Chọn phiên bản'} VND
                 </Text>
+
+                <Select
+                  placeholder="Chọn kích thước & màu sắc"
+                  style={{ width: '100%', marginTop: 10 }}
+                  onChange={(skuId) => {
+                    const selected = product.skus.find((s) => s.id === skuId)
+                    handleSelectSku(product.id, selected)
+                  }}
+                >
+                  {product.skus.map((sku) => (
+                    <Select.Option key={sku.id} value={sku.id}>
+                      {sku.attributes.map((attr) => attr.value).join(' - ')}
+                    </Select.Option>
+                  ))}
+                </Select>
+
+                {/* Nút thêm vào giỏ hàng */}
+                <Button
+                  type="primary"
+                  onClick={() => handleAddToCart(product.id)}
+                  style={{ marginTop: '10px' }}
+                  disabled={!selectedSkus[product.id]}
+                >
+                  Thêm vào giỏ hàng
+                </Button>
               </Card>
             </Col>
           ))}

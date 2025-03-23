@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@store/store'
 import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
-import PrivateRoute from '@app/routes/PrivateRoute'
+import PrivateRoute from 'src/routes/PrivateRoute'
 import Dashboard from './dashboard'
 import CreateCategory from '@app/categories/create'
 import UpdateCategory from '@app/categories/update'
@@ -19,7 +19,6 @@ import CreateBrand from '@app/brands/create'
 import AttributeManagement from '@app/attributes'
 import UserManagement from '@app/users'
 import CreateUser from '@app/users/create'
-
 
 function App() {
   const dispatch = useDispatch()

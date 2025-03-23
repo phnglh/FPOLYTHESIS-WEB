@@ -1,8 +1,6 @@
-import React from 'react'
 import {
   Form,
   Input,
-  Select,
   Button,
   Radio,
   Card,
@@ -11,28 +9,46 @@ import {
   Col,
   Divider,
   Badge,
+  Space,
 } from 'antd'
+import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { useEffect, useState } from 'react'
 
 const { Title, Text } = Typography
-const { Option } = Select
+
+interface CartItem {
+  product_id: number
+  name: string
+  price: number
+  quantity: number
+  image: string
+}
 
 const CheckoutPage = () => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [totalPrice, setTotalPrice] = useState<number>(0)
+
+  useEffect(() => {
+    const storedItems = localStorage.getItem('checkout_items')
+    if (storedItems) {
+      const parsedItems: CartItem[] = JSON.parse(storedItems)
+      setCartItems(parsedItems)
+      const total = parsedItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      )
+      setTotalPrice(total)
+    }
+  }, [])
+
   return (
-    <Row gutter={[16, 16]}>
-      {/* Thông tin nhận hàng */}
-      <Col xs={24} md={14}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: 16,
-            justifyContent: 'space-between',
-          }}
-        >
-          <Title level={2}>Thông tin nhận hàng</Title>
-          <Button type="link">Đăng nhập</Button>
-        </div>
-        <Card>
+    <Row gutter={[16, 16]} justify="center">
+      <Col xs={24} sm={20} md={16} lg={12}>
+        <Card variant="borderless" style={{ borderRadius: 8, padding: 16 }}>
+          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+            <Title level={4}>Thông tin nhận hàng</Title>
+            <Button type="link">Đăng nhập</Button>
+          </Space>
           <Form layout="vertical">
             <Form.Item label="Email">
               <Input placeholder="Email" />
@@ -40,85 +56,64 @@ const CheckoutPage = () => {
             <Form.Item label="Họ và tên">
               <Input placeholder="Họ và tên" />
             </Form.Item>
-            <Form.Item label="Số điện thoại (tùy chọn)">
+            <Form.Item label="Số điện thoại">
               <Input placeholder="Số điện thoại" />
             </Form.Item>
-            <Form.Item label="Địa chỉ (tùy chọn)">
+            <Form.Item label="Địa chỉ">
               <Input placeholder="Địa chỉ" />
             </Form.Item>
-            <Row gutter={8}>
-              <Col span={8}>
-                <Form.Item label="Tỉnh thành">
-                  <Select placeholder="---">
-                    <Option value="hcm">Hồ Chí Minh</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Quận huyện (tùy chọn)">
-                  <Select placeholder="Quận huyện" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Phường xã (tùy chọn)">
-                  <Select placeholder="Phường xã" />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item label="Ghi chú (tùy chọn)">
-              <Input.TextArea placeholder="Ghi chú" />
+            <Form.Item label="Ghi chú">
+              <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
             </Form.Item>
           </Form>
         </Card>
-      </Col>
-      {/* Vận chuyển & Thanh toán */}
-      <Col xs={24} md={10}>
-        <Card title="Vận chuyển">
-          <Button block>Vui lòng nhập thông tin giao hàng</Button>
+
+        <Card
+          title="Vận chuyển"
+          variant="borderless"
+          style={{ borderRadius: 8, marginTop: 16 }}
+        >
+          <Button type="primary" block>
+            Nhập thông tin giao hàng
+          </Button>
         </Card>
-        <Card title="Thanh toán" style={{ marginTop: 16 }}>
+
+        <Card
+          title="Thanh toán"
+          bordered={false}
+          style={{ borderRadius: 8, marginTop: 16 }}
+        >
           <Radio.Group>
             <Radio value="bank">Chuyển khoản</Radio>
-            <Radio value="cod">Thu hộ (COD)</Radio>
+            <Radio value="cod">Thanh toán khi nhận hàng (COD)</Radio>
           </Radio.Group>
         </Card>
-      </Col>
-      {/* Đơn hàng */}
-      <Col xs={24}>
-        <Card title="Đơn hàng (6 sản phẩm)">
-          {[
-            {
-              name: 'Áo lót giữ nhiệt đá bóng Keepdry cho người lớn',
-              size: 'XL',
-              price: '395.000₫',
-              quantity: 1,
-              image: '/images/product1.jpg',
-            },
-            {
-              name: 'Áo giữ nhiệt nam - Áo thun tập GYM',
-              size: 'S',
-              price: '200.000₫',
-              quantity: 2,
-              image: '/images/product2.jpg',
-            },
-          ].map((item, index) => (
-            <Row gutter={[8, 8]} align="middle" key={index}>
-              <Col span={4} style={{ position: 'relative' }}>
-                <Badge count={item.quantity} offset={[-5, 5]}>
+
+        <Card
+          title={
+            <Title level={5}>
+              <ShoppingCartOutlined /> Đơn hàng ({cartItems.length} sản phẩm)
+            </Title>
+          }
+          bordered={false}
+          style={{ borderRadius: 8, marginTop: 16 }}
+        >
+          {cartItems.map((item, index) => (
+            <Row gutter={[12, 12]} align="middle" key={index}>
+              <Col span={6}>
+                <Badge count={item.quantity}>
                   <img
                     src={item.image}
                     alt={item.name}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', borderRadius: 8 }}
                   />
                 </Badge>
               </Col>
-              <Col span={16}>
-                <Text>{item.name}</Text>
-                <br />
-                <Text type="secondary">Size: {item.size}</Text>
+              <Col span={12}>
+                <Text strong>{item.name}</Text>
               </Col>
-              <Col span={4}>
-                <Text strong>{item.price}</Text>
+              <Col span={6} style={{ textAlign: 'right' }}>
+                <Text strong>{item.price.toLocaleString()}₫</Text>
               </Col>
             </Row>
           ))}
@@ -136,7 +131,7 @@ const CheckoutPage = () => {
               <Text>Tạm tính</Text>
             </Col>
             <Col>
-              <Text strong>2.175.000₫</Text>
+              <Text strong>{totalPrice.toLocaleString()}₫</Text>
             </Col>
           </Row>
           <Row justify="space-between" style={{ marginTop: 8 }}>
@@ -145,14 +140,19 @@ const CheckoutPage = () => {
             </Col>
             <Col>
               <Title level={3} type="success">
-                2.175.000₫
+                {totalPrice.toLocaleString()}₫
               </Title>
             </Col>
           </Row>
           <Button type="primary" block style={{ marginTop: 16 }}>
             ĐẶT HÀNG
           </Button>
-          <Button type="link" block style={{ marginTop: 8 }}>
+          <Button
+            type="link"
+            block
+            icon={<ArrowLeftOutlined />}
+            style={{ marginTop: 8 }}
+          >
             Quay về giỏ hàng
           </Button>
         </Card>

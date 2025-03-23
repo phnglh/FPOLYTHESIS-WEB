@@ -1,19 +1,16 @@
-import { Layout, Menu } from 'antd'
-import {
-  HeartOutlined,
-  ShoppingCartOutlined,
-  UserOutlined,
-} from '@ant-design/icons'
-import { Outlet, Link } from 'react-router'
-import { useTranslation } from 'react-i18next'
+import { Layout } from 'antd'
+import { Outlet } from 'react-router'
+// import { useTranslation } from 'react-i18next'
+import AppHeader from '@layout/components/AppBar'
+import Footer from '@layout/components/Footer'
 
-const { Header, Content, Footer } = Layout
+const { Content } = Layout
 
 export default function AppLayout() {
-  const { t } = useTranslation()
+  // const { t } = useTranslation()
   return (
     <Layout className="layout">
-      <Header
+      {/* <Header
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -57,13 +54,12 @@ export default function AppLayout() {
           <Menu.Item icon={<ShoppingCartOutlined />} />
           <Menu.Item icon={<UserOutlined />} />
         </Menu>
-      </Header>
+      </Header> */}
+      <AppHeader />
       <Content>
         <Outlet />
       </Content>
-      <Footer style={{ textAlign: 'center' }}>
-        Bản quyền ©2023 Cửa hàng của tôi
-      </Footer>
+      <Footer />
     </Layout>
   )
 }

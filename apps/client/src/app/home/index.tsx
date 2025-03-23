@@ -1,140 +1,12 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Badge,
-  Button,
-  Col,
-  Row,
-  Typography,
-  Card,
-  Image,
-  Tabs,
-  Rate,
-  Carousel,
-  Avatar,
-  Tag,
-} from 'antd'
-import {
-  CreditCardOutlined,
-  CustomerServiceOutlined,
-  HeartOutlined,
-  RightOutlined,
-  SyncOutlined,
-  TruckOutlined,
-} from '@ant-design/icons'
+import { Button, Col, Row, Typography, Card } from 'antd'
 import { ProductCard } from '../../layout/components/homepage/ProductCard'
+import { useProductList } from '@hooks/useProductQuery'
 const { Title, Text } = Typography
 
 export default function Home() {
   const { t } = useTranslation()
-  const [value, setValue] = useState(false)
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const products = [
-    {
-      brand: 'Puma',
-      name: 'TÚI TRỐNG THỂ THAO UNISEX FIT DUFFEL',
-      price: 1500000,
-      oldPrice: null,
-      discount: null,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: [],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-    {
-      brand: 'Nike',
-      name: 'NIKE DUNK HIGH UP',
-      price: 3890000,
-      oldPrice: 4100000,
-      discount: 5,
-      image: 'https://via.placeholder.com/150',
-      extraImages: [
-        'https://via.placeholder.com/40',
-        'https://via.placeholder.com/40',
-      ],
-      colors: ['#C62828', '#795548', '#000000', '#FFFFFF'],
-    },
-  ]
+  const { data } = useProductList()
 
   return (
     <Row>
@@ -157,20 +29,15 @@ export default function Home() {
             gutter={[50, 30]}
             style={{ margin: '0 auto', maxWidth: '1400px' }}
           >
-            {products.map((product, index) => (
+            {data?.map((product, index) => (
               <Col key={index} xs={24} sm={12} md={12} lg={6} xl={6}>
                 <Card
                   hoverable
                   style={{ width: 300 }}
-                  cover={
-                    <img
-                      alt="example"
-                      src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-                    />
-                  }
+                  cover={<img alt={product.name} src={product.image_url} />}
                 >
                   <div>
-                    <Text strong>{product.brand}</Text>
+                    <Text strong>{product.brand_name}</Text>
                     <br />
                     <Text>{product.name}</Text>
                     <br />
@@ -197,7 +64,7 @@ export default function Home() {
             <Title style={{ color: '#fff' }}>{t('homepage.categories')}</Title>
           </Col>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 px-40">
-            {products.slice(0, 2).map((product, index) => (
+            {data?.slice(0, 2).map((product, index) => (
               <div
                 key={index}
                 className={`${index >= 1 ? 'hidden md:block' : ''}`}

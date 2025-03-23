@@ -17,7 +17,7 @@ export const ProductCard = ({ product }) => {
             className="w-40 h-40 object-cover rounded-lg"
           />
           <div className="flex gap-1 mt-2">
-            {product.extraImages.slice(0, 2).map((img, index) => (
+            {/* {product.extraImages.slice(0, 2).map((img, index) => (
               <img
                 key={index}
                 src={img}
@@ -29,7 +29,7 @@ export const ProductCard = ({ product }) => {
               <span className="text-xs text-gray-500">
                 +{product.extraImages.length - 2}
               </span>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -42,12 +42,7 @@ export const ProductCard = ({ product }) => {
             {product.name}
           </h3>
           <div className="text-red-600 text-lg font-bold">
-            {product.price.toLocaleString()}đ{' '}
-            {product.oldPrice && (
-              <span className="text-gray-400 line-through text-sm">
-                {product.oldPrice.toLocaleString()}đ
-              </span>
-            )}
+            {product.price}đ{' '}
           </div>
           <p className="text-gray-500 text-xs md:text-sm">Hết ưu đãi</p>
           <div className="flex gap-2 mt-2 justify-center md:justify-start flex-wrap">

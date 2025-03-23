@@ -6,7 +6,7 @@ import apiClient from '@store/services/apiClient'
 
 const initialState: AuthState = {
   user: null,
-  token: null,
+  access_token: null,
   isInitialized: false,
   loading: false,
   error: null,
@@ -17,11 +17,11 @@ export const login = createAsyncThunk(
   async (values: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await apiClient.post('/login', values)
-      const { user, token } = res.data.data
+      const { user, access_token } = res.data.data
 
-      localStorage.setItem('access_token', token)
+      localStorage.setItem('access_token', access_token)
 
-      return { user, token: token }
+      return { user, access_token }
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message)
@@ -72,11 +72,9 @@ export const register = createAsyncThunk(
   async (values: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await apiClient.post('/register', values)
-      const { user, token } = res.data.data
+      const { user, access_token } = res.data.data
 
-      localStorage.setItem('access_token', token)
-
-      return { user, token }
+      return { user, access_token }
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message)
@@ -97,7 +95,7 @@ const authSlice = createSlice({
       const storedToken = localStorage.getItem('access_token')
 
       state.user = storedUser ? JSON.parse(storedUser) : null
-      state.token = storedToken || ''
+      state.access_token = storedToken || ''
       state.isInitialized = true
     },
   },
@@ -109,9 +107,12 @@ const authSlice = createSlice({
       })
       .addCase(
         login.fulfilled,
-        (state, action: PayloadAction<{ user: User; token: string }>) => {
+        (
+          state,
+          action: PayloadAction<{ user: User; access_token: string }>,
+        ) => {
           state.user = action.payload.user
-          state.token = action.payload.token
+          state.access_token = action.payload.access_token
           state.isInitialized = true
           state.loading = false
         },
@@ -122,7 +123,7 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null
-        state.token = null
+        state.access_token = null
         state.isInitialized = true
         localStorage.removeItem('user')
         localStorage.removeItem('access_token')
@@ -146,11 +147,15 @@ const authSlice = createSlice({
       })
       .addCase(
         register.fulfilled,
-        (state, action: PayloadAction<{ user: User; token: string }>) => {
+        (
+          state,
+          action: PayloadAction<{ user: User; access_token: string }>,
+        ) => {
           state.user = action.payload.user
-          state.token = action.payload.token
+          state.access_token = action.payload.access_token
           state.isInitialized = true
           state.loading = false
+          localStorage.setItem('access_token', action.payload.access_token)
         },
       )
       .addCase(register.rejected, (state, action) => {
