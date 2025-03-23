@@ -1,13 +1,35 @@
 import { useTranslation } from 'react-i18next'
-import { Button, Col, Row, Typography, Card } from 'antd'
-import { ProductCard } from '../../layout/components/homepage/ProductCard'
+import { Button, Col, Row, Typography } from 'antd'
+import ProductCard from '../../layout/components/common/ProductCard'
 import { useProductList } from '@hooks/useProductQuery'
-const { Title, Text } = Typography
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from '@store/store'
+import { addToCart, fetchCart } from '@store/slices/cartSlice'
+import { toast } from 'react-toastify'
+import ProductCardHorizontal from '@layout/components/homepage/ProductCardHorizontal'
+const { Title } = Typography
 
 export default function Home() {
   const { t } = useTranslation()
   const { data } = useProductList()
+  const dispatch = useDispatch<AppDispatch>()
 
+  const handleAddToCart = (selectedSku) => {
+    if (!selectedSku) {
+      alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
+      return
+    }
+
+    dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
+      .unwrap()
+      .then(() => {
+        toast.success('THem')
+        dispatch(fetchCart())
+      })
+      .catch((error) => {
+        console.error('Lỗi khi thêm vào giỏ hàng:', error)
+      })
+  }
   return (
     <Row>
       <Col className="banner">
@@ -31,19 +53,7 @@ export default function Home() {
           >
             {data?.map((product, index) => (
               <Col key={index} xs={24} sm={12} md={12} lg={6} xl={6}>
-                <Card
-                  hoverable
-                  style={{ width: 300 }}
-                  cover={<img alt={product.name} src={product.image_url} />}
-                >
-                  <div>
-                    <Text strong>{product.brand_name}</Text>
-                    <br />
-                    <Text>{product.name}</Text>
-                    <br />
-                    <Text>{product.price}</Text>
-                  </div>
-                </Card>
+                <ProductCard product={product} onAddToCart={handleAddToCart} />
               </Col>
             ))}
           </Row>
@@ -69,7 +79,10 @@ export default function Home() {
                 key={index}
                 className={`${index >= 1 ? 'hidden md:block' : ''}`}
               >
-                <ProductCard product={product} />
+                <ProductCardHorizontal
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                />
               </div>
             ))}
           </div>

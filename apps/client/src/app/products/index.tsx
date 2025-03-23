@@ -1,25 +1,13 @@
-import { useEffect, useState } from 'react'
-import {
-  Layout,
-  Select,
-  Card,
-  Row,
-  Col,
-  Checkbox,
-  Collapse,
-  Tag,
-  Button,
-  Typography,
-  Image,
-} from 'antd'
+import { useState } from 'react'
+import { Layout, Row, Col, Checkbox, Collapse, Tag, Typography } from 'antd'
 
 import { useProductList } from '@hooks/useProductQuery'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { AppDispatch } from '@store/store'
 import { useDispatch } from 'react-redux'
-import { Sku } from '#types/products'
+import ProductCard from '@layout/components/common/ProductCard'
 
-const { Title, Text } = Typography
+const { Title } = Typography
 
 const { Sider } = Layout
 const { Panel } = Collapse
@@ -48,24 +36,19 @@ const ProductPage = () => {
     )
   }
 
-  const [selectedSkus, setSelectedSkus] = useState<{ [key: string]: any }>({})
-
-  const handleSelectSku = (productId: string, sku: Sku) => {
-    setSelectedSkus((prev) => ({
-      ...prev,
-      [productId]: sku,
-    }))
-  }
-
-  const handleAddToCart = (productId: string) => {
-    const selectedSku = selectedSkus[productId]
-    if (!selectedSku)
-      return alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
+  const handleAddToCart = (selectedSku) => {
+    if (!selectedSku) {
+      alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
+      return
+    }
 
     dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
       .unwrap()
       .then(() => {
         dispatch(fetchCart())
+      })
+      .catch((error) => {
+        console.error('Lỗi khi thêm vào giỏ hàng:', error)
       })
   }
 
@@ -141,7 +124,7 @@ const ProductPage = () => {
   ]
 
   return (
-    <Layout style={{ margin: '0 200px', padding: '10px' }}>
+    <Layout style={{ margin: '0 100px', padding: '10px' }}>
       <Sider
         width={350}
         style={{
@@ -244,72 +227,14 @@ const ProductPage = () => {
           ))}
         </div>
       </Sider>
-      <Layout style={{ margin: '0 200px', padding: '10px' }}>
-        <Row gutter={[30, 30]} justify="center" style={{ padding: '20px' }}>
+      <Layout style={{ padding: '10px' }}>
+        <Row gutter={[30, 30]} justify="center">
           {data?.map((product) => (
-            <Col xs={24} sm={12} md={8} lg={8} key={product.id}>
-              <Card
-                hoverable
-                cover={
-                  <Image
-                    src={product.image_url}
-                    preview={false}
-                    style={{
-                      width: '100%',
-                      borderTopLeftRadius: '10px',
-                      borderTopRightRadius: '10px',
-                    }}
-                  />
-                }
-                style={{
-                  textAlign: 'center',
-                  borderRadius: '10px',
-                  minHeight: '420px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <Title
-                  level={5}
-                  style={{
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {product.name}
-                </Title>
-
-                <Text strong style={{ fontSize: '16px', color: '#D92D20' }}>
-                  {selectedSkus[product.id]?.price || 'Chọn phiên bản'} VND
-                </Text>
-
-                <Select
-                  placeholder="Chọn kích thước & màu sắc"
-                  style={{ width: '100%', marginTop: 10 }}
-                  onChange={(skuId) => {
-                    const selected = product.skus.find((s) => s.id === skuId)
-                    handleSelectSku(product.id, selected)
-                  }}
-                >
-                  {product.skus.map((sku) => (
-                    <Select.Option key={sku.id} value={sku.id}>
-                      {sku.attributes.map((attr) => attr.value).join(' - ')}
-                    </Select.Option>
-                  ))}
-                </Select>
-
-                {/* Nút thêm vào giỏ hàng */}
-                <Button
-                  type="primary"
-                  onClick={() => handleAddToCart(product.id)}
-                  style={{ marginTop: '10px' }}
-                  disabled={!selectedSkus[product.id]}
-                >
-                  Thêm vào giỏ hàng
-                </Button>
-              </Card>
+            <Col xs={20} sm={12} md={8} lg={6} key={product.id}>
+              <ProductCard
+                product={product}
+                onAddToCart={(selectedSku) => handleAddToCart(selectedSku)}
+              />
             </Col>
           ))}
         </Row>
