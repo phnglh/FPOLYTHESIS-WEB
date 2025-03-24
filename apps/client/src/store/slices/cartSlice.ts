@@ -2,6 +2,7 @@ import { ApiErrorResponse } from '#types/api'
 import { Cart, CartItem, CartState } from '#types/cart'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
+import { RootState } from '@store/store'
 
 const initialState: CartState = {
   data: null,
@@ -129,5 +130,7 @@ const cartSlice = createSlice({
       })
   },
 })
+
+export const selectCartItems = (state: RootState) => state.cart.data?.items
 
 export default cartSlice.reducer

@@ -13,13 +13,13 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { fetchCart, removeFromCart } from '@store/slices/cartSlice'
 import { CartItem } from '#types/cart'
-import { useNavigate } from 'react-router'
+import { useCheckout } from '@hooks/useCheckout'
 
 const CartPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { data } = useSelector((state: RootState) => state.cart)
   const items = data?.items || []
-  const navigate = useNavigate()
+  const { handleCheckout } = useCheckout()
   useEffect(() => {
     dispatch(fetchCart())
   }, [dispatch])
@@ -27,19 +27,6 @@ const CartPage = () => {
   const handleRemoveItem = async (id: number) => {
     await dispatch(removeFromCart(id))
     await dispatch(fetchCart())
-  }
-
-  const handleCheckout = () => {
-    const selectedItems = items.map((item) => ({
-      sku_id: item.sku_id,
-      name: item.sku.sku,
-      price: item.unit_price,
-      quantity: item.quantity,
-      image: item.sku.image_url,
-    }))
-
-    localStorage.setItem('checkout_items', JSON.stringify(selectedItems))
-    navigate('/checkout')
   }
 
   const columns = [

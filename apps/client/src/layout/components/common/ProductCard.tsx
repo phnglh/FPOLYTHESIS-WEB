@@ -2,6 +2,7 @@ import { Card, Button, Typography, Image } from 'antd'
 import { ShoppingCartOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Product, Sku } from '#types/products'
+import { useNavigate } from 'react-router'
 
 const { Meta } = Card
 const { Text } = Typography
@@ -12,9 +13,11 @@ type Props = {
 }
 const ProductCard = ({ product, onAddToCart }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
+  const navigate = useNavigate()
   return (
     <Card
       hoverable
+      onClick={() => navigate(`/products/${product.id}`)}
       cover={
         <Image
           src={product.image_url}

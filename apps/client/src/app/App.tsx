@@ -18,6 +18,9 @@ import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
 import { AppDispatch, RootState } from '@store/store'
 import ProtectedRoute from '../routes/ProtectedRoute'
+import ProfilePage from '@app/profile'
+import OrdersPage from '@app/orders'
+import OrderDetailPage from '@app/orders/detail'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -36,17 +39,18 @@ function App() {
 
         <Route path="products">
           <Route index element={<ProductPage />} />
-          <Route path=":slug" element={<ProductDetailPage />} />
           <Route path=":id" element={<ProductDetailPage />} />
         </Route>
         <Route path="carts" element={<CartPage />} />
-        <Route path="gioi-thieu" element={<AboutUsPage />} />
-        <Route path="lien-he" element={<ContactPage />} />
-        <Route path="tin-tuc" element={<NewsPage />} />
-        <Route path="he-thong-cua-hang" element={<StoresPage />} />
-        <Route path="chi-tiet" element={<ProductDetailPage />} />
-        <Route path="yeu-thich" element={<FavoriteProducts />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
+        <Route path="about" element={<AboutUsPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="news" element={<NewsPage />} />
+        <Route path="stores" element={<StoresPage />} />
+        <Route path="yeu-thich" element={<FavoriteProducts />} />
         <Route
           path="login"
           element={

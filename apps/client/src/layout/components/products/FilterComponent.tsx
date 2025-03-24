@@ -138,7 +138,18 @@ const FilterComponent = ({ selectedFilters, setSelectedFilters }) => {
               ) : null,
             )}
           </Space>
-          <Button type="link" danger onClick={() => setSelectedFilters({})}>
+          <Button
+            type="link"
+            danger
+            onClick={() =>
+              setSelectedFilters((prev) =>
+                Object.keys(prev).reduce(
+                  (acc, key) => ({ ...acc, [key]: [] }),
+                  {},
+                ),
+              )
+            }
+          >
             Bỏ hết
           </Button>
         </div>

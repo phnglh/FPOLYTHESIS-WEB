@@ -13,33 +13,49 @@ import {
 } from 'antd'
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
+import apiClient from '@store/services/apiClient'
 
 const { Title, Text } = Typography
 
-interface CartItem {
-  product_id: number
-  name: string
-  price: number
-  quantity: number
-  image: string
-}
-
 const CheckoutPage = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [totalPrice, setTotalPrice] = useState<number>(0)
+  const [cartItems, setCartItems] = useState([])
+  const [totalPrice, setTotalPrice] = useState(0)
+  const [user, setUser] = useState(null)
+  const [form] = Form.useForm()
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await apiClient.get('/users/profile')
+        setUser(response.data)
+        form.setFieldsValue({
+          email: response.data.email,
+          fullName: response.data.name,
+          phone: response.data.phone,
+          address: response.data.address,
+        })
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin người dùng:', error)
+      }
+    }
+    fetchUserProfile()
+
     const storedItems = localStorage.getItem('checkout_items')
     if (storedItems) {
-      const parsedItems: CartItem[] = JSON.parse(storedItems)
+      let parsedItems = JSON.parse(storedItems)
+
+      parsedItems = parsedItems.map((item) => ({
+        ...item,
+        image:
+          typeof item.image === 'string' ? JSON.parse(item.image) : item.image,
+      }))
+
       setCartItems(parsedItems)
-      const total = parsedItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0,
+      setTotalPrice(
+        parsedItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
       )
-      setTotalPrice(total)
     }
-  }, [])
+  }, [form])
 
   return (
     <Row gutter={[16, 16]} justify="center">
@@ -47,40 +63,44 @@ const CheckoutPage = () => {
         <Card variant="borderless" style={{ borderRadius: 8, padding: 16 }}>
           <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Title level={4}>Thông tin nhận hàng</Title>
-            <Button type="link">Đăng nhập</Button>
+            {!user && <Button type="link">Đăng nhập</Button>}
           </Space>
-          <Form layout="vertical">
-            <Form.Item label="Email">
-              <Input placeholder="Email" />
+          <Form layout="vertical" form={form}>
+            <Form.Item label="Email" name="email">
+              <Input placeholder="Email" disabled={!!user} />
             </Form.Item>
-            <Form.Item label="Họ và tên">
+            <Form.Item
+              label="Họ và tên"
+              name="fullName"
+              rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
+            >
               <Input placeholder="Họ và tên" />
             </Form.Item>
-            <Form.Item label="Số điện thoại">
+            <Form.Item
+              label="Số điện thoại"
+              name="phone"
+              rules={[
+                { required: true, message: 'Vui lòng nhập số điện thoại' },
+              ]}
+            >
               <Input placeholder="Số điện thoại" />
             </Form.Item>
-            <Form.Item label="Địa chỉ">
+            <Form.Item
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+            >
               <Input placeholder="Địa chỉ" />
             </Form.Item>
-            <Form.Item label="Ghi chú">
+            <Form.Item label="Ghi chú" name="note">
               <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
             </Form.Item>
           </Form>
         </Card>
 
         <Card
-          title="Vận chuyển"
-          variant="borderless"
-          style={{ borderRadius: 8, marginTop: 16 }}
-        >
-          <Button type="primary" block>
-            Nhập thông tin giao hàng
-          </Button>
-        </Card>
-
-        <Card
           title="Thanh toán"
-          bordered={false}
+          variant="borderless"
           style={{ borderRadius: 8, marginTop: 16 }}
         >
           <Radio.Group>
@@ -95,7 +115,7 @@ const CheckoutPage = () => {
               <ShoppingCartOutlined /> Đơn hàng ({cartItems.length} sản phẩm)
             </Title>
           }
-          bordered={false}
+          variant="borderless"
           style={{ borderRadius: 8, marginTop: 16 }}
         >
           {cartItems.map((item, index) => (
@@ -103,9 +123,14 @@ const CheckoutPage = () => {
               <Col span={6}>
                 <Badge count={item.quantity}>
                   <img
-                    src={item.image}
-                    alt={item.name}
-                    style={{ width: '100%', borderRadius: 8 }}
+                    src={item.image[1]}
+                    alt={item.sku}
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                    }}
                   />
                 </Badge>
               </Col>
@@ -113,19 +138,11 @@ const CheckoutPage = () => {
                 <Text strong>{item.name}</Text>
               </Col>
               <Col span={6} style={{ textAlign: 'right' }}>
-                <Text strong>{item.price.toLocaleString()}₫</Text>
+                <Text strong>{item.price}₫</Text>
               </Col>
             </Row>
           ))}
           <Divider />
-          <Form layout="inline" style={{ marginBottom: 16 }}>
-            <Form.Item>
-              <Input placeholder="Nhập mã giảm giá" />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary">Áp dụng</Button>
-            </Form.Item>
-          </Form>
           <Row justify="space-between">
             <Col>
               <Text>Tạm tính</Text>

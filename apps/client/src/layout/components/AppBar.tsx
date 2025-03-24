@@ -24,13 +24,14 @@ import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
 import { fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
+import { useCheckout } from '@hooks/useCheckout'
 
 const { Header } = Layout
 
 const AppHeader = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const navigator = useNavigate()
+  const { handleCheckout } = useCheckout()
   const { user, access_token, loading } = useSelector(
     (state: RootState) => state.auth,
   )
@@ -125,7 +126,7 @@ const AppHeader = () => {
           fontSize: 16,
           fontWeight: 500,
         }}
-        onClick={() => navigator('/checkout')}
+        onClick={handleCheckout}
       >
         Thanh toán
       </button>
@@ -349,34 +350,34 @@ const AppHeader = () => {
             }}
           >
             <Menu.Item key="home">
-              <a href="/" style={{ color: 'white' }}>
+              <Link to="/" style={{ color: 'white' }}>
                 Trang chủ
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="about">
-              <a href="gioi-thieu" style={{ color: 'white' }}>
+              <Link to="/about" style={{ color: 'white' }}>
                 Giới thiệu
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="products">
-              <a href="products" style={{ color: 'white' }}>
+              <Link to="/products" style={{ color: 'white' }}>
                 Sản phẩm
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="news">
-              <a href="tin-tuc" style={{ color: 'white' }}>
-                Tin tức
-              </a>
+              <Link to="/news" style={{ color: 'white' }}>
+                Sản phẩm
+              </Link>
             </Menu.Item>
             <Menu.Item key="contact">
-              <a href="lien-he" style={{ color: 'white' }}>
+              <Link to="/contact" style={{ color: 'white' }}>
                 Liên hệ
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="stores">
-              <a href="he-thong-cua-hang" style={{ color: 'white' }}>
+              <Link to="/stores" style={{ color: 'white' }}>
                 Hệ thống cửa hàng
-              </a>
+              </Link>
             </Menu.Item>
           </Menu>
         </Col>
