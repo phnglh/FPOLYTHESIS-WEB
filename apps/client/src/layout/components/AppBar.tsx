@@ -24,11 +24,13 @@ import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
 import { fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router'
 
 const { Header } = Layout
 
 const AppHeader = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const navigator = useNavigate()
   const { user, access_token, loading } = useSelector(
     (state: RootState) => state.auth,
   )
@@ -123,7 +125,7 @@ const AppHeader = () => {
           fontSize: 16,
           fontWeight: 500,
         }}
-        onClick={() => (window.location.href = '/thanh-toan')}
+        onClick={() => navigator('/checkout')}
       >
         Thanh toán
       </button>

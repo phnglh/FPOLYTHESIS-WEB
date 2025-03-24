@@ -7,6 +7,7 @@ import { AppDispatch } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
 import ProductCardHorizontal from '@layout/components/homepage/ProductCardHorizontal'
+import { Sku } from '#types/products'
 const { Title } = Typography
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
   const { data } = useProductList()
   const dispatch = useDispatch<AppDispatch>()
 
-  const handleAddToCart = (selectedSku) => {
+  const handleAddToCart = (selectedSku: Sku) => {
     if (!selectedSku) {
       alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
       return
