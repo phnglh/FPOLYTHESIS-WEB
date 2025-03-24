@@ -1,5 +1,13 @@
-import { Table, Button, InputNumber, Card, Space, Typography } from 'antd'
-import { DeleteOutlined } from '@ant-design/icons'
+import {
+  Table,
+  Button,
+  InputNumber,
+  Card,
+  Space,
+  Typography,
+  Image,
+} from 'antd'
+import { DeleteOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
@@ -36,57 +44,55 @@ const CartPage = () => {
 
   const columns = [
     {
-      title: 'Thông tin sản phẩm',
+      title: 'Sản phẩm',
       dataIndex: 'product',
       key: 'product',
-      render: (_: any, record: CartItem) => (
-        <div className="flex items-center gap-3">
-          <img
+      render: (_: string, record: CartItem) => (
+        <Space>
+          <Image
             src={record.sku.image_url[1]}
             alt={record.sku.sku}
-            className="w-12 h-12 object-cover"
+            width={50}
+            height={50}
           />
-          <div>
-            <div className="font-medium">{record.sku.sku}</div>
-            <div className="text-gray-500 text-sm">Mã: {record.id}</div>
-          </div>
-        </div>
+          <Typography.Text strong>{record.sku.sku}</Typography.Text>
+          <Typography.Text type="secondary">Mã: {record.id}</Typography.Text>
+        </Space>
       ),
     },
     {
       title: 'Đơn giá',
       dataIndex: 'unit_price',
       key: 'unit_price',
-      render: (price: number) => `${price.toLocaleString()} đ`,
+      render: (price: number) => (
+        <Typography.Text strong type="danger">
+          {price.toLocaleString()} đ
+        </Typography.Text>
+      ),
     },
     {
       title: 'Số lượng',
       dataIndex: 'quantity',
       key: 'quantity',
-      render: (_: any, record: CartItem) => (
+      render: (_: string, record: CartItem) => (
         <Space>
-          <Button>-</Button>
-          <InputNumber
-            min={1}
-            max={100}
-            defaultValue={record.quantity}
-            className="w-14 text-center"
-          />
-          <Button>+</Button>
+          <Button icon={<MinusOutlined />} size="small" />
+          <InputNumber min={1} max={100} defaultValue={record.quantity} />
+          <Button icon={<PlusOutlined />} size="small" />
         </Space>
       ),
     },
     {
       title: 'Thành tiền',
       key: 'total',
-      render: (_: any, record: CartItem) => (
-        <span className="text-red-600 font-semibold">
+      render: (_: string, record: CartItem) => (
+        <Typography.Text strong type="danger">
           {(record.unit_price * record.quantity).toLocaleString()} đ
-        </span>
+        </Typography.Text>
       ),
     },
     {
-      render: (_: any, record: CartItem) => (
+      render: (_: string, record: CartItem) => (
         <Button
           type="text"
           danger
@@ -98,20 +104,21 @@ const CartPage = () => {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-left text-black text-2xl mb-4">Giỏ hàng của bạn</h2>
-
+    <Card
+      title="🛒 Giỏ hàng của bạn"
+      bordered={false}
+      style={{ maxWidth: '800px', margin: '0 auto' }}
+    >
       <Table
         columns={columns}
         dataSource={items}
         pagination={false}
         rowKey="id"
       />
-
-      <Card className="mt-4 text-right">
-        <Typography.Title level={4} className="flex justify-between">
-          <span>Tổng tiền:</span>
-          <span className="text-red-600">
+      <Card bordered={false} style={{ marginTop: '16px', textAlign: 'right' }}>
+        <Typography.Title level={4}>
+          Tổng tiền:{' '}
+          <Typography.Text type="danger" strong>
             {items
               .reduce(
                 (total, item) => total + item.unit_price * item.quantity,
@@ -119,18 +126,13 @@ const CartPage = () => {
               )
               .toLocaleString()}{' '}
             đ
-          </span>
+          </Typography.Text>
         </Typography.Title>
-
-        <Button
-          type="primary"
-          className="bg-black text-white"
-          onClick={handleCheckout}
-        >
+        <Button type="primary" onClick={handleCheckout}>
           Thanh toán
         </Button>
       </Card>
-    </div>
+    </Card>
   )
 }
 
