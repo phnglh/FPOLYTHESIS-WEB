@@ -1,15 +1,5 @@
 import { useState } from 'react'
-import {
-  Form,
-  Input,
-  Button,
-  Typography,
-  Checkbox,
-  Card,
-  Space,
-  Row,
-  Col,
-} from 'antd'
+import { Form, Input, Button, Typography, Card, Row, Col } from 'antd'
 import {
   FacebookOutlined,
   GoogleOutlined,
@@ -25,7 +15,7 @@ import { Link, Navigate } from 'react-router'
 
 const { Title, Text } = Typography
 
-export default function LoginPage() {
+const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
   const dispatch = useDispatch<AppDispatch>()
@@ -52,22 +42,19 @@ export default function LoginPage() {
   return (
     <Row justify="center" style={{ paddingTop: 80, marginBottom: 50 }}>
       <Col xs={24} sm={16} md={12} lg={8} xl={6}>
-        <Card style={{ width: '100%', padding: 20 }}>
+        <Card style={{ width: '100%', padding: 30 }}>
           <Title level={3} style={{ textAlign: 'center' }}>
-            Đăng Nhập
+            ĐĂNG NHẬP
           </Title>
-          <Text>
+          <Text
+            style={{ display: 'block', textAlign: 'center', marginBottom: 15 }}
+          >
             Nếu bạn chưa có tài khoản,{' '}
-            <Link to="/register">
-              <Text style={{ color: '#3a5c44' }}>Đăng ký ngay!</Text>
+            <Link to="/register" style={{ color: '#3a5c44' }}>
+              đăng ký tại đây
             </Link>
           </Text>
-          <Form
-            name="login"
-            initialValues={{ remember: true }}
-            layout="vertical"
-            onFinish={handleLogin}
-          >
+          <Form name="login" layout="vertical" onFinish={handleLogin}>
             <Form.Item
               name="email"
               rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
@@ -83,43 +70,50 @@ export default function LoginPage() {
                 placeholder="Mật khẩu"
               />
             </Form.Item>
-            <Row justify="space-between" align="middle">
-              <Col>
-                <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox>Nhớ mật khẩu</Checkbox>
-                </Form.Item>
-              </Col>
-              <Col>
-                <Link style={{ color: '#3a5c44' }} to="/forgot-password">
-                  Quên mật khẩu?
-                </Link>
-              </Col>
-            </Row>
             <Form.Item>
-              <Button block type="primary" htmlType="submit" loading={loading}>
+              <Button
+                block
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ backgroundColor: '#3a5c44', borderColor: '#3a5c44' }}
+              >
                 Đăng nhập
               </Button>
             </Form.Item>
           </Form>
-          <Text>Hoặc đăng nhập bằng</Text>
-          <Space
-            style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}
+          <Text
+            style={{ display: 'block', textAlign: 'center', marginBottom: 10 }}
           >
-            <Button
-              icon={<FacebookOutlined />}
-              style={{ backgroundColor: '#1877F2', color: '#fff' }}
-            >
-              Facebook
-            </Button>
-            <Button
-              icon={<GoogleOutlined />}
-              style={{ backgroundColor: '#DB4437', color: '#fff' }}
-            >
-              Google
-            </Button>
-          </Space>
+            Quên mật khẩu
+          </Text>
+          <Text
+            style={{ display: 'block', textAlign: 'center', marginBottom: 10 }}
+          >
+            Hoặc đăng nhập bằng
+          </Text>
+          <Row justify="center" gutter={10}>
+            <Col>
+              <Button
+                icon={<FacebookOutlined />}
+                style={{ backgroundColor: '#1877F2', color: '#fff' }}
+              >
+                Facebook
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                icon={<GoogleOutlined />}
+                style={{ backgroundColor: '#DB4437', color: '#fff' }}
+              >
+                Google
+              </Button>
+            </Col>
+          </Row>
         </Card>
       </Col>
     </Row>
   )
 }
+
+export default LoginPage

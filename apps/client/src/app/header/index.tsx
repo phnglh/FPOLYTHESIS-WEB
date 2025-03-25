@@ -53,11 +53,11 @@ const AppHeader = () => {
   }, [token, user, dispatch])
 
   const cartContent = (
-    <div
+    <Row
       style={{ width: 300, padding: 16, background: 'white', borderRadius: 8 }}
     >
       {cartItems?.map((item) => (
-        <div
+        <Row
           key={item.id}
           style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
         >
@@ -66,16 +66,16 @@ const AppHeader = () => {
             alt={item.product.name}
             style={{ width: 50, height: 50, marginRight: 12 }}
           />
-          <div style={{ flex: 1 }}>
+          <Row style={{ flex: 1 }}>
             <p style={{ margin: 0 }}>{item.product.name}</p>
             <p style={{ margin: '4px 0', color: 'gray' }}>
               So luong: {item.quantity}
             </p>
             <p style={{ margin: 0, color: 'red' }}>{item.unit_price} VND</p>
-          </div>
-        </div>
+          </Row>
+        </Row>
       ))}
-      <div
+      <Row
         style={{
           borderTop: '1px solid #ddd',
           paddingTop: 12,
@@ -83,7 +83,7 @@ const AppHeader = () => {
         }}
       >
         <strong>Tổng tiền: {cartTotal.toLocaleString()} VND</strong>
-      </div>
+      </Row>
       <button
         style={{
           marginTop: 12,
@@ -99,18 +99,18 @@ const AppHeader = () => {
       >
         Thanh toán
       </button>
-    </div>
+    </Row>
   )
 
   const userMenu = (
-    <div
+    <Row
       style={{ width: 280, padding: 16, background: 'white', borderRadius: 8 }}
     >
-      <div style={{ textAlign: 'center', marginBottom: 12 }}>
+      <Row style={{ textAlign: 'center', marginBottom: 12 }}>
         <Avatar size={64} icon={<UserOutlined />} src={user?.avatar} />
         <h3 style={{ margin: '8px 0' }}>{user?.name}</h3>
         <p style={{ color: 'gray' }}>Chưa phân hạng</p>
-      </div>
+      </Row>
       <Menu style={{ border: 'none' }}>
         <Menu.Item key="profile">Ví Của Tôi</Menu.Item>
         <Menu.Item key="orders">Lịch Sử Đặt Hàng</Menu.Item>
@@ -127,7 +127,7 @@ const AppHeader = () => {
           Đăng xuất
         </Menu.Item>
       </Menu>
-    </div>
+    </Row>
   )
 
   return (
@@ -140,14 +140,14 @@ const AppHeader = () => {
       }}
     >
       {/* Logo  */}
-      <div
+      <Row
         style={{
           position: 'absolute',
           top: '0',
           left: '60px',
           zIndex: 10,
           background: 'black',
-          height: '144px',
+          height: '170px',
           display: 'flex',
           alignItems: 'center',
         }}
@@ -155,24 +155,22 @@ const AppHeader = () => {
         <img
           src={Logo}
           alt="Logo"
-          style={{ height: '144px', width: '140px' }}
+          style={{ height: '170px', width: '160px' }}
         />
-      </div>
+      </Row>
 
       <Row
         align="middle"
         style={{
           padding: '10px 24px',
           display: 'flex',
+          marginLeft: '430px',
           justifyContent: 'space-between',
-          marginLeft: '200px',
+          alignItems: 'center',
         }}
       >
         {/* Thanh tìm kiếm */}
-        <Col
-          flex="auto"
-          style={{ padding: '0 16px', maxWidth: '580px', marginLeft: '130px' }}
-        >
+        <Col flex="auto" style={{ maxWidth: '600px' }}>
           <Input
             placeholder="Tìm kiếm sản phẩm"
             prefix={<SearchOutlined />}
@@ -200,7 +198,7 @@ const AppHeader = () => {
                   placement="bottomRight"
                   arrow
                 >
-                  <div
+                  <Row
                     style={{
                       cursor: 'pointer',
                       display: 'flex',
@@ -216,7 +214,7 @@ const AppHeader = () => {
                     <span style={{ color: 'white', fontSize: '14px' }}>
                       Xin chào, <b>{user?.name}</b>
                     </span>
-                  </div>
+                  </Row>
                 </Dropdown>
               ) : (
                 <>
@@ -287,6 +285,7 @@ const AppHeader = () => {
       </Row>
 
       <Row
+        align="middle"
         style={{
           background: 'black',
           height: '65px',
@@ -294,17 +293,9 @@ const AppHeader = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 24px',
-          marginTop: '-5px',
         }}
       >
-        <Col
-          flex="auto"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginLeft: '110px',
-          }}
-        >
+        <Col flex="auto" style={{ display: 'flex', justifyContent: 'center' }}>
           <Menu
             mode="horizontal"
             theme="dark"
@@ -313,10 +304,8 @@ const AppHeader = () => {
               border: 'none',
               display: 'flex',
               justifyContent: 'center',
-              flexWrap: 'nowrap',
               height: '100%',
-              width: '800px',
-              marginRight: '80px',
+              maxWidth: '800px',
             }}
           >
             <Menu.Item key="home">

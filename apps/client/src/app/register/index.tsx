@@ -1,4 +1,4 @@
-import { Form, Input, Button, Card, Typography } from 'antd'
+import { Form, Input, Button, Card, Typography, Row, Col } from 'antd'
 import { FacebookOutlined, GoogleOutlined } from '@ant-design/icons'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '@store/store'
@@ -13,112 +13,102 @@ const Register = () => {
   }
 
   return (
-    <div
+    <Card
       style={{
-        display: 'flex',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        alignItems: 'center',
-        background: '#f8f9fa',
+        width: 400,
+        padding: '20px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        margin: 'auto',
+        marginTop: '50px',
       }}
     >
-      <Card
-        style={{
-          width: 400,
-          padding: '20px',
-          borderRadius: '10px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        }}
+      <Title level={2} style={{ textAlign: 'center' }}>
+        ĐĂNG KÝ
+      </Title>
+      <Text
+        style={{ display: 'block', textAlign: 'center', marginBottom: '10px' }}
       >
-        <Title level={2} style={{ textAlign: 'center' }}>
-          ĐĂNG KÝ
-        </Title>
-        <Text
-          style={{
-            display: 'block',
-            textAlign: 'center',
-            marginBottom: '10px',
-          }}
+        Đã có tài khoản, <a href="/login">đăng nhập tại đây</a>
+      </Text>
+
+      <Form layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          name="lastName"
+          rules={[{ required: true, message: 'Vui lòng nhập họ' }]}
         >
-          Đã có tài khoản, <a href="/login">đăng nhập tại đây</a>
-        </Text>
+          <Input placeholder="Họ" />
+        </Form.Item>
 
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item
-            name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập họ' }]}
-          >
-            <Input placeholder="Ten" />
-          </Form.Item>
-
-          {/* <Form.Item
-            name="lastName"
-            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
-          >
-            <Input placeholder="Tên" />
-          </Form.Item> */}
-
-          <Form.Item
-            name="email"
-            rules={[
-              {
-                required: true,
-                type: 'email',
-                message: 'Vui lòng nhập email hợp lệ',
-              },
-            ]}
-          >
-            <Input placeholder="Email" />
-          </Form.Item>
-
-          {/* <Form.Item
-            name="phone"
-            rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
-          >
-            <Input placeholder="Số điện thoại" />
-          </Form.Item> */}
-
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
-          >
-            <Input.Password placeholder="Mật khẩu" />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              style={{ backgroundColor: '#2D6A4F' }}
-            >
-              Đăng ký
-            </Button>
-          </Form.Item>
-        </Form>
-
-        <Text
-          style={{ display: 'block', textAlign: 'center', margin: '10px 0' }}
+        <Form.Item
+          name="firstName"
+          rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
         >
-          Hoặc đăng nhập bằng
-        </Text>
+          <Input placeholder="Tên" />
+        </Form.Item>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        <Form.Item
+          name="email"
+          rules={[
+            {
+              required: true,
+              type: 'email',
+              message: 'Vui lòng nhập email hợp lệ',
+            },
+          ]}
+        >
+          <Input placeholder="Email" />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+        >
+          <Input placeholder="Số điện thoại" />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+        >
+          <Input.Password placeholder="Mật khẩu" />
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            style={{ backgroundColor: '#2D6A4F' }}
+          >
+            Đăng ký
+          </Button>
+        </Form.Item>
+      </Form>
+
+      <Text style={{ display: 'block', textAlign: 'center', margin: '10px 0' }}>
+        Hoặc đăng nhập bằng
+      </Text>
+
+      <Row gutter={10} justify="center">
+        <Col>
           <Button
             icon={<FacebookOutlined />}
             style={{ backgroundColor: '#1877F2', color: 'white' }}
           >
             Facebook
           </Button>
+        </Col>
+        <Col>
           <Button
             icon={<GoogleOutlined />}
             style={{ backgroundColor: '#DB4437', color: 'white' }}
           >
             Google
           </Button>
-        </div>
-      </Card>
-    </div>
+        </Col>
+      </Row>
+    </Card>
   )
 }
 

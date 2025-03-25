@@ -25,7 +25,7 @@ const ContactPage = () => {
             <Row gutter={[32, 32]} align="middle">
               <Col xs={24} md={12}>
                 <img
-                  src="https://via.placeholder.com/500x500"
+                  src="https://bizweb.dktcdn.net/100/494/200/themes/918976/assets/contact.jpg?1721817765499"
                   alt="Contact"
                   style={{ width: '100%', borderRadius: '8px' }}
                 />
