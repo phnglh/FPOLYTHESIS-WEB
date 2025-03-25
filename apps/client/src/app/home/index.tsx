@@ -69,7 +69,11 @@ export default function Home() {
         <Row
           justify="center"
           align="middle"
-          style={{ marginTop: 50, backgroundColor: '#46694f' }}
+          style={{
+            marginTop: 50,
+            paddingBottom: 100,
+            backgroundColor: '#46694f',
+          }}
         >
           <Col span={24} style={{ textAlign: 'center', margin: '30px 0' }}>
             <Title style={{ color: '#fff' }}>{t('homepage.categories')}</Title>

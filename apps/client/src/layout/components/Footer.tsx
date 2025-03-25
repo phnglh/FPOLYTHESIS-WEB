@@ -4,7 +4,6 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
 } from '@ant-design/icons'
-import { Row, Col } from 'antd'
 
 const Footer = () => {
   return (
@@ -15,15 +14,9 @@ const Footer = () => {
           <h3 className="text-lg font-semibold mb-4">
             Nhận thông tin khuyến mãi
           </h3>
-          <div className="flex">
-            <Input
-              type="email"
-              placeholder="Nhập email của bạn"
-              className="flex-1 px-4 py-2 rounded-l-lg border-none"
-            />
-            <Button className="bg-primary text-white px-6 rounded-r-lg hover:bg-primaryHover">
-              Gửi
-            </Button>
+          <div className="flex gap-4">
+            <Input type="email" size="large" placeholder="Nhập email của bạn" />
+            <Button size="large">Gửi</Button>
           </div>
         </div>
 

@@ -23,8 +23,21 @@ const ProductDetailPage = () => {
 
   if (isLoading || !product) return <p>Đang tải sản phẩm...</p>
 
-  // Convert string image_url to array
-  const getImages = (sku: Sku): string[] => JSON.parse(sku.image_url)
+  const getImages = (sku: Sku): string[] => {
+    if (Array.isArray(sku.image_url)) {
+      return sku.image_url
+    }
+    try {
+      const images = JSON.parse(sku.image_url)
+      return Array.isArray(images) &&
+        images.every((img) => typeof img === 'string')
+        ? images
+        : []
+    } catch (error) {
+      console.error('Invalid image_url format:', error)
+      return []
+    }
+  }
 
   // Handle SKU selection
   const handleAttributeChange = (attrName: string, value: string) => {
@@ -98,7 +111,7 @@ const ProductDetailPage = () => {
               }
               style={{ width: 200 }}
             >
-              {option.values.map((v) => (
+              {option.values.map((v: { value: string }) => (
                 <Select.Option key={v.value} value={v.value}>
                   {v.value}
                 </Select.Option>

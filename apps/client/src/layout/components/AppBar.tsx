@@ -366,7 +366,7 @@ const AppHeader = () => {
             </Menu.Item>
             <Menu.Item key="news">
               <Link to="/news" style={{ color: 'white' }}>
-                Sản phẩm
+                Tin tức
               </Link>
             </Menu.Item>
             <Menu.Item key="contact">

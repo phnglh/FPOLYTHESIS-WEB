@@ -37,13 +37,23 @@ const CartPage = () => {
       render: (_: string, record: CartItem) => (
         <Space>
           <Image
-            src={record.sku.image_url[1]}
+            src={
+              Array.isArray(record?.sku.image_url)
+                ? record?.sku.image_url[0]
+                : JSON.parse(record?.sku.image_url)[0]
+            }
             alt={record.sku.sku}
             width={50}
             height={50}
           />
-          <Typography.Text strong>{record.sku.sku}</Typography.Text>
-          <Typography.Text type="secondary">Mã: {record.id}</Typography.Text>
+          <div>
+            <Typography.Text strong>
+              {record.sku?.product?.name}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              SKU: {record.sku.sku}
+            </Typography.Text>
+          </div>
         </Space>
       ),
     },
@@ -93,7 +103,7 @@ const CartPage = () => {
   return (
     <Card
       title="🛒 Giỏ hàng của bạn"
-      bordered={false}
+      variant="borderless"
       style={{ maxWidth: '800px', margin: '0 auto' }}
     >
       <Table
@@ -102,7 +112,10 @@ const CartPage = () => {
         pagination={false}
         rowKey="id"
       />
-      <Card bordered={false} style={{ marginTop: '16px', textAlign: 'right' }}>
+      <Card
+        variant="borderless"
+        style={{ marginTop: '16px', textAlign: 'right' }}
+      >
         <Typography.Title level={4}>
           Tổng tiền:{' '}
           <Typography.Text type="danger" strong>
