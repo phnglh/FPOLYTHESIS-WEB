@@ -134,9 +134,7 @@ const brandSlice = createSlice({
       .addCase(
         deleteBrand.fulfilled,
         (state, action: PayloadAction<number>) => {
-          state.data = state.data.filter(
-            (category) => category.id !== action.payload,
-          )
+          state.data = state.data.filter((brand) => brand.id !== action.payload)
         },
       )
   },

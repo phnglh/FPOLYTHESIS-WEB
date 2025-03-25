@@ -55,6 +55,25 @@ export const logout = createAsyncThunk(
   },
 )
 
+export const register = createAsyncThunk(
+  'auth/register',
+  async (values: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post('/register', values)
+      const { user, token } = res.data.data
+
+      localStorage.setItem('access_token', token)
+      return { user, token }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message)
+      }
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Đăng ký không thành công!'
+      return rejectWithValue(errMsg)
+    }
+  },
+)
 const authSlice = createSlice({
   name: 'auth',
   initialState,

@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router'
-import Layout from '../layout/Layout'
+import AppLayout from '../layout/Layout'
 import Home from './home'
 import Login from './login'
 import Register from './register'
@@ -7,7 +7,7 @@ import AboutUsPage from './about'
 import ContactPage from './contact'
 import NewsPage from './news'
 import StoresPage from './stores'
-import CartPage from './carts'
+import CartPage from './cart'
 import ProductPage from './products'
 import FavoriteProducts from './wishlist'
 import CheckoutPage from './checkout'
@@ -17,6 +17,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
 import { AppDispatch, RootState } from '@store/store'
+import ProtectedRoute from '../routes/ProtectedRoute'
+import ProfilePage from '@app/profile'
+import OrdersPage from '@app/orders'
+import OrderDetailPage from '@app/orders/detail'
+import OrderSuccess from '@app/orders/detail/order-success.tsx'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -30,23 +35,40 @@ function App() {
   if (!isInitialized) return <NotFound />
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route path="/" element={<AppLayout />}>
         <Route index element={<Home />} />
 
         <Route path="products">
           <Route index element={<ProductPage />} />
-          <Route path=":slug" element={<ProductDetailPage />} />
           <Route path=":id" element={<ProductDetailPage />} />
         </Route>
         <Route path="carts" element={<CartPage />} />
-        <Route path="gioi-thieu" element={<AboutUsPage />} />
-        <Route path="lien-he" element={<ContactPage />} />
-        <Route path="tin-tuc" element={<NewsPage />} />
-        <Route path="he-thong-cua-hang" element={<StoresPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
+        <Route path="about" element={<AboutUsPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="news" element={<NewsPage />} />
+        <Route path="stores" element={<StoresPage />} />
         <Route path="yeu-thich" element={<FavoriteProducts />} />
-        <Route path="thanh-toan" element={<CheckoutPage />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route
+          path="login"
+          element={
+            <ProtectedRoute>
+              <Login />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="register"
+          element={
+            <ProtectedRoute>
+              <Register />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -32,6 +32,7 @@
       "@styles/*": ["src/styles/*"],
       "#types/*": ["src/types/*"],
       "@config/*": ["src/config/*"],
+      "@routes/*": ["src/routes/*"]
     }
   },
   "include": ["src"]

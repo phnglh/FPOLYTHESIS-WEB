@@ -1,69 +1,17 @@
-// import { Outlet } from 'react-router'
-// import { Layout } from 'antd'
-
-// const { Header, Footer, Content } = Layout
-
-// const headerStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   color: 'black',
-//   height: 64,
-//   paddingInline: 48,
-//   lineHeight: '64px',
-//   backgroundColor: 'white',
-// }
-
-// const contentStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   minHeight: 120,
-//   lineHeight: '120px',
-//   color: '#fff',
-//   // backgroundColor: '#0958d9',
-//   margin: '0 30px',
-// }
-
-// const footerStyle: React.CSSProperties = {
-//   textAlign: 'center',
-//   color: 'black',
-//   backgroundColor: 'white',
-// }
-// const layoutStyle = {
-//   borderRadius: 8,
-//   overflow: 'hidden',
-//   minHeight: '100vh',
-//   backgroundColor: 'white',
-// }
-// export default function AppLayout() {
-//   return (
-//     <Layout style={layoutStyle}>
-//       <Header style={headerStyle}>Header </Header>
-//       <Content style={contentStyle}>
-//         <Outlet />
-//       </Content>
-//       <Footer style={footerStyle}>
-//         Ant Design ©{new Date().getFullYear()} Created by Ant UED
-//       </Footer>
-//     </Layout>
-//   )
-// }
-
-import { Outlet } from 'react-router'
 import { Layout } from 'antd'
-import AppHeader from '../app/header'
-import Footer from '../app/footer'
+import { Outlet } from 'react-router'
+// import { useTranslation } from 'react-i18next'
+import AppHeader from '@layout/components/AppBar'
+import Footer from '@layout/components/Footer'
 
 const { Content } = Layout
 
-const layoutStyle: React.CSSProperties = {
-  width: '100%',
-  overflowX: 'hidden',
-}
-
-const contentStyle: React.CSSProperties = {}
 export default function AppLayout() {
+  // const { t } = useTranslation()
   return (
-    <Layout style={layoutStyle}>
+    <Layout className="layout">
       <AppHeader />
-      <Content style={contentStyle}>
+      <Content>
         <Outlet />
       </Content>
       <Footer />

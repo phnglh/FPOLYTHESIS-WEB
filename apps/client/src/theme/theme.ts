@@ -7,6 +7,8 @@ const primaryColorBg = '#f0f5f2'
 const primaryColorBgHover = '#d9e4dc'
 const borderRadiusBase = 8
 
+const bgColor = '#ffffff'
+
 const theme: ThemeConfig = {
   token: {
     colorPrimary: primaryColor,
@@ -57,7 +59,9 @@ const theme: ThemeConfig = {
     Card: {
       borderRadius: 12,
     },
-    Layout: {},
+    Layout: {
+      headerBg: bgColor,
+    },
   },
 }
 

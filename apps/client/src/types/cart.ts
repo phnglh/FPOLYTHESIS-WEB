@@ -1,5 +1,5 @@
 import { BaseState } from '#types/api'
-import { Product } from '#types/products'
+import { Sku } from '#types/products'
 
 export interface Cart {
   id: number
@@ -9,11 +9,11 @@ export interface Cart {
 
 export interface CartItem {
   id: number
-  product_id: number
   cart_id: number
+  sku_id: number
   quantity: number
   unit_price: number
-  product: Product
+  sku: Sku
 }
 
 export type CartState = BaseState<Cart | null, Cart>

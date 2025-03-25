@@ -16,6 +16,7 @@ export default defineConfig({
       '@styles': path.resolve(__dirname, './src/styles'),
       '#types': path.resolve(__dirname, './src/types'),
       '@config': path.resolve(__dirname, './src/config'),
+      '@routes': path.resolve(__dirname, './src/routes'),
     },
   },
   plugins: [react(), tailwindcss(), vercel()],

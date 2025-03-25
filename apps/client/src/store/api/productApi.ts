@@ -17,6 +17,7 @@ export const productApi = createApi({
     getProducts: builder.query<Product[], void>({
       query: () => '/products',
       transformResponse: (response: ApiResponse<Product[]>) => {
+        console.log(response.data)
         return response.data
       },
       transformErrorResponse: (response) => {

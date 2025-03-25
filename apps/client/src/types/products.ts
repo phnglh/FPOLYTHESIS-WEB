@@ -11,13 +11,14 @@ export interface Product {
   brand_name?: string
   category_id?: number
   category_name?: string
-  skus?: Sku[]
+  skus: Sku[]
 }
 
 export interface Sku {
   id: number
   product_id: number
   sku: string
+  image_url: string[] | string
   price: number
   stock: number
   attributes: Attribute[]

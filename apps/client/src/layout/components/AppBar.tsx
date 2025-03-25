@@ -9,6 +9,7 @@ import {
   Avatar,
   Popover,
   Badge,
+  Spin,
 } from 'antd'
 import {
   SearchOutlined,
@@ -17,29 +18,32 @@ import {
   ShoppingCartOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
-import { useEffect } from 'react'
-import Logo from '../images/logo.flames2.png'
+import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
 import { fetchCart } from '@store/slices/cartSlice'
+import { toast } from 'react-toastify'
+import { Link } from 'react-router'
+import { useCheckout } from '@hooks/useCheckout'
 
 const { Header } = Layout
 
 const AppHeader = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { user, token } = useSelector((state: RootState) => state.auth)
+  const { handleCheckout } = useCheckout()
+  const { user, access_token, loading } = useSelector(
+    (state: RootState) => state.auth,
+  )
 
   const cart = useSelector((state: RootState) => state.cart)
+  const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
 
   useEffect(() => {
-    if (token && user) {
+    if (access_token && user) {
       dispatch(fetchCart())
     }
-  }, [token, user, dispatch])
-
-  console.log('cart', cart)
-  const cartItems = cart.data?.items || []
+  }, [access_token, user, dispatch])
 
   const cartTotal = cartItems.reduce((total, item) => {
     const price = item.unit_price
@@ -47,70 +51,97 @@ const AppHeader = () => {
   }, 0)
 
   useEffect(() => {
-    if (token && !user) {
+    if (access_token && !user) {
       dispatch(getUser())
     }
-  }, [token, user, dispatch])
+  }, [access_token, user, dispatch])
 
+  const handleLogout = () => {
+    dispatch(logout())
+      .unwrap()
+      .then(() => {
+        toast.success('Đăng xuất thành công!')
+      })
+      .catch((err) => {
+        toast.error(err || 'Đăng xuất thất bại!')
+      })
+  }
   const cartContent = (
-    <Row
-      style={{ width: 300, padding: 16, background: 'white', borderRadius: 8 }}
+    <div
+      style={{
+        width: 300,
+        padding: 16,
+        background: 'white',
+        borderRadius: 8,
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      }}
     >
       {cartItems?.map((item) => (
-        <Row
+        <div
           key={item.id}
           style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
         >
-          <img
-            src={item.product.image_url}
-            alt={item.product.name}
-            style={{ width: 50, height: 50, marginRight: 12 }}
-          />
-          <Row style={{ flex: 1 }}>
-            <p style={{ margin: 0 }}>{item.product.name}</p>
+          {item.sku.image_url.length > 0 && (
+            <img
+              src={item.sku.image_url[0]}
+              alt={item.sku.sku}
+              style={{
+                width: 50,
+                height: 50,
+                marginRight: 12,
+                objectFit: 'cover',
+                borderRadius: 4,
+              }}
+            />
+          )}
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontWeight: 500 }}>{item.sku.sku}</p>
             <p style={{ margin: '4px 0', color: 'gray' }}>
-              So luong: {item.quantity}
+              Số lượng: {item.quantity}
             </p>
             <p style={{ margin: 0, color: 'red' }}>{item.unit_price} VND</p>
-          </Row>
-        </Row>
+          </div>
+        </div>
       ))}
-      <Row
+      <div
         style={{
           borderTop: '1px solid #ddd',
           paddingTop: 12,
           textAlign: 'right',
+          fontWeight: 'bold',
         }}
       >
-        <strong>Tổng tiền: {cartTotal.toLocaleString()} VND</strong>
-      </Row>
+        Tổng tiền: {cartTotal.toLocaleString()} VND
+      </div>
       <button
         style={{
           marginTop: 12,
           width: '100%',
-          padding: 8,
+          padding: 10,
           background: 'green',
           color: 'white',
           border: 'none',
           borderRadius: 4,
           cursor: 'pointer',
+          fontSize: 16,
+          fontWeight: 500,
         }}
-        onClick={() => (window.location.href = '/thanh-toan')}
+        onClick={handleCheckout}
       >
         Thanh toán
       </button>
-    </Row>
+    </div>
   )
 
   const userMenu = (
-    <Row
+    <div
       style={{ width: 280, padding: 16, background: 'white', borderRadius: 8 }}
     >
-      <Row style={{ textAlign: 'center', marginBottom: 12 }}>
+      <div style={{ textAlign: 'center', marginBottom: 12 }}>
         <Avatar size={64} icon={<UserOutlined />} src={user?.avatar} />
         <h3 style={{ margin: '8px 0' }}>{user?.name}</h3>
         <p style={{ color: 'gray' }}>Chưa phân hạng</p>
-      </Row>
+      </div>
       <Menu style={{ border: 'none' }}>
         <Menu.Item key="profile">Ví Của Tôi</Menu.Item>
         <Menu.Item key="orders">Lịch Sử Đặt Hàng</Menu.Item>
@@ -119,15 +150,14 @@ const AppHeader = () => {
         <Menu.Divider />
         <Menu.Item
           key="logout"
-          onClick={() => {
-            dispatch(logout())
-          }}
-          style={{ color: 'red' }}
+          onClick={loading ? undefined : handleLogout}
+          style={{ color: 'red', cursor: loading ? 'not-allowed' : 'pointer' }}
+          disabled={loading}
         >
-          Đăng xuất
+          {loading ? <Spin size="small" /> : 'Đăng xuất'}
         </Menu.Item>
       </Menu>
-    </Row>
+    </div>
   )
 
   return (
@@ -137,40 +167,42 @@ const AppHeader = () => {
         padding: '0',
         height: 'auto',
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* Logo  */}
-      <Row
+      <Space
         style={{
           position: 'absolute',
           top: '0',
           left: '60px',
           zIndex: 10,
           background: 'black',
-          height: '170px',
+          height: '144px',
           display: 'flex',
           alignItems: 'center',
         }}
       >
         <img
-          src={Logo}
+          src="/assets/images/logo/logo.png"
           alt="Logo"
-          style={{ height: '170px', width: '160px' }}
+          style={{ height: '144px', width: '140px' }}
         />
-      </Row>
+      </Space>
 
       <Row
         align="middle"
         style={{
           padding: '10px 24px',
           display: 'flex',
-          marginLeft: '430px',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          justifyContent: 'flex-end',
+          marginLeft: '200px',
         }}
       >
-        {/* Thanh tìm kiếm */}
-        <Col flex="auto" style={{ maxWidth: '600px' }}>
+        <Col
+          flex="auto"
+          style={{ padding: '0 16px', maxWidth: '580px', marginLeft: '130px' }}
+        >
           <Input
             placeholder="Tìm kiếm sản phẩm"
             prefix={<SearchOutlined />}
@@ -178,7 +210,6 @@ const AppHeader = () => {
           />
         </Col>
 
-        {/* chức năng */}
         <Col style={{ marginLeft: '100px' }}>
           <Space size="middle">
             <a href="yeu-thich" style={{ color: 'white', fontSize: '14px' }}>
@@ -198,7 +229,7 @@ const AppHeader = () => {
                   placement="bottomRight"
                   arrow
                 >
-                  <Row
+                  <div
                     style={{
                       cursor: 'pointer',
                       display: 'flex',
@@ -214,7 +245,7 @@ const AppHeader = () => {
                     <span style={{ color: 'white', fontSize: '14px' }}>
                       Xin chào, <b>{user?.name}</b>
                     </span>
-                  </Row>
+                  </div>
                 </Dropdown>
               ) : (
                 <>
@@ -285,17 +316,26 @@ const AppHeader = () => {
       </Row>
 
       <Row
-        align="middle"
         style={{
           background: 'black',
           height: '65px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           padding: '0 24px',
+          marginTop: '-5px',
         }}
       >
-        <Col flex="auto" style={{ display: 'flex', justifyContent: 'center' }}>
+        <Col
+          flex="auto"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexGrow: 1,
+            maxWidth: '800px',
+            marginLeft: '50px',
+          }}
+        >
           <Menu
             mode="horizontal"
             theme="dark"
@@ -304,52 +344,52 @@ const AppHeader = () => {
               border: 'none',
               display: 'flex',
               justifyContent: 'center',
+              flexWrap: 'nowrap',
               height: '100%',
-              maxWidth: '800px',
+              width: '100%',
             }}
           >
             <Menu.Item key="home">
-              <a href="/" style={{ color: 'white' }}>
+              <Link to="/" style={{ color: 'white' }}>
                 Trang chủ
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="about">
-              <a href="gioi-thieu" style={{ color: 'white' }}>
+              <Link to="/about" style={{ color: 'white' }}>
                 Giới thiệu
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="products">
-              <a href="products" style={{ color: 'white' }}>
+              <Link to="/products" style={{ color: 'white' }}>
                 Sản phẩm
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="news">
-              <a href="tin-tuc" style={{ color: 'white' }}>
+              <Link to="/news" style={{ color: 'white' }}>
                 Tin tức
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="contact">
-              <a href="lien-he" style={{ color: 'white' }}>
+              <Link to="/contact" style={{ color: 'white' }}>
                 Liên hệ
-              </a>
+              </Link>
             </Menu.Item>
             <Menu.Item key="stores">
-              <a href="he-thong-cua-hang" style={{ color: 'white' }}>
+              <Link to="/stores" style={{ color: 'white' }}>
                 Hệ thống cửa hàng
-              </a>
+              </Link>
             </Menu.Item>
           </Menu>
         </Col>
 
-        {/* Hotline  */}
         <Col
           style={{
             display: 'flex',
             alignItems: 'center',
-            marginRight: '100px',
+            paddingRight: '24px',
           }}
         >
-          <span
+          <Space
             style={{
               color: 'rgb(50, 149, 70)',
               fontWeight: 'bold',
@@ -357,7 +397,7 @@ const AppHeader = () => {
             }}
           >
             <PhoneOutlined style={{ marginRight: '5px' }} /> Hotline: 1800.6750
-          </span>
+          </Space>
         </Col>
       </Row>
     </Header>
