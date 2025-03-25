@@ -21,6 +21,7 @@ import ProtectedRoute from '../routes/ProtectedRoute'
 import ProfilePage from '@app/profile'
 import OrdersPage from '@app/orders'
 import OrderDetailPage from '@app/orders/detail'
+import OrderSuccess from '@app/orders/detail/order-success.tsx'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -43,6 +44,7 @@ function App() {
         </Route>
         <Route path="carts" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetailPage />} />

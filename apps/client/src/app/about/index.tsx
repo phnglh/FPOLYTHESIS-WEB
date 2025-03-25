@@ -5,7 +5,7 @@ const { Content } = Layout
 
 const AboutUsPage = () => {
   return (
-    <Layout style={{ minHeight: '100vh', background: '#ffffff' }}>
+    <Layout style={{ minHeight: '100vh' }}>
       <Content
         style={{ padding: '50px', display: 'flex', justifyContent: 'center' }}
       >

@@ -83,7 +83,8 @@ const CheckoutPage = () => {
       })
 
       toast.success('Thanh toán thành công!')
-      localStorage.removeItem('checkout_items') // Xóa giỏ hàng sau khi checkout
+      localStorage.removeItem('checkout_items')
+      localStorage.setItem('orderSuccess', 'true')
       navigate('/order-success')
     } catch (error) {
       console.error(error)
