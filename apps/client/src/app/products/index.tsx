@@ -101,7 +101,7 @@ const ProductPage = () => {
           {/* {data?.map((product) => ( */}
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
-              <Col xs={20} sm={12} md={8} lg={6} key={product.id}>
+              <Col xs={20} sm={12} md={8} lg={8} key={product.id}>
                 <ProductCard
                   product={product}
                   onAddToCart={(selectedSku) => handleAddToCart(selectedSku)}

@@ -26,10 +26,12 @@ import { fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router'
 import { useCheckout } from '@hooks/useCheckout'
+import { useTranslation } from 'react-i18next'
 
 const { Header } = Layout
 
 const AppHeader = () => {
+  const { t } = useTranslation()
   const dispatch = useDispatch<AppDispatch>()
   const { handleCheckout } = useCheckout()
   const { user, access_token, loading } = useSelector(
@@ -95,7 +97,9 @@ const AppHeader = () => {
             />
           )}
           <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontWeight: 500 }}>{item.sku.sku}</p>
+            <p style={{ margin: 0, fontWeight: 500 }}>
+              {item.product_name} - {item.sku.sku}
+            </p>
             <p style={{ margin: '4px 0', color: 'gray' }}>
               Số lượng: {item.quantity}
             </p>
@@ -133,273 +137,101 @@ const AppHeader = () => {
     </div>
   )
 
-  const userMenu = (
-    <div
-      style={{ width: 280, padding: 16, background: 'white', borderRadius: 8 }}
-    >
-      <div style={{ textAlign: 'center', marginBottom: 12 }}>
-        <Avatar size={64} icon={<UserOutlined />} src={user?.avatar} />
-        <h3 style={{ margin: '8px 0' }}>{user?.name}</h3>
-        <p style={{ color: 'gray' }}>Chưa phân hạng</p>
-      </div>
-      <Menu style={{ border: 'none' }}>
-        <Menu.Item key="profile">Ví Của Tôi</Menu.Item>
-        <Menu.Item key="orders">Lịch Sử Đặt Hàng</Menu.Item>
-        <Menu.Item key="favorites">Yêu Thích</Menu.Item>
-        <Menu.Item key="gift-codes">Mã Quà Tặng</Menu.Item>
-        <Menu.Divider />
-        <Menu.Item
-          key="logout"
-          onClick={loading ? undefined : handleLogout}
-          style={{ color: 'red', cursor: loading ? 'not-allowed' : 'pointer' }}
-          disabled={loading}
-        >
-          {loading ? <Spin size="small" /> : 'Đăng xuất'}
-        </Menu.Item>
-      </Menu>
+  const authMenu = (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Link to="/login">Đăng nhập</Link>
+      <Link to="/register" style={{ marginTop: 4 }}>
+        Đăng ký
+      </Link>
     </div>
+  )
+  const userMenu = (
+    <Menu>
+      <Menu.Item key="profile">Hồ sơ</Menu.Item>
+      <Menu.Item key="logout" onClick={handleLogout}>
+        Đăng xuất
+      </Menu.Item>
+    </Menu>
   )
 
   return (
     <Header
       style={{
-        background: 'rgb(70, 105, 79)',
-        padding: '0',
-        height: 'auto',
-        position: 'relative',
         display: 'flex',
-        flexDirection: 'column',
+        alignItems: 'center',
+        maxWidth: '1200px',
+        width: '100%',
+        margin: '0 auto',
+        padding: '0 20px',
       }}
     >
-      <Space
-        style={{
-          position: 'absolute',
-          top: '0',
-          left: '60px',
-          zIndex: 10,
-          background: 'black',
-          height: '144px',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
+      <Link to="/">
         <img
           src="/assets/images/logo/logo.png"
-          alt="Logo"
-          style={{ height: '144px', width: '140px' }}
+          alt="logo"
+          style={{ height: 60 }}
         />
-      </Space>
+      </Link>
 
-      <Row
-        align="middle"
-        style={{
-          padding: '10px 24px',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          marginLeft: '200px',
-        }}
+      <Menu
+        mode="horizontal"
+        defaultSelectedKeys={['1']}
+        style={{ flexGrow: 1, minWidth: 0, justifyContent: 'center' }}
       >
-        <Col
-          flex="auto"
-          style={{ padding: '0 16px', maxWidth: '580px', marginLeft: '130px' }}
-        >
-          <Input
-            placeholder="Tìm kiếm sản phẩm"
-            prefix={<SearchOutlined />}
-            style={{ width: '100%', padding: '6px 12px', borderRadius: '8px' }}
-          />
-        </Col>
-
-        <Col style={{ marginLeft: '100px' }}>
-          <Space size="middle">
-            <a href="yeu-thich" style={{ color: 'white', fontSize: '14px' }}>
-              <HeartOutlined /> <span>Yêu thích (0)</span>
-            </a>
-            <Col
+        <Menu.Item key="1">
+          <Link to="/">{t('menu.homepage')}</Link>
+        </Menu.Item>
+        <Menu.Item key="2">
+          <Link to="/about">{t('menu.about')}</Link>
+        </Menu.Item>
+        <Menu.Item key="3">
+          <Link to="/products">{t('menu.products')}</Link>
+        </Menu.Item>
+        <Menu.Item key="4">
+          <Link to="/contact">{t('menu.contact')}</Link>
+        </Menu.Item>
+        <Menu.Item key="5">
+          <Link to="/stores">{t('menu.stores')}</Link>
+        </Menu.Item>
+      </Menu>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <HeartOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+        <Popover content={cartContent} title="Giỏ hàng" trigger="hover">
+          <Badge count={cartItems.length}>
+            <ShoppingCartOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+          </Badge>
+        </Popover>
+        {user ? (
+          <Dropdown
+            overlay={userMenu}
+            trigger={['click']}
+            placement="bottomRight"
+            arrow
+          >
+            <div
               style={{
-                marginLeft: '10px',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
               }}
             >
-              {user ? (
-                <Dropdown
-                  overlay={userMenu}
-                  trigger={['click']}
-                  placement="bottomRight"
-                  arrow
-                >
-                  <div
-                    style={{
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Avatar
-                      size={24}
-                      icon={<UserOutlined />}
-                      src={user?.avatar}
-                      style={{ marginRight: '6px' }}
-                    />
-                    <span style={{ color: 'white', fontSize: '14px' }}>
-                      Xin chào, <b>{user?.name}</b>
-                    </span>
-                  </div>
-                </Dropdown>
-              ) : (
-                <>
-                  <UserOutlined
-                    style={{
-                      color: 'white',
-                      fontSize: '16px',
-                      marginRight: '6px',
-                    }}
-                  />
-                  <a
-                    href="register"
-                    style={{
-                      color: 'white',
-                      fontSize: '14px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Đăng ký
-                  </a>
-                  <span style={{ color: 'white', margin: '0 8px' }}>|</span>
-                  <a
-                    href="login"
-                    style={{
-                      color: 'white',
-                      fontSize: '14px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Đăng nhập
-                  </a>
-                </>
-              )}
-            </Col>
-
-            <Row
-              align="middle"
-              style={{
-                padding: '10px 24px',
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Col style={{ marginRight: '100px' }}>
-                <Space size="middle">
-                  <Popover content={cartContent} trigger="hover">
-                    <Badge count={cartItems.length}>
-                      <a
-                        href="carts"
-                        style={{ color: 'white', fontSize: '14px' }}
-                      >
-                        <ShoppingCartOutlined
-                          style={{
-                            color: 'white',
-                            fontSize: '20px',
-                            cursor: 'pointer',
-                          }}
-                        />{' '}
-                        <span>Giỏ hàng</span>
-                      </a>
-                    </Badge>
-                  </Popover>
-                </Space>
-              </Col>
-            </Row>
-          </Space>
-        </Col>
-      </Row>
-
-      <Row
-        style={{
-          background: 'black',
-          height: '65px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 24px',
-          marginTop: '-5px',
-        }}
-      >
-        <Col
-          flex="auto"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexGrow: 1,
-            maxWidth: '800px',
-            marginLeft: '50px',
-          }}
-        >
-          <Menu
-            mode="horizontal"
-            theme="dark"
-            style={{
-              background: 'black',
-              border: 'none',
-              display: 'flex',
-              justifyContent: 'center',
-              flexWrap: 'nowrap',
-              height: '100%',
-              width: '100%',
-            }}
-          >
-            <Menu.Item key="home">
-              <Link to="/" style={{ color: 'white' }}>
-                Trang chủ
-              </Link>
-            </Menu.Item>
-            <Menu.Item key="about">
-              <Link to="/about" style={{ color: 'white' }}>
-                Giới thiệu
-              </Link>
-            </Menu.Item>
-            <Menu.Item key="products">
-              <Link to="/products" style={{ color: 'white' }}>
-                Sản phẩm
-              </Link>
-            </Menu.Item>
-            <Menu.Item key="news">
-              <Link to="/news" style={{ color: 'white' }}>
-                Tin tức
-              </Link>
-            </Menu.Item>
-            <Menu.Item key="contact">
-              <Link to="/contact" style={{ color: 'white' }}>
-                Liên hệ
-              </Link>
-            </Menu.Item>
-            <Menu.Item key="stores">
-              <Link to="/stores" style={{ color: 'white' }}>
-                Hệ thống cửa hàng
-              </Link>
-            </Menu.Item>
-          </Menu>
-        </Col>
-
-        <Col
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            paddingRight: '24px',
-          }}
-        >
-          <Space
-            style={{
-              color: 'rgb(50, 149, 70)',
-              fontWeight: 'bold',
-              fontSize: '16px',
-            }}
-          >
-            <PhoneOutlined style={{ marginRight: '5px' }} /> Hotline: 1800.6750
-          </Space>
-        </Col>
-      </Row>
+              <Avatar
+                size={24}
+                icon={<UserOutlined />}
+                src={user?.avatar}
+                style={{ marginRight: '6px' }}
+              />
+              <span style={{ fontSize: '14px' }}>
+                Xin chào, <b>{user?.name}</b>
+              </span>
+            </div>
+          </Dropdown>
+        ) : (
+          <Popover content={authMenu} title="Tài khoản" trigger="click">
+            <UserOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+          </Popover>
+        )}
+      </div>
     </Header>
   )
 }
