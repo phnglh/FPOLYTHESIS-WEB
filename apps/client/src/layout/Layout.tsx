@@ -10,7 +10,6 @@ export default function AppLayout() {
   return (
     <Layout className="layout">
       <AppHeader />
-
       <Content>
         <Outlet />
       </Content>

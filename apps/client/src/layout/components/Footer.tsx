@@ -9,7 +9,6 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-12 mt-10">
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Đăng ký nhận khuyến mãi */}
         <div>
           <h3 className="text-lg font-semibold mb-4">
             Nhận thông tin khuyến mãi
@@ -20,7 +19,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Thông tin cửa hàng */}
         <div className="text-center">
           <img
             src="/assets/images/logo/logo.png"
@@ -42,7 +40,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Liên kết nhanh */}
         <div className="grid grid-cols-3 gap-6 text-sm">
           <div>
             <h3 className="font-semibold mb-2">Về chúng tôi</h3>

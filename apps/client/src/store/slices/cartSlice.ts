@@ -81,6 +81,31 @@ export const removeFromCart = createAsyncThunk(
   },
 )
 
+export const updateCartItem = createAsyncThunk(
+  'cart/updateCartItem',
+  async ({ id, quantity }: { id: number; quantity: number }) => {
+    await apiClient.put(`/cart/${id}`, { quantity })
+    return { id, quantity }
+  },
+)
+
+export const incrementCartItem = createAsyncThunk(
+  'cart/incrementCartItem',
+  async (id: number) => {
+    await apiClient.patch(`/cart/increment/${id}`)
+    return id
+  },
+)
+
+// Giảm số lượng
+export const decrementCartItem = createAsyncThunk(
+  'cart/decrementCartItem',
+  async (id: number) => {
+    await apiClient.patch(`/cart/decrement/${id}`)
+    return id
+  },
+)
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
@@ -125,9 +150,26 @@ const cartSlice = createSlice({
           }
         },
       )
-
       .addCase(removeFromCart.rejected, (state, action) => {
         state.error = action.payload as string
+      })
+      .addCase(updateCartItem.fulfilled, (state, action) => {
+        if (state.data) {
+          const item = state.data.items.find((i) => i.id === action.payload.id)
+          if (item) item.quantity = action.payload.quantity
+        }
+      })
+      .addCase(incrementCartItem.fulfilled, (state, action) => {
+        if (state.data) {
+          const item = state.data.items.find((i) => i.id === action.payload)
+          if (item) item.quantity += 1
+        }
+      })
+      .addCase(decrementCartItem.fulfilled, (state, action) => {
+        if (state.data) {
+          const item = state.data.items.find((i) => i.id === action.payload)
+          if (item && item.quantity > 1) item.quantity -= 1
+        }
       })
   },
 })

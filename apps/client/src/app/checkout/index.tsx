@@ -82,10 +82,23 @@ const CheckoutPage = () => {
         },
       })
 
-      toast.success('Thanh toán thành công!')
-      localStorage.removeItem('checkout_items')
-      localStorage.setItem('orderSuccess', 'true')
-      navigate('/order-success')
+      // toast.success('Thanh toán thành công!')
+      // localStorage.removeItem('checkout_items')
+      // localStorage.setItem('orderSuccess', 'true')
+      // navigate('/order-success')
+
+      if (values.payment_method === 'vnpay') {
+        const paymentUrl = response.data?.data?.payment_url // Lấy đúng URL
+        if (paymentUrl) {
+          window.location.href = paymentUrl // Chuyển hướng đến VNPay
+        } else {
+          toast.error('Không lấy được URL thanh toán VNPay!')
+        }
+      } else {
+        toast.success('Đặt hàng thành công!')
+        localStorage.removeItem('checkout_items')
+        navigate('/order-success')
+      }
     } catch (error) {
       console.error(error)
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra!')

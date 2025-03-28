@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Image, Select, Button, InputNumber } from 'antd'
+import { Image, Select, Button, InputNumber, message } from 'antd'
 import { useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
@@ -14,10 +14,19 @@ const ProductDetailPage = () => {
 
   const [selectedSku, setSelectedSku] = useState<Sku | null>(null)
   const [quantity, setQuantity] = useState<number>(1)
+  const [selectedAttributes, setSelectedAttributes] = useState<
+    Record<string, string>
+  >({})
 
   useEffect(() => {
     if (product && product.skus.length > 0) {
       setSelectedSku(product.skus[0])
+      // Set giá trị mặc định cho thuộc tính
+      const defaultAttrs: Record<string, string> = {}
+      product.options.forEach((opt) => {
+        defaultAttrs[opt.attribute_name] = opt.values[0].value
+      })
+      setSelectedAttributes(defaultAttrs)
     }
   }, [product])
 
@@ -39,29 +48,49 @@ const ProductDetailPage = () => {
     }
   }
 
-  // Handle SKU selection
-  const handleAttributeChange = (attrName: string, value: string) => {
-    const matchedSku = product.skus.find((sku: Sku) =>
-      sku.attributes.some(
-        (attr) => attr.name === attrName && attr.value === value,
-      ),
+  // Tìm SKU dựa trên tất cả thuộc tính đã chọn
+  const findMatchingSku = (attrs: Record<string, string>): Sku | null => {
+    return (
+      product.skus.find((sku: Sku) =>
+        Object.entries(attrs).every(([key, value]) =>
+          sku.attributes.some(
+            (attr) => attr.name === key && attr.value === value,
+          ),
+        ),
+      ) || null
     )
+  }
+
+  // Xử lý khi thay đổi thuộc tính
+  const handleAttributeChange = (attrName: string, value: string) => {
+    const updatedAttrs = { ...selectedAttributes, [attrName]: value }
+    setSelectedAttributes(updatedAttrs)
+
+    const matchedSku = findMatchingSku(updatedAttrs)
     if (matchedSku) setSelectedSku(matchedSku)
   }
 
-  const handleAddToCart = (selectedSku: Sku) => {
+  // Xử lý thêm vào giỏ hàng
+  const handleAddToCart = () => {
     if (!selectedSku) {
-      alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
+      message.warning('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
       return
     }
 
-    dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
+    if (quantity < 1 || quantity > selectedSku.stock) {
+      message.error('Số lượng không hợp lệ!')
+      return
+    }
+
+    dispatch(addToCart({ sku_id: selectedSku.id, quantity }))
       .unwrap()
       .then(() => {
+        message.success('Thêm vào giỏ hàng thành công!')
         dispatch(fetchCart())
       })
       .catch((error) => {
         console.error('Lỗi khi thêm vào giỏ hàng:', error)
+        message.error('Không thể thêm vào giỏ hàng!')
       })
   }
 
@@ -73,9 +102,6 @@ const ProductDetailPage = () => {
           {selectedSku &&
             getImages(selectedSku).map((img, index) => (
               <Image
-                style={{
-                  objectFit: 'fill',
-                }}
                 key={index}
                 width={150}
                 height={190}
@@ -85,7 +111,7 @@ const ProductDetailPage = () => {
             ))}
         </div>
         <div>
-          {selectedSku && (
+          {selectedSku && getImages(selectedSku)[0] && (
             <Image width={400} height={600} src={getImages(selectedSku)[0]} />
           )}
         </div>
@@ -105,7 +131,7 @@ const ProductDetailPage = () => {
           <div key={option.attribute_id} className="mt-4">
             <p className="font-semibold">{option.attribute_name}:</p>
             <Select
-              defaultValue={option.values[0].value}
+              value={selectedAttributes[option.attribute_name]}
               onChange={(value) =>
                 handleAttributeChange(option.attribute_name, value)
               }
@@ -134,11 +160,7 @@ const ProductDetailPage = () => {
                 value={quantity}
                 onChange={(value) => setQuantity(value ?? 1)}
               />
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => handleAddToCart(selectedSku)}
-              >
+              <Button type="primary" size="large" onClick={handleAddToCart}>
                 Thêm vào giỏ
               </Button>
             </div>

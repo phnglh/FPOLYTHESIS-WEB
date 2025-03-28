@@ -84,6 +84,16 @@ export const items = [
         key: '/orders',
         icon: <OrderedListOutlined />,
         label: 'Orders',
+        children: [
+          {
+            key: '/orders/list',
+            label: <Link to="/orders">List</Link>,
+          },
+          {
+            key: '/orders/create',
+            label: <Link to="/orders/create">Create</Link>,
+          },
+        ],
       },
       {
         key: '/users',

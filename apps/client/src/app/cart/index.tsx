@@ -11,7 +11,13 @@ import { DeleteOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
-import { fetchCart, removeFromCart } from '@store/slices/cartSlice'
+import {
+  decrementCartItem,
+  fetchCart,
+  incrementCartItem,
+  removeFromCart,
+  updateCartItem,
+} from '@store/slices/cartSlice'
 import { CartItem } from '#types/cart'
 import { useCheckout } from '@hooks/useCheckout'
 
@@ -20,9 +26,24 @@ const CartPage = () => {
   const { data } = useSelector((state: RootState) => state.cart)
   const items = data?.items || []
   const { handleCheckout } = useCheckout()
+
   useEffect(() => {
     dispatch(fetchCart())
   }, [dispatch])
+
+  const handleUpdateQuantity = (id: number, quantity: number) => {
+    dispatch(updateCartItem({ id, quantity })).then(() => dispatch(fetchCart()))
+  }
+
+  const handleIncrement = (id: number) => {
+    dispatch(incrementCartItem(id)).then(() => dispatch(fetchCart()))
+  }
+
+  const handleDecrement = (id: number, quantity: number) => {
+    if (quantity > 1) {
+      dispatch(decrementCartItem(id)).then(() => dispatch(fetchCart()))
+    }
+  }
 
   const handleRemoveItem = async (id: number) => {
     await dispatch(removeFromCart(id))
@@ -73,9 +94,22 @@ const CartPage = () => {
       key: 'quantity',
       render: (_: string, record: CartItem) => (
         <Space>
-          <Button icon={<MinusOutlined />} size="small" />
-          <InputNumber min={1} max={100} defaultValue={record.quantity} />
-          <Button icon={<PlusOutlined />} size="small" />
+          <Button
+            icon={<MinusOutlined />}
+            size="small"
+            onClick={() => handleDecrement(record.id, record.quantity)}
+          />
+          <InputNumber
+            min={1}
+            max={100}
+            value={record.quantity}
+            onChange={(value) => handleUpdateQuantity(record.id, value ?? 1)}
+          />
+          <Button
+            icon={<PlusOutlined />}
+            size="small"
+            onClick={() => handleIncrement(record.id)}
+          />
         </Space>
       ),
     },

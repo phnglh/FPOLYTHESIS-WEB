@@ -19,6 +19,8 @@ import AttributeManagement from '@app/attributes'
 import UserManagement from '@app/users'
 import CreateUser from '@app/users/create'
 import PrivateRoute from '@routes/PrivateRoute.tsx'
+import OrderManagement from '@app/orders'
+import OrderDetails from '@app/orders/detail'
 
 function App() {
   const dispatch = useDispatch()
@@ -60,6 +62,10 @@ function App() {
         </Route>
         <Route path="attributes">
           <Route index element={<AttributeManagement />} />
+        </Route>
+        <Route path="orders">
+          <Route index element={<OrderManagement />} />
+          <Route path=":id" element={<OrderDetails />} />
         </Route>
         <Route path="users">
           <Route index element={<UserManagement />} />
