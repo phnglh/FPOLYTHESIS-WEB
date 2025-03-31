@@ -32,13 +32,13 @@ import NotFound from '@layout/components/NotFound'
 const { Title } = Typography
 
 const ProductPage = () => {
+  const navigate = useNavigate()
   const [selectedProduct, setSelectedProduct] = useState<Product>()
   const [isModalVisible, setIsModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  const { data, errorMessage } = useProductList()
-  const navigate = useNavigate()
+  const { data, isLoading, errorMessage, pagination, handleTableChange } =
+    useProductList()
 
-  console.log(data)
   if (!data) return <NotFound />
 
   if (errorMessage || !data) return <div>{errorMessage}</div>
@@ -53,8 +53,7 @@ const ProductPage = () => {
   }
 
   const handleViewProduct = async (id: number) => {
-    console.log(id)
-    const product = data.find((p) => p.id === id)
+    const product = data.data.find((p) => p.id === id)
     setSelectedProduct(product)
     setIsModalVisible(true)
   }
@@ -185,9 +184,15 @@ const ProductPage = () => {
               },
             }}
             columns={columns}
-            dataSource={data}
+            dataSource={data.data}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            loading={isLoading}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: data?.meta?.total,
+            }}
+            onChange={handleTableChange}
             title={() => (
               <Row justify="space-between" align="middle" gutter={[16, 16]}>
                 <Col>

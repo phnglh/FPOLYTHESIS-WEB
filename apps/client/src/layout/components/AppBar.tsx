@@ -1,22 +1,8 @@
+import { Layout, Menu, Dropdown, Avatar, Popover, Badge } from 'antd'
 import {
-  Layout,
-  Input,
-  Space,
-  Menu,
-  Row,
-  Col,
-  Dropdown,
-  Avatar,
-  Popover,
-  Badge,
-  Spin,
-} from 'antd'
-import {
-  SearchOutlined,
   HeartOutlined,
   UserOutlined,
   ShoppingCartOutlined,
-  PhoneOutlined,
 } from '@ant-design/icons'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'

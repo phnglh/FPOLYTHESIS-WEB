@@ -1,5 +1,5 @@
 import { ApiErrorResponse } from '#types/api'
-import { Attribute, AttributeState } from '#types/product'
+import { Attribute, AttributeState } from '#types/products'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
 

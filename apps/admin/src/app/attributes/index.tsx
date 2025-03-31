@@ -1,179 +1,190 @@
-import { Attribute, AttributeValue } from '#types/product'
-import { EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { fetchAttributes } from '@store/slices/attributeSlice'
-import { AppDispatch, RootState } from '@store/store'
-import { Button, Form, Input, Modal, Space, Table } from 'antd'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { Table, Button, Modal, Form, Input, Space } from 'antd'
+import {
+  fetchAttributes,
+  addAttribute,
+  updateAttribute,
+  deleteAttribute,
+  fetchAttributeValues,
+  addAttributeValue,
+  deleteAttributeValue,
+} from '@store/slices/attributeSlice'
+import { AppDispatch, RootState } from '@store/store'
+import { Attribute, AttributeValue } from '#types/product'
+import { toast } from 'react-toastify'
 
 const AttributeManagement = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false)
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false)
-  const [isValueModalVisible, setIsValueModalVisible] = useState(false)
-  const [currentAttribute, setCurrentAttribute] = useState<Attribute>()
-  const [currentAttributeValue] = useState<AttributeValue>()
-  const [attributesid, setAttributesid] = useState<number[]>([])
+  const { data, loading } = useSelector((state: RootState) => state.attributes)
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingAttribute, setEditingAttribute] = useState<Attribute>()
   const [form] = Form.useForm()
-  console.log(attributesid)
-  const { data } = useSelector((state: RootState) => state.attributes)
+
+  const [isValueModalOpen, setIsValueModalOpen] = useState(false)
+  const [selectedAttribute, setSelectedAttribute] = useState<Attribute | null>(
+    null,
+  )
+  const [valueForm] = Form.useForm()
 
   useEffect(() => {
     dispatch(fetchAttributes())
   }, [dispatch])
 
-  console.log(data)
-  const fetchAttributesId = async (id: number) => {
+  const handleAdd = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleEdit = (record: Attribute) => {
+    setEditingAttribute(record)
+    form.setFieldsValue(record)
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (id: number) => {
     try {
-      setAttributesid(data)
+      await dispatch(deleteAttribute(id)).unwrap()
+      toast.success('Xóa thuộc tính thành công!')
+      await dispatch(fetchAttributes())
     } catch (error) {
-      console.error('Failed to fetch attributes:', error)
+      toast.error(`Xóa thất bại: ${error}`)
     }
   }
 
-  const handleAddAttribute = async (values: Attribute) => {
-    try {
-      console.log(values)
-      setIsAddModalVisible(false)
-      form.resetFields()
-    } catch (error) {
-      console.error('Failed to add attribute:', error)
+  const handleSubmit = async (values: Attribute) => {
+    if (editingAttribute) {
+      await dispatch(updateAttribute({ ...values, id: editingAttribute.id }))
+    } else {
+      await dispatch(addAttribute(values)).unwrap()
+      toast.success('Thêm thành công')
     }
+    await dispatch(fetchAttributes())
+    setIsModalOpen(false)
+    form.resetFields()
   }
 
-  const handleEditAttribute = async (values: Attribute) => {
-    try {
-      console.log(values)
-      setIsEditModalVisible(false)
-      form.resetFields()
-    } catch (error) {
-      console.error('Failed to edit attribute:', error)
-    }
+  const handleManageValues = (attribute: Attribute) => {
+    setSelectedAttribute(attribute)
+    dispatch(fetchAttributeValues(attribute.id))
+    setIsValueModalOpen(true)
   }
 
-  const handleAddAttributeValue = async (values: AttributeValue) => {
+  const handleAddValue = async () => {
     try {
-      if (currentAttribute) {
-        const data: any = {
-          value: values?.value,
-          attribute_id: currentAttribute?.id,
-        }
-        setIsValueModalVisible(false)
-        form.resetFields()
+      const { value } = await valueForm.validateFields()
+      if (selectedAttribute) {
+        await dispatch(
+          addAttributeValue({ attributeId: selectedAttribute.id, value }),
+        )
+        const response = await dispatch(
+          fetchAttributeValues(selectedAttribute.id),
+        )
+        console.log('🔄 Fetch lại values:', response)
+        valueForm.resetFields()
+        toast.success('Thêm giá trị thành công!')
       }
-    } catch (error) {
-      console.error('Failed to add attribute value:', error)
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Lỗi không xác định khi thêm giá trị!'
+
+      toast.error(`Xóa thất bại: ${errorMessage}`)
     }
   }
 
-  const handleEditAttributeValue = async (values: AttributeValue) => {
+  const handleDeleteValue = async (valueId: number) => {
     try {
-      if (currentAttribute && currentAttributeValue) {
-        console.log(values)
-        fetchAttributes()
-        setIsValueModalVisible(false)
-        form.resetFields()
-      }
-    } catch (error) {
-      console.error('Failed to edit attribute value:', error)
+      await dispatch(deleteAttributeValue(valueId)).unwrap()
+      dispatch(fetchAttributeValues(selectedAttribute!.id))
+      toast.success('Xóa giá trị thành công!')
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Lỗi không xác định khi xóa giá trị!'
+
+      toast.error(`Xóa thất bại: ${errorMessage}`)
     }
   }
-  const attributeColumns = [
+
+  const columns = [
+    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { title: 'Tên', dataIndex: 'name', key: 'name' },
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      render: (_text: string, _record: Attribute, index: number) => index + 1,
+      title: 'Giá trị',
+      dataIndex: 'values',
+      key: 'values',
+      render: (values: AttributeValue) => {
+        console.log('Debug values:', values)
+        return Array.isArray(values)
+          ? values.map((v) => v.value).join(', ')
+          : 'Chưa có'
+      },
     },
     {
-      title: 'Thuộc tính',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Hoạt động',
-      key: 'action',
-      render: (record: Attribute) => (
-        <Space size="middle">
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => {
-              setCurrentAttribute(record)
-              form.setFieldsValue(record)
-              setIsEditModalVisible(true)
-            }}
-          />
-          <Button
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setCurrentAttribute(record)
-              setIsValueModalVisible(true)
-            }}
-          >
-            Thêm giá trị cho thuộc tính
+      title: 'Hành động',
+      key: 'actions',
+      render: (_: unknown, record: Attribute) => (
+        <Space style={{ gap: 10 }}>
+          <Button onClick={() => handleEdit(record)}>Sửa</Button>
+          <Button onClick={() => handleManageValues(record)}>
+            Quản lý giá trị
           </Button>
-          <Button onClick={() => showModal(record?.id)}>Chi tiết</Button>
+          <Button onClick={() => handleDelete(record.id)} danger>
+            Xóa
+          </Button>
         </Space>
       ),
     },
   ]
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const showModal = (id: any) => {
-    fetchAttributesId(id)
-    setIsModalOpen(true)
-  }
-
-  const handleOk = () => {
-    setIsModalOpen(false)
-  }
-
-  const handleCancel = () => {
-    setIsModalOpen(false)
-  }
-  const valueColumns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      render: (_text: string, _record: AttributeValue, index: number) =>
-        index + 1,
-    },
-    {
-      title: 'Value',
-      dataIndex: 'value',
-      key: 'value',
-      render: (text: string, record: AttributeValue) => {
-        console.log(text)
-
-        return record.value
-      },
-    },
-  ]
   return (
-    <div className="content">
-      <Table columns={attributeColumns} dataSource={data} rowKey={'id'} />
+    <div>
+      <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
+        Thêm thuộc tính
+      </Button>
+      <Table
+        dataSource={data}
+        columns={columns}
+        loading={loading}
+        rowKey="id"
+      />
 
       <Modal
-        title="Thêm thuộc tính"
-        open={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
-        footer={null}
+        title={editingAttribute ? 'Chỉnh sửa thuộc tính' : 'Thêm thuộc tính'}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        onOk={() => form.submit()}
       >
-        <Form form={form} onFinish={handleAddAttribute}>
+        <Form form={form} onFinish={handleSubmit} layout="vertical">
           <Form.Item
-            label="Tên thuộc tính"
             name="name"
-            rules={[
-              {
-                required: true,
-                message: 'Please input the attribute name!',
-              },
-            ]}
+            label="Tên thuộc tính"
+            rules={[{ required: true }]}
           >
             <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Quản lý giá trị thuộc tính"
+        open={isValueModalOpen}
+        onCancel={() => setIsValueModalOpen(false)}
+        footer={null}
+      >
+        <Form form={valueForm} layout="inline" onFinish={handleAddValue}>
+          <Form.Item
+            name="value"
+            rules={[{ required: true, message: 'Nhập giá trị' }]}
+          >
+            <Input placeholder="Nhập giá trị mới" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
@@ -181,82 +192,26 @@ const AttributeManagement = () => {
             </Button>
           </Form.Item>
         </Form>
-      </Modal>
-      {/* modal con */}
-      <Modal
-        title="Attribute_value"
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
+
         <Table
-          columns={valueColumns}
-          dataSource={attributesid}
-          pagination={false}
-        />
-      </Modal>
-
-      <Modal
-        title="Sửa thuộc tính"
-        open={isEditModalVisible}
-        onCancel={() => setIsEditModalVisible(false)}
-        footer={null}
-      >
-        <Form form={form} onFinish={handleEditAttribute}>
-          <Form.Item
-            label="Tên thuộc tính"
-            name="name"
-            rules={[
-              {
-                required: true,
-                message: 'Please input the attribute name!',
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Sửa
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title={
-          currentAttributeValue ? 'Edit Attribute Value' : 'Add Attribute Value'
-        }
-        open={isValueModalVisible}
-        onCancel={() => setIsValueModalVisible(false)}
-        footer={null}
-      >
-        <Form
-          form={form}
-          onFinish={
-            currentAttributeValue
-              ? handleEditAttributeValue
-              : handleAddAttributeValue
+          dataSource={
+            data.find((attr) => attr.id === selectedAttribute?.id)?.values || []
           }
-        >
-          <Form.Item
-            label="Value"
-            name="value"
-            rules={[
-              {
-                required: true,
-                message: 'Please input the attribute value!',
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              {currentAttributeValue ? 'Save Changes' : 'Add Value'}
-            </Button>
-          </Form.Item>
-        </Form>
+          columns={[
+            { title: 'ID', dataIndex: 'id', key: 'id' },
+            { title: 'Giá trị', dataIndex: 'value', key: 'value' },
+            {
+              title: 'Hành động',
+              key: 'actions',
+              render: (_, record) => (
+                <Button onClick={() => handleDeleteValue(record.id)} danger>
+                  Xóa
+                </Button>
+              ),
+            },
+          ]}
+          rowKey="id"
+        />
       </Modal>
     </div>
   )

@@ -22,6 +22,7 @@ export interface Sku {
   price: number
   stock: number
   attributes: Attribute[]
+  product?: Product
 }
 export interface Attribute {
   id: number

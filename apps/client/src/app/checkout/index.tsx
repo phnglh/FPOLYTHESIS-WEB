@@ -10,6 +10,7 @@ import {
   Badge,
   Space,
   Select,
+  Radio,
 } from 'antd'
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
@@ -36,13 +37,17 @@ const CheckoutPage = () => {
           receiver_name: response.data.name,
           receiver_phone: response.data.phone,
           address: response.data.address,
-          payment_method: 'vnpay', // Mặc định chọn VNPay
+          payment_method: 'vnpay',
         })
       } catch (error) {
         console.error('Lỗi khi lấy thông tin người dùng:', error)
       }
     }
-    fetchUserProfile()
+
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      fetchUserProfile()
+    }
 
     const storedItems = localStorage.getItem('checkout_items')
     if (storedItems) {
@@ -88,9 +93,9 @@ const CheckoutPage = () => {
       // navigate('/order-success')
 
       if (values.payment_method === 'vnpay') {
-        const paymentUrl = response.data?.data?.payment_url // Lấy đúng URL
+        const paymentUrl = response.data?.data?.payment_url
         if (paymentUrl) {
-          window.location.href = paymentUrl // Chuyển hướng đến VNPay
+          window.location.href = paymentUrl
         } else {
           toast.error('Không lấy được URL thanh toán VNPay!')
         }
@@ -114,11 +119,9 @@ const CheckoutPage = () => {
             {!user && <Button type="link">Đăng nhập</Button>}
           </Space>
 
-          {/* GỘP FORM CHUNG */}
           <Form layout="vertical" form={form} onFinish={onFinish}>
-            {/* Thông tin người nhận */}
             <Form.Item label="Email" name="email">
-              <Input placeholder="Email" disabled />
+              <Input placeholder="Email" />
             </Form.Item>
             <Form.Item
               label="Họ và tên"
@@ -143,31 +146,24 @@ const CheckoutPage = () => {
             >
               <Input placeholder="Địa chỉ" />
             </Form.Item>
-            <Form.Item label="Thành phố" name="city">
-              <Input placeholder="Thành phố" />
-            </Form.Item>
-            <Form.Item label="Quận/Huyện" name="state">
-              <Input placeholder="Quận/Huyện" />
-            </Form.Item>
-            <Form.Item label="Mã bưu điện" name="zip_code">
-              <Input placeholder="Mã bưu điện" />
-            </Form.Item>
             <Form.Item label="Ghi chú" name="note">
               <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
             </Form.Item>
 
-            {/* Phương thức thanh toán */}
             <Form.Item
               label="Phương thức thanh toán"
               name="payment_method"
-              rules={[{ required: true }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Vui lòng chọn phương thức thanh toán!',
+                },
+              ]}
             >
-              <Select>
-                <Select.Option value="vnpay">VNPay</Select.Option>
-                <Select.Option value="cod">
-                  Thanh toán khi nhận hàng
-                </Select.Option>
-              </Select>
+              <Radio.Group>
+                <Radio value="vnpay">VNPay</Radio>
+                <Radio value="cod">Thanh toán khi nhận hàng</Radio>
+              </Radio.Group>
             </Form.Item>
 
             {/* Thông tin đơn hàng */}

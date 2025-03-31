@@ -42,10 +42,10 @@ const ProductPage = () => {
   useEffect(() => {
     if (!data) return
 
-    console.log('🔍 Lọc sản phẩm với bộ lọc:', selectedFilters)
-
     const result = data.filter((product) => {
-      console.log('🔎 Kiểm tra sản phẩm:', product.name)
+      if (!product.is_published) {
+        return false
+      }
 
       if (
         selectedFilters.category.length > 0 &&
@@ -83,12 +83,9 @@ const ProductPage = () => {
       return true
     })
 
-    console.log('🛍 Danh sách sản phẩm sau lọc:', result)
     setFilteredProducts(result)
   }, [data, selectedFilters])
-  console.log('🔎 Giá trị selectedFilters.brand:', selectedFilters.brand)
 
-  console.log('filteredProducts', filteredProducts)
   return (
     <Layout style={{ margin: '0 100px', padding: '10px' }}>
       <FilterComponent
