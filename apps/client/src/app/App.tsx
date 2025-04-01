@@ -22,6 +22,7 @@ import ProfilePage from '@app/profile'
 import OrdersPage from '@app/orders'
 import OrderDetailPage from '@app/orders/detail'
 import OrderSuccess from '@app/orders/detail/order-success.tsx'
+import ProfileDetail from '@app/profile/file'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -45,9 +46,14 @@ function App() {
         <Route path="carts" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="orders/:id" element={<OrderDetailPage />} />
+
+        <Route path="account">
+          <Route index element={<ProfilePage />} />
+          <Route path="" element={<ProductDetailPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:id" element={<OrderDetailPage />} />
+        </Route>
+
         <Route path="about" element={<AboutUsPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="news" element={<NewsPage />} />
