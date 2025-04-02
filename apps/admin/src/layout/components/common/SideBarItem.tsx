@@ -1,11 +1,13 @@
 import {
   AppstoreOutlined,
   BarChartOutlined,
-  CommentOutlined,
-  FallOutlined,
-  FormatPainterOutlined,
-  OrderedListOutlined,
-  TeamOutlined,
+  FolderOutlined,
+  TrademarkCircleOutlined,
+  TagsOutlined,
+  ShoppingOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { Link } from 'react-router'
 
@@ -23,7 +25,7 @@ export const items = [
       {
         key: '/categories',
         label: 'Danh mục',
-        icon: <AppstoreOutlined />,
+        icon: <FolderOutlined />,
         children: [
           {
             key: '/categories/list',
@@ -38,7 +40,7 @@ export const items = [
       {
         key: '/brands',
         label: 'Thương hiệu',
-        icon: <AppstoreOutlined />,
+        icon: <TrademarkCircleOutlined />,
         children: [
           {
             key: '/brands/list',
@@ -52,7 +54,7 @@ export const items = [
       },
       {
         key: '/attributes',
-        icon: <AppstoreOutlined />,
+        icon: <TagsOutlined />,
         label: 'Attribute',
         children: [
           {
@@ -61,13 +63,13 @@ export const items = [
           },
           {
             key: '/attributes/create',
-            label: <Link to="/attributes/create">Tất cả thuộc tính</Link>,
+            label: <Link to="/attributes/create">Tạo thuộc tính</Link>,
           },
         ],
       },
       {
         key: '/products',
-        icon: <AppstoreOutlined />,
+        icon: <ShoppingOutlined />,
         label: 'Sản phẩm',
         children: [
           {
@@ -82,7 +84,7 @@ export const items = [
       },
       {
         key: '/orders',
-        icon: <OrderedListOutlined />,
+        icon: <ShoppingCartOutlined />,
         label: 'Orders',
         children: [
           {
@@ -97,7 +99,7 @@ export const items = [
       },
       {
         key: '/users',
-        icon: <TeamOutlined />,
+        icon: <UserOutlined />,
         label: 'Users',
         children: [
           {
@@ -112,25 +114,9 @@ export const items = [
       },
     ],
   },
-
   {
-    key: '/quan-ly-orders',
-    icon: <OrderedListOutlined />,
-    label: <Link to="/quan-ly-orders">Quản lý đơn hàng</Link>,
-  },
-  {
-    key: '/quan-ly-sale',
-    icon: <FallOutlined />,
-    label: <Link to="/quan-ly-sale">Quản lý sản phẩm giảm giá</Link>,
-  },
-  {
-    key: '/voucher',
-    icon: <FormatPainterOutlined />,
-    label: <Link to="/voucher">Quản lý mã giảm giá</Link>,
-  },
-  {
-    key: '/comment',
-    icon: <CommentOutlined />,
-    label: <Link to="/comment">Quản lý đánh giá</Link>,
+    key: '/settings',
+    icon: <SettingOutlined />,
+    label: <Link to="/settings">Settings</Link>,
   },
 ]
