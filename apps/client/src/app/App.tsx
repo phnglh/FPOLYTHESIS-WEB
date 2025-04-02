@@ -22,7 +22,6 @@ import ProfilePage from '@app/profile'
 import OrdersPage from '@app/orders'
 import OrderDetailPage from '@app/orders/detail'
 import OrderSuccess from '@app/orders/detail/order-success.tsx'
-import ProfileDetail from '@app/profile/file'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()

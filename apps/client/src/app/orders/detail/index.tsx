@@ -63,7 +63,10 @@ const OrderDetailPage = () => {
     try {
       await dispatch(cancelOrder(Number(id))).unwrap()
       setCancelModalVisible(false)
-      navigate('/orders')
+
+      setOrder((prevOrder) =>
+        prevOrder ? { ...prevOrder, status: 'Đã hủy' } : prevOrder,
+      )
     } catch (error) {
       console.error('Lỗi khi hủy đơn hàng:', error)
     }
