@@ -80,36 +80,90 @@ const OrderDetailPage = () => {
       <Content>
         <Card>
           <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
-          <Text style={{ fontSize: '16px', lineHeight: '1.5' }}>
-            <b>Người nhận:</b> {order.address.receiver_name}
-          </Text>
-          <br />
-          <Text style={{ fontSize: '16px', lineHeight: '1.5' }}>
-            <b>Điện thoại:</b> {order.address.receiver_phone}
-          </Text>
-          <br />
-          <Text style={{ fontSize: '16px', lineHeight: '1.5' }}>
-            <b>Địa chỉ:</b> {order.address.address}
-          </Text>
-          <br />
-          <Text style={{ fontSize: '16px', lineHeight: '1.5' }}>
-            <b>Ngày đặt:</b> {order.ordered_at}
-          </Text>
-          <br />
-          <Text style={{ fontSize: '16px', lineHeight: '1.5' }}>
-            <b>Trạng thái:</b>
-            <Tag
-              color={
-                order.status === 'pending' || order.status === 'processing'
-                  ? 'blue'
-                  : 'red'
-              }
-            >
-              {order.status}
-            </Tag>
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Người nhận:</strong>
+              </Col>
+              <Col span={18}>{order.address.receiver_name}</Col>
+            </Row>
           </Text>
 
-          <br />
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Điện thoại:</strong>
+              </Col>
+              <Col span={18}>{order.address.receiver_phone}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Địa chỉ:</strong>
+              </Col>
+              <Col span={18}>{order.address.address}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Ngày đặt:</strong>
+              </Col>
+              <Col span={18}>{order.ordered_at}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Trạng thái:</strong>
+              </Col>
+              <Col span={18}>
+                <Tag
+                  color={
+                    order.status === 'pending' || order.status === 'processing'
+                      ? 'blue'
+                      : 'red'
+                  }
+                >
+                  {order.status}
+                </Tag>
+              </Col>
+            </Row>
+          </Text>
         </Card>
 
         <Title level={4}>Sản phẩm trong đơn</Title>
