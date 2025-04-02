@@ -17,7 +17,7 @@ export interface BrandResponse {
 }
 
 export interface GetBrandResponse {
-  categories?: Brand[]
+  brand?: Brand[]
   meta: {
     total: number
     per_page: number

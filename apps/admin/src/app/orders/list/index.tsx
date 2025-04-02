@@ -1,31 +1,24 @@
-import { Table, Tag, Space, Button, Input, Select } from 'antd'
-import { useState } from 'react'
-
-const { Option } = Select
+import { Button, Input, Select, Space, Table, Tag } from 'antd'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@store/store.ts'
+import { fetchOrders } from '@store/slices/orderSlice.ts'
 
 const OrderList = () => {
+  const dispatch = useDispatch<AppDispatch>()
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const { data, loading } = useSelector((state: RootState) => state.orders)
 
-  const orders = [
-    {
-      id: 'ORD001',
-      customer: 'Nguyễn Văn A',
-      total: 500000,
-      status: 'Pending',
-    },
-    {
-      id: 'ORD002',
-      customer: 'Trần Thị B',
-      total: 1200000,
-      status: 'Completed',
-    },
-  ]
+  console.log(data)
+  useEffect(() => {
+    dispatch(fetchOrders())
+  }, [dispatch])
 
-  const filteredOrders = orders.filter(
+  const filteredOrders = (data && Array.isArray(data) ? data : []).filter(
     (order) =>
       (statusFilter === 'all' || order.status === statusFilter) &&
-      order.id.includes(searchTerm),
+      order.id.toString().includes(searchTerm),
   )
 
   const columns = [
@@ -33,9 +26,9 @@ const OrderList = () => {
     { title: 'Khách hàng', dataIndex: 'customer', key: 'customer' },
     {
       title: 'Tổng tiền',
-      dataIndex: 'total',
-      key: 'total',
-      render: (total) => `${total.toLocaleString()} đ`,
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+      render: (totalPrice) => `${totalPrice.toLocaleString()} đ`,
     },
     {
       title: 'Trạng thái',
@@ -66,13 +59,22 @@ const OrderList = () => {
           placeholder="Tìm mã đơn hàng"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Select defaultValue="all" onChange={(value) => setStatusFilter(value)}>
-          <Option value="all">Tất cả</Option>
-          <Option value="Pending">Chờ xử lý</Option>
-          <Option value="Completed">Hoàn thành</Option>
-        </Select>
+        <Select
+          defaultValue="all"
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: 'Tất cả' },
+            { value: 'Pending', label: 'Chờ xử lý' },
+            { value: 'Completed', label: 'Hoàn thành' },
+          ]}
+        />
       </Space>
-      <Table columns={columns} dataSource={filteredOrders} rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={filteredOrders}
+        rowKey="id"
+        loading={loading}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 import { useEffect } from 'react'
 import { Brand } from '#types/brand'
 import { addBrand, fetchBrands } from '@store/slices/brandSlice'
+import { toast } from 'react-toastify'
 
 const { Title, Text } = Typography
 
@@ -20,7 +21,9 @@ const CreateBrand = () => {
   }, [dispatch])
 
   const handleFinish = async (values: Brand) => {
-    await dispatch(addBrand(values))
+    await dispatch(addBrand(values)).unwrap()
+    toast.success('Them thuong hieu thanh cong!')
+
     navigate('/brands')
   }
 

@@ -25,6 +25,8 @@ const AppHeader = () => {
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
 
+  console.log('cart', cart)
+
   useEffect(() => {
     if (access_token && user) {
       dispatch(fetchCart())
@@ -72,9 +74,9 @@ const AppHeader = () => {
           key={item.id}
           style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
         >
-          {item.sku.image_url.length > 0 && (
+          {item.sku.image_url && (
             <img
-              src={item.sku.image_url[0]}
+              src={item.sku.image_url}
               alt={item.sku.sku}
               style={{
                 width: 50,

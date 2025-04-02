@@ -6,7 +6,7 @@ import authReducer from '@store/slices/authSlice'
 import brandReducer from '@store/slices/brandSlice'
 import attributeSlice from '@store/slices/attributeSlice'
 import userSlice from '@store/slices/userSlice'
-
+import orderSlice from '@store/slices/orderSlice.ts'
 
 export const store = configureStore({
   reducer: {
@@ -17,7 +17,7 @@ export const store = configureStore({
     brands: brandReducer,
     attributes: attributeSlice,
     users: userSlice,
-
+    orders: orderSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(productApi.middleware),

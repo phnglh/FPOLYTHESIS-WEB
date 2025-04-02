@@ -1,30 +1,11 @@
 import { ApiErrorResponse } from '#types/api'
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { Order, OrderItem, OrderState } from '#types/order'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
 
-export interface OrderItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
-
-export interface Order {
-  id: number
-  items: OrderItem[]
-  totalPrice: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  createdAt: string
-}
-
-interface OrderState {
-  orders: Order[]
-  loading: boolean
-  error: string | null
-}
-
-const initialState: OrderState = {
-  orders: [],
+const initialOrderState: OrderState = {
+  data: [],
+  selectedItem: null,
   loading: false,
   error: null,
 }
@@ -37,9 +18,6 @@ export const createOrder = createAsyncThunk(
       const res = await apiClient.post('/orders', { items })
       return res.data
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -55,9 +33,6 @@ export const fetchOrders = createAsyncThunk(
       const res = await apiClient.get('/orders')
       return res.data
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -73,9 +48,6 @@ export const cancelOrder = createAsyncThunk(
       await apiClient.post(`/orders/${orderId}/cancel`)
       return orderId
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -85,7 +57,7 @@ export const cancelOrder = createAsyncThunk(
 
 const orderSlice = createSlice({
   name: 'order',
-  initialState,
+  initialState: initialOrderState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -93,7 +65,11 @@ const orderSlice = createSlice({
         state.loading = true
       })
       .addCase(createOrder.fulfilled, (state, action: PayloadAction<Order>) => {
-        state.orders.push(action.payload)
+        if (state.data) {
+          state.data.push(action.payload)
+        } else {
+          state.data = [action.payload]
+        }
         state.loading = false
       })
       .addCase(createOrder.rejected, (state, action) => {
@@ -106,7 +82,7 @@ const orderSlice = createSlice({
       .addCase(
         fetchOrders.fulfilled,
         (state, action: PayloadAction<Order[]>) => {
-          state.orders = action.payload
+          state.data = action.payload // Gán thẳng danh sách đơn hàng
           state.loading = false
         },
       )
@@ -117,9 +93,11 @@ const orderSlice = createSlice({
       .addCase(
         cancelOrder.fulfilled,
         (state, action: PayloadAction<number>) => {
-          state.orders = state.orders.filter(
-            (order) => order.id !== action.payload,
-          )
+          if (state.data) {
+            state.data = state.data.filter(
+              (order) => order.id !== action.payload,
+            )
+          }
         },
       )
   },
