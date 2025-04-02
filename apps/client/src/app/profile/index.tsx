@@ -46,7 +46,19 @@ export default function ProfilePage() {
   }
 
   const orderColumns = [
-    { title: 'Mã đơn hàng', dataIndex: 'order_number', key: 'order_number' },
+    {
+      title: 'Mã đơn hàng',
+      dataIndex: 'order_number',
+      key: 'order_number',
+      render: (text: string, record: Order) => (
+        <a
+          onClick={() => window.location.assign(`/account/orders/${record.id}`)}
+          style={{ cursor: 'pointer', color: '#1890ff' }}
+        >
+          {text}
+        </a>
+      ),
+    },
     { title: 'Ngày đặt', dataIndex: 'ordered_at', key: 'ordered_at' },
     {
       title: 'Tổng tiền',
