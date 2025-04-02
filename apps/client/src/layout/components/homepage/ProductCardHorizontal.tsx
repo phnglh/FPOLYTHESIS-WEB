@@ -11,9 +11,6 @@ type Props = {
 }
 const ProductCardHorizontal = ({ product, onAddToCart }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
-  const images = Array.isArray(selectedSku.image_url)
-    ? selectedSku.image_url
-    : JSON.parse(selectedSku.image_url || '[]')
 
   return (
     <Card
@@ -37,7 +34,7 @@ const ProductCardHorizontal = ({ product, onAddToCart }: Props) => {
         }}
       >
         <Image
-          src={images.length > 0 ? images[0] : product.image_url}
+          src={product.image_url}
           preview={false}
           style={{
             width: '120px',
@@ -60,15 +57,10 @@ const ProductCardHorizontal = ({ product, onAddToCart }: Props) => {
           {product.skus && product.skus.length > 0 && (
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               {product.skus.map((sku) => {
-                const skuImages = Array.isArray(sku.image_url)
-                  ? sku.image_url
-                  : JSON.parse(sku.image_url || '[]')
                 return (
                   <Image
                     key={sku.id}
-                    src={
-                      skuImages.length > 0 ? skuImages[0] : product.image_url
-                    }
+                    src={sku.image_url}
                     preview={false}
                     width={40}
                     height={40}

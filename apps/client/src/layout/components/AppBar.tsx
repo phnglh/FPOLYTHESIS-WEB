@@ -20,9 +20,7 @@ const AppHeader = () => {
   const { t } = useTranslation()
   const dispatch = useDispatch<AppDispatch>()
   const { handleCheckout } = useCheckout()
-  const { user, access_token, loading } = useSelector(
-    (state: RootState) => state.auth,
-  )
+  const { user, access_token } = useSelector((state: RootState) => state.auth)
 
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
@@ -39,7 +37,12 @@ const AppHeader = () => {
   }, 0)
 
   useEffect(() => {
-    if (access_token && !user) {
+    if (
+      !!access_token &&
+      typeof access_token === 'string' &&
+      access_token.trim() !== '' &&
+      !user
+    ) {
       dispatch(getUser())
     }
   }, [access_token, user, dispatch])

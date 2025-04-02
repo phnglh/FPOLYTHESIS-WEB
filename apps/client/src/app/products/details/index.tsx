@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
-import { Image, Select, Button, InputNumber, message } from 'antd'
+import { Image, Select, Button, InputNumber, message, Radio } from 'antd'
 import { useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from '@store/store'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
+import { fetchAttributes } from '@store/slices/attributeSlice'
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
   const { data: product, isLoading } = useGetProductQuery(Number(id))
-
+  const attributes = useSelector((state: RootState) => state.attributes.data)
   const [selectedSku, setSelectedSku] = useState<Sku | null>(null)
   const [quantity, setQuantity] = useState<number>(1)
   const [selectedAttributes, setSelectedAttributes] = useState<
@@ -19,6 +20,7 @@ const ProductDetailPage = () => {
   >({})
 
   useEffect(() => {
+    dispatch(fetchAttributes())
     if (product && product.skus.length > 0) {
       setSelectedSku(product.skus[0])
       // Set giá trị mặc định cho thuộc tính
@@ -28,27 +30,10 @@ const ProductDetailPage = () => {
       })
       setSelectedAttributes(defaultAttrs)
     }
-  }, [product])
+  }, [product, dispatch])
 
   if (isLoading || !product) return <p>Đang tải sản phẩm...</p>
 
-  const getImages = (sku: Sku): string[] => {
-    if (Array.isArray(sku.image_url)) {
-      return sku.image_url
-    }
-    try {
-      const images = JSON.parse(sku.image_url)
-      return Array.isArray(images) &&
-        images.every((img) => typeof img === 'string')
-        ? images
-        : []
-    } catch (error) {
-      console.error('Invalid image_url format:', error)
-      return []
-    }
-  }
-
-  // Tìm SKU dựa trên tất cả thuộc tính đã chọn
   const findMatchingSku = (attrs: Record<string, string>): Sku | null => {
     return (
       product.skus.find((sku: Sku) =>
@@ -94,25 +79,25 @@ const ProductDetailPage = () => {
       })
   }
 
+  console.log(product)
   return (
     <div className="container mx-auto justify-center p-8 flex gap-20">
       <div className="flex gap-6">
         {/* Ảnh nhỏ */}
         <div className="flex flex-col gap-1 mt-3">
-          {selectedSku &&
-            getImages(selectedSku).map((img, index) => (
-              <Image
-                key={index}
-                width={150}
-                height={190}
-                src={img}
-                className="cursor-pointer"
-              />
-            ))}
+          {selectedSku && selectedSku.image_url && (
+            <Image
+              key={selectedSku.image_url}
+              width={150}
+              height={190}
+              src={selectedSku.image_url}
+              className="cursor-pointer"
+            />
+          )}
         </div>
         <div>
-          {selectedSku && getImages(selectedSku)[0] && (
-            <Image width={400} height={600} src={getImages(selectedSku)[0]} />
+          {selectedSku && selectedSku.image_url && (
+            <Image width={400} height={600} src={selectedSku.image_url} />
           )}
         </div>
       </div>
@@ -126,25 +111,43 @@ const ProductDetailPage = () => {
         <p className="text-lg">
           <b>Danh mục:</b> {product.category_name}
         </p>
+        <div>
+          {attributes.map((attribute) => {
+            // Lấy option của sản phẩm hiện tại nếu có
+            const productOption = product.options.find(
+              (opt) => opt.attribute_id === attribute.id,
+            )
 
-        {product.options.map((option) => (
-          <div key={option.attribute_id} className="mt-4">
-            <p className="font-semibold">{option.attribute_name}:</p>
-            <Select
-              value={selectedAttributes[option.attribute_name]}
-              onChange={(value) =>
-                handleAttributeChange(option.attribute_name, value)
-              }
-              style={{ width: 200 }}
-            >
-              {option.values.map((v: { value: string }) => (
-                <Select.Option key={v.value} value={v.value}>
-                  {v.value}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-        ))}
+            return (
+              <div key={attribute.id} className="mt-4">
+                <p className="font-semibold">{attribute.name}:</p>
+                <Radio.Group
+                  value={selectedAttributes[attribute.name]}
+                  onChange={(e) =>
+                    handleAttributeChange(attribute.name, e.target.value)
+                  }
+                >
+                  {Array.isArray(attribute.values) &&
+                    attribute.values.map((v) => {
+                      const isDisabled =
+                        !productOption ||
+                        !productOption.values.some((pv) => pv.value === v.value)
+
+                      return (
+                        <Radio
+                          key={v.value}
+                          value={v.value}
+                          disabled={isDisabled}
+                        >
+                          {v.value}
+                        </Radio>
+                      )
+                    })}
+                </Radio.Group>
+              </div>
+            )
+          })}
+        </div>
 
         {selectedSku && (
           <>

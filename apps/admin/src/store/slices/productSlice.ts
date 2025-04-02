@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '../services/apiClient'
 import { Product, ProductsState } from '#types/product'
 
@@ -27,7 +27,11 @@ export const addProduct = createAsyncThunk(
   'products/addProduct',
   async (newProduct: Omit<Product, 'id'>, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/products', newProduct)
+      const response = await apiClient.post('/products', newProduct, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data || 'Lỗi không xác định')

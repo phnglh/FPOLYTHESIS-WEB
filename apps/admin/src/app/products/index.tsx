@@ -58,12 +58,6 @@ const ProductPage = () => {
     setIsModalVisible(true)
   }
   const columns: (ColumnGroupType<Product> | ColumnType<Product>)[] = [
-    // {
-    //   title: 'STT',
-    //   dataIndex: 'id',
-    //   key: 'id',
-    //   render: (_text: string, _record: Product, index: number) => index + 1,
-    // },
     {
       title: 'Tên sản phẩm',
       dataIndex: 'name',

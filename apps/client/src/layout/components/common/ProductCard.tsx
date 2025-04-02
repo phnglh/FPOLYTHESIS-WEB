@@ -64,13 +64,10 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
           }}
         >
           {product.skus.map((sku) => {
-            const skuImages = Array.isArray(sku.image_url)
-              ? sku.image_url
-              : JSON.parse(sku.image_url || '[]')
             return (
               <Image
                 key={sku.id}
-                src={skuImages.length > 0 ? skuImages[0] : product.image_url}
+                src={sku.image_url}
                 preview={false}
                 width={40}
                 height={40}

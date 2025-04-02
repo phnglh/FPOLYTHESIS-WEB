@@ -4,7 +4,7 @@ export interface Product {
   id: number
   name: string
   description: string
-  is_published: boolean
+  is_published: boolean | number
   image_url?: string
   brand_id?: number
   brand_name?: string
@@ -19,8 +19,10 @@ export interface Sku {
   sku: string
   price: number
   stock: number
+  image_url?: string
   attributes: Attribute[]
 }
+
 export interface Attribute {
   id: number
   name: string

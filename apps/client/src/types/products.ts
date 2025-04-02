@@ -1,5 +1,16 @@
 import { BaseState } from '#types/api'
 
+export interface OptionValue {
+  id: number
+  value: string
+}
+
+export interface Option {
+  attribute_id: number
+  attribute_name: string
+  values: OptionValue[]
+}
+
 export interface Product {
   id: number
   name: string
@@ -12,13 +23,14 @@ export interface Product {
   category_id?: number
   category_name?: string
   skus: Sku[]
+  options: Option[]
 }
 
 export interface Sku {
   id: number
   product_id: number
   sku: string
-  image_url: string[] | string
+  image_url: string
   price: number
   stock: number
   attributes: Attribute[]
@@ -27,7 +39,7 @@ export interface Sku {
 export interface Attribute {
   id: number
   name: string
-  value?: string
+  values: AttributeValue
 }
 
 export interface AttributeValue {
