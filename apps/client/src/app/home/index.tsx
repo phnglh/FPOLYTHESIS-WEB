@@ -8,6 +8,7 @@ import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
 import ProductCardHorizontal from '@layout/components/homepage/ProductCardHorizontal'
 import { Sku } from '#types/products'
+
 const { Title } = Typography
 
 export default function Home() {
@@ -52,7 +53,7 @@ export default function Home() {
             gutter={[50, 30]}
             style={{ margin: '0 auto', maxWidth: '1400px' }}
           >
-            {data?.map((product, index) => (
+            {data?.data?.map((product, index) => (
               <Col key={index} xs={24} sm={12} md={12} lg={6} xl={6}>
                 <ProductCard product={product} onAddToCart={handleAddToCart} />
               </Col>
@@ -79,7 +80,7 @@ export default function Home() {
             <Title style={{ color: '#fff' }}>{t('homepage.categories')}</Title>
           </Col>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 px-40">
-            {data?.slice(0, 2).map((product, index) => (
+            {data?.data?.slice(0, 2).map((product, index) => (
               <div
                 key={index}
                 className={`${index >= 1 ? 'hidden md:block' : ''}`}

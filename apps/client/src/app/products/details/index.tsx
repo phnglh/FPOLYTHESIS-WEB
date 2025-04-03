@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Image, Button, InputNumber, message, Radio } from 'antd'
+import { useEffect, useState } from 'react'
+import { Button, Image, InputNumber, message, Radio } from 'antd'
 import { useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
@@ -35,6 +35,7 @@ const ProductDetailPage = () => {
 
   if (isLoading || !product) return <p>Đang tải sản phẩm...</p>
 
+  // Tìm SKU phù hợp với các thuộc tính đã chọn
   const findMatchingSku = (attrs: Record<string, string>): Sku | null => {
     return (
       product.skus.find((sku: Sku) =>
@@ -44,6 +45,31 @@ const ProductDetailPage = () => {
           ),
         ),
       ) || null
+    )
+  }
+
+  // Hàm lọc các giá trị thuộc tính có sẵn cho các thuộc tính hiện tại
+  const getFilteredValues = (attributeName: string): any[] => {
+    const availableValues: string[] = []
+
+    // Duyệt qua các SKUs để lấy ra các giá trị có sẵn cho thuộc tính
+    product.skus.forEach((sku) => {
+      const matchedAttribute = sku.attributes.find(
+        (attr) => attr.name === attributeName,
+      )
+      if (matchedAttribute) {
+        // Nếu thuộc tính đã có trong sku, thêm giá trị vào mảng availableValues
+        if (!availableValues.includes(matchedAttribute.value)) {
+          availableValues.push(matchedAttribute.value)
+        }
+      }
+    })
+
+    // Trả về giá trị hợp lệ cho thuộc tính đó (giá trị có trong SKU)
+    return (
+      product.options
+        .find((option) => option.attribute_name === attributeName)
+        ?.values.filter((value) => availableValues.includes(value.value)) || []
     )
   }
 
@@ -128,7 +154,7 @@ const ProductDetailPage = () => {
                   }
                 >
                   {Array.isArray(attribute.values) &&
-                    attribute.values.map((v) => {
+                    getFilteredValues(attribute.name).map((v) => {
                       const isDisabled =
                         !productOption ||
                         !productOption.values.some((pv) => pv.value === v.value)
@@ -137,7 +163,7 @@ const ProductDetailPage = () => {
                         <Radio
                           key={v.value}
                           value={v.value}
-                          disabled={isDisabled}
+                          disabled={isDisabled} // Disable các tùy chọn không hợp lệ
                         >
                           {v.value}
                         </Radio>
