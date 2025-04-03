@@ -180,7 +180,9 @@ const AppHeader = () => {
   )
   const userMenu = (
     <Menu>
-      <Menu.Item key="profile">Hồ sơ</Menu.Item>
+      <Menu.Item key="account">
+        <Link to="/account">Hồ sơ</Link>{' '}
+      </Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
         Đăng xuất
       </Menu.Item>

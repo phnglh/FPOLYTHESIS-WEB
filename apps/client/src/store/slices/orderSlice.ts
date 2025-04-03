@@ -61,7 +61,7 @@ export const cancelOrder = createAsyncThunk(
   'order/cancelOrder',
   async (orderId: number, { rejectWithValue }) => {
     try {
-      await apiClient.post(`/orders/${orderId}/cancel`)
+      await apiClient.delete(`/orders/${orderId}`)
       return orderId
     } catch (error: unknown) {
       const errMsg =
