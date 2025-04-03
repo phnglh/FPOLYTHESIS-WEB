@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
 import {
+  Layout,
   Card,
-  List,
   Typography,
-  Button,
+  Table,
   Spin,
-  Timeline,
+  Tag,
+  Button,
   Modal,
   Row,
   Col,
-  Space,
 } from 'antd'
 import apiClient from '@store/services/apiClient.ts'
 import { useDispatch } from 'react-redux'
 import { cancelOrder } from '@store/slices/orderSlice'
 import { AppDispatch } from '@store/store'
+
+const { Title, Text } = Typography
+const { Content } = Layout
 
 interface OrderDetail {
   id: number
@@ -36,20 +38,20 @@ interface OrderDetail {
     receiver_phone: string
     address: string
   }
-  tracking: { date: string; status: string }[]
 }
 
 const OrderDetailPage = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
+    const orderId = window.location.pathname.split('/').pop()
+    if (!orderId) return
+
     apiClient
-      .get(`/orders/${id}`)
+      .get(`/orders/${orderId}`)
       .then((response) => {
         if (response.data.status === 'success') {
           setOrder(response.data.data)
@@ -57,109 +59,163 @@ const OrderDetailPage = () => {
       })
       .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [])
 
   const handleCancelOrder = async () => {
     try {
-      await dispatch(cancelOrder(Number(id))).unwrap()
+      if (!order) return
+      await dispatch(cancelOrder(order.id)).unwrap()
       setCancelModalVisible(false)
-      navigate('/orders')
+      window.location.reload()
     } catch (error) {
       console.error('Lỗi khi hủy đơn hàng:', error)
     }
   }
 
   if (loading) return <Spin size="large" />
-  if (!order) return <Typography.Text>Không tìm thấy đơn hàng!</Typography.Text>
+  if (!order) return <Text>Không tìm thấy đơn hàng!</Text>
 
   return (
-    <Row justify="center" style={{ padding: 20 }}>
-      <Col xs={24} sm={22} md={20} lg={18} xl={16}>
-        <Typography.Title level={2} style={{ textAlign: 'center' }}>
-          Chi tiết đơn hàng #{order.order_number}
-        </Typography.Title>
-
+    <Layout style={{ padding: '24px', background: '#fff' }}>
+      <Content>
         <Card>
-          <Typography.Text>Ngày đặt: {order.ordered_at}</Typography.Text>
-          <br />
-          <Typography.Text>
-            Tổng tiền: {Number(order.final_total).toLocaleString()} VND
-          </Typography.Text>
-          <br />
-          <Typography.Text>Trạng thái: {order.status}</Typography.Text>
+          <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Người nhận:</strong>
+              </Col>
+              <Col span={18}>{order.address.receiver_name}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Điện thoại:</strong>
+              </Col>
+              <Col span={18}>{order.address.receiver_phone}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Địa chỉ:</strong>
+              </Col>
+              <Col span={18}>{order.address.address}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Ngày đặt:</strong>
+              </Col>
+              <Col span={18}>{order.ordered_at}</Col>
+            </Row>
+          </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Trạng thái:</strong>
+              </Col>
+              <Col span={18}>
+                <Tag
+                  color={
+                    order.status === 'pending' || order.status === 'processing'
+                      ? 'blue'
+                      : 'red'
+                  }
+                >
+                  {order.status}
+                </Tag>
+              </Col>
+            </Row>
+          </Text>
         </Card>
 
-        <Typography.Title level={4} style={{ textAlign: 'center' }}>
-          Lịch trình vận chuyển
-        </Typography.Title>
-        <Card>
-          <Timeline>
-            {order.tracking?.length ? (
-              order.tracking.map((event, index) => (
-                <Timeline.Item key={index}>
-                  {event.date} - {event.status}
-                </Timeline.Item>
-              ))
-            ) : (
-              <Timeline.Item>Chưa có thông tin vận chuyển</Timeline.Item>
-            )}
-          </Timeline>
-        </Card>
-
-        <Typography.Title level={4} style={{ textAlign: 'center' }}>
-          Sản phẩm trong đơn
-        </Typography.Title>
-        <List
-          grid={{ gutter: 16, column: 2 }}
+        <Title level={4}>Sản phẩm trong đơn</Title>
+        <Table
           dataSource={order.items}
-          renderItem={(item) => (
-            <List.Item>
-              <Card style={{ textAlign: 'center' }}>
-                <img
-                  src={JSON.parse(item.sku.image_url)[0]}
-                  alt={item.product_name}
-                  width={80}
-                  height={80}
-                />
-                <Typography.Text>
-                  {item.product_name} - {item.quantity} x{' '}
-                  {Number(item.unit_price).toLocaleString()} VND
-                </Typography.Text>
-              </Card>
-            </List.Item>
-          )}
+          columns={[
+            {
+              title: 'Sản phẩm',
+              dataIndex: 'product_name',
+              key: 'product_name',
+              render: (text, record) => (
+                <Row>
+                  <Col span={4}>
+                    <img
+                      src={JSON.parse(record.sku.image_url)[0]}
+                      alt={text}
+                      width={50}
+                    />
+                  </Col>
+                  <Col span={20}>{text}</Col>
+                </Row>
+              ),
+            },
+            { title: 'Đơn giá', dataIndex: 'unit_price', key: 'unit_price' },
+            { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
+            {
+              title: 'Thành tiền',
+              dataIndex: 'total_price',
+              key: 'total_price',
+              render: (total_price: string) =>
+                `${Number(total_price).toLocaleString()} VND`,
+            },
+          ]}
+          rowKey="id"
         />
 
-        <Typography.Title level={4} style={{ textAlign: 'center' }}>
-          Thông tin giao hàng
-        </Typography.Title>
-        <Card>
-          <Typography.Text>
-            Người nhận: {order.address.receiver_name}
-          </Typography.Text>
-          <br />
-          <Typography.Text>
-            Điện thoại: {order.address.receiver_phone}
-          </Typography.Text>
-          <br />
-          <Typography.Text>Địa chỉ: {order.address.address}</Typography.Text>
-        </Card>
-
         <Row justify="center" style={{ marginTop: 20 }}>
-          <Space>
-            <Button type="primary" onClick={() => navigate('/orders')}>
-              Quay lại danh sách đơn hàng
+          <Button
+            type="primary"
+            onClick={() => (window.location.href = '/account/orders')}
+          >
+            Quay lại danh sách đơn hàng
+          </Button>
+          {['pending', 'processing'].includes(order.status) && (
+            <Button
+              type="default"
+              danger
+              onClick={() => setCancelModalVisible(true)}
+            >
+              Hủy đơn hàng
             </Button>
-            {order.status !== 'Đã hủy' && (
-              <Button
-                type="default"
-                danger
-                onClick={() => setCancelModalVisible(true)}
-              >
-                Hủy đơn hàng
-              </Button>
-            )}
-          </Space>
+          )}
         </Row>
 
         <Modal
@@ -168,12 +224,10 @@ const OrderDetailPage = () => {
           onOk={handleCancelOrder}
           onCancel={() => setCancelModalVisible(false)}
         >
-          <Typography.Text>
-            Bạn có chắc chắn muốn hủy đơn hàng này không?
-          </Typography.Text>
+          <Text>Bạn có chắc chắn muốn hủy đơn hàng này không?</Text>
         </Modal>
-      </Col>
-    </Row>
+      </Content>
+    </Layout>
   )
 }
 

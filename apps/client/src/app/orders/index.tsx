@@ -57,7 +57,10 @@ const Orders = () => {
       title: 'Hành động',
       key: 'action',
       render: (_, record) => (
-        <Button type="link" onClick={() => navigate(`/orders/${record.id}`)}>
+        <Button
+          type="link"
+          onClick={() => navigate(`/account/orders/${record.id}`)}
+        >
           Xem chi tiết
         </Button>
       ),

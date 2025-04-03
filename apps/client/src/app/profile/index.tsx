@@ -1,63 +1,79 @@
-import React, { useState, useEffect } from 'react'
-import { Layout, Menu, Card, Typography, Avatar, Table, Spin } from 'antd'
+import { useEffect, useState } from 'react'
+import { Layout, Menu, Card, Typography, Avatar, Table, Spin, Tag } from 'antd'
 import {
   UserOutlined,
   HomeOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons'
-import { useDispatch, useSelector } from 'react-redux'
-import { getUser } from '@store/slices/authSlice'
-import { fetchOrders } from '@store/slices/orderSlice'
-import { AppDispatch, RootState } from '@store/store'
-import { Link } from 'react-router'
+import apiClient from '@store/services/apiClient.ts'
 
 const { Title, Text } = Typography
 const { Sider, Content } = Layout
 
+interface Order {
+  id: number
+  order_number: string
+  ordered_at: string
+  final_total: string
+  status: string
+}
+
 export default function ProfilePage() {
-  const dispatch = useDispatch<AppDispatch>()
-  const { user, loading: userLoading } = useSelector(
-    (state: RootState) => state.auth,
-  )
-  const { orders, loading: ordersLoading } = useSelector(
-    (state: RootState) => state.order,
-  )
-
   const [selectedMenu, setSelectedMenu] = useState('info')
-  const [selectedOrder, setSelectedOrder] = useState<number | null>(null)
-
-  useEffect(() => {
-    dispatch(getUser())
-  }, [dispatch])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     if (selectedMenu === 'orders') {
-      dispatch(fetchOrders())
+      setLoading(true)
+      apiClient
+        .get('/orders')
+        .then((response) => {
+          if (response.data.status === 'success') {
+            setOrders(response.data.data.data)
+          }
+        })
+        .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
+        .finally(() => setLoading(false))
     }
-  }, [selectedMenu, dispatch])
+  }, [selectedMenu])
 
-  if (userLoading || !user) {
-    return <Spin />
+  const statusColors: Record<string, string> = {
+    processing: 'blue',
+    pending: 'orange',
+    completed: 'green',
+    cancelled: 'red',
   }
 
   const orderColumns = [
-    { title: 'Mã đơn', dataIndex: 'id', key: 'id' },
-    { title: 'Ngày đặt', dataIndex: 'createdAt', key: 'createdAt' },
-    { title: 'Tổng tiền', dataIndex: 'totalPrice', key: 'totalPrice' },
     {
-      title: 'Hành động',
-      key: 'action',
-      render: (record: any) => (
-        <a onClick={() => setSelectedOrder(record.id)}>Xem chi tiết</a>
+      title: 'Mã đơn hàng',
+      dataIndex: 'order_number',
+      key: 'order_number',
+      render: (text: string, record: Order) => (
+        <a
+          onClick={() => window.location.assign(`/account/orders/${record.id}`)}
+          style={{ cursor: 'pointer', color: '#1890ff' }}
+        >
+          {text}
+        </a>
       ),
     },
-  ]
-
-  const orderDetailColumns = [
-    { title: 'Sản phẩm', dataIndex: 'name', key: 'name' },
-    { title: 'Đơn giá', dataIndex: 'price', key: 'price' },
-    { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
-    { title: 'Thành tiền', dataIndex: 'totalPrice', key: 'totalPrice' },
+    { title: 'Ngày đặt', dataIndex: 'ordered_at', key: 'ordered_at' },
+    {
+      title: 'Tổng tiền',
+      dataIndex: 'final_total',
+      key: 'final_total',
+      render: (total: string) => `${Number(total).toLocaleString()} VND`,
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={statusColors[status] || 'default'}>{status}</Tag>
+      ),
+    },
   ]
 
   return (
@@ -75,7 +91,7 @@ export default function ProfilePage() {
             Địa chỉ
           </Menu.Item>
           <Menu.Item key="orders" icon={<ShoppingCartOutlined />}>
-            <Link to="/account/orders">Danh sách đơn hàng</Link>
+            Danh sách đơn hàng
           </Menu.Item>
         </Menu>
       </Sider>
@@ -86,14 +102,23 @@ export default function ProfilePage() {
             {selectedMenu === 'info' && (
               <>
                 <Avatar size={64} icon={<UserOutlined />} />
-                <Title level={3}>{user.name}</Title>
-                <Text>{user.email}</Text>
+                <Title level={3}>Người dùng</Title>
+                <Text>user@example.com</Text>
               </>
             )}
 
-            {selectedMenu === 'address' && (
+            {selectedMenu === 'orders' && (
               <>
-                <Title level={4}>Địa chỉ giao hàng</Title>
+                <Title level={4}>Danh sách đơn hàng</Title>
+                {loading ? (
+                  <Spin size="large" />
+                ) : (
+                  <Table
+                    dataSource={orders || []}
+                    columns={orderColumns}
+                    rowKey="id"
+                  />
+                )}
               </>
             )}
           </Card>
