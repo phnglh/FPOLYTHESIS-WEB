@@ -5,7 +5,7 @@ import {
 } from '@reduxjs/toolkit/query/react'
 import { getErrorMessage } from '../../utils/error'
 import { ApiResponse } from '#types/api'
-import { Product } from '#types/products'
+import { Meta, Product } from '#types/products'
 
 export const productApi = createApi({
   reducerPath: 'productApi',
@@ -14,18 +14,19 @@ export const productApi = createApi({
   refetchOnReconnect: true,
   tagTypes: ['Products'],
   endpoints: (builder) => ({
-    getProducts: builder.query<Product[], void>({
-      query: () => '/products',
-      transformResponse: (response: ApiResponse<Product[]>) => {
-        console.log(response.data)
-        return response.data
-      },
-      transformErrorResponse: (response) => {
-        return {
-          message: getErrorMessage(response as FetchBaseQueryError),
-          status: (response as FetchBaseQueryError).status,
-        }
-      },
+    getProducts: builder.query<
+      { data: Product[]; meta: Meta },
+      { page: number; limit: number }
+    >({
+      query: ({ page, limit }) => `/products?page=${page}&per_page=${limit}`,
+      transformResponse: (response: { data: Product[]; meta: Meta }) => ({
+        data: response.data,
+        meta: response.meta,
+      }),
+      transformErrorResponse: (response) => ({
+        message: getErrorMessage(response as FetchBaseQueryError),
+        status: (response as FetchBaseQueryError).status,
+      }),
       providesTags: ['Products'],
     }),
 

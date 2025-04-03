@@ -9,7 +9,6 @@ import {
   Divider,
   Badge,
   Space,
-  Select,
   Radio,
 } from 'antd'
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
@@ -17,6 +16,7 @@ import { useEffect, useState } from 'react'
 import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Title, Text } = Typography
 
@@ -26,6 +26,7 @@ const CheckoutPage = () => {
   const [user, setUser] = useState(null)
   const [form] = Form.useForm()
   const navigate = useNavigate()
+  const { formatCurrency } = useCurrencyFormatter()
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -182,7 +183,7 @@ const CheckoutPage = () => {
                   <Col span={6}>
                     <Badge count={item.quantity}>
                       <img
-                        src={item.image[1]}
+                        src={item.image_url}
                         alt={item.sku}
                         style={{
                           width: '50px',
@@ -197,7 +198,7 @@ const CheckoutPage = () => {
                     <Text strong>{item.name}</Text>
                   </Col>
                   <Col span={6} style={{ textAlign: 'right' }}>
-                    <Text strong>{item.price}₫</Text>
+                    <Text strong>{formatCurrency(item.price)}</Text>
                   </Col>
                 </Row>
               ))}
@@ -208,7 +209,7 @@ const CheckoutPage = () => {
                 </Col>
                 <Col>
                   <Title level={3} type="success">
-                    {totalPrice.toLocaleString()}₫
+                    {formatCurrency(totalPrice)}
                   </Title>
                 </Col>
               </Row>

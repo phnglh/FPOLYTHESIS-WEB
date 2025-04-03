@@ -1,4 +1,19 @@
-import { Layout, Menu, Dropdown, Avatar, Popover, Badge } from 'antd'
+import {
+  Layout,
+  Menu,
+  Dropdown,
+  Avatar,
+  Popover,
+  Badge,
+  Button,
+  Typography,
+  Row,
+  Col,
+  Card,
+  Image,
+  Divider,
+  Space,
+} from 'antd'
 import {
   HeartOutlined,
   UserOutlined,
@@ -8,24 +23,28 @@ import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
-import { fetchCart } from '@store/slices/cartSlice'
+import {
+  decrementCartItem,
+  fetchCart,
+  incrementCartItem,
+} from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useCheckout } from '@hooks/useCheckout'
 import { useTranslation } from 'react-i18next'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Header } = Layout
 
 const AppHeader = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { formatCurrency } = useCurrencyFormatter()
   const dispatch = useDispatch<AppDispatch>()
   const { handleCheckout } = useCheckout()
   const { user, access_token } = useSelector((state: RootState) => state.auth)
-
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
-
-  console.log('cart', cart)
 
   useEffect(() => {
     if (access_token && user) {
@@ -59,73 +78,96 @@ const AppHeader = () => {
         toast.error(err || 'Đăng xuất thất bại!')
       })
   }
+
+  const handleIncrement = (id: number) => {
+    dispatch(incrementCartItem(id)).then(() => dispatch(fetchCart()))
+  }
+
+  const handleDecrement = (id: number, quantity: number) => {
+    if (quantity > 1) {
+      dispatch(decrementCartItem(id)).then(() => dispatch(fetchCart()))
+    }
+  }
   const cartContent = (
-    <div
-      style={{
-        width: 300,
-        padding: 16,
-        background: 'white',
-        borderRadius: 8,
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      }}
-    >
-      {cartItems?.map((item) => (
-        <div
-          key={item.id}
-          style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}
-        >
-          {item.sku.image_url && (
-            <img
-              src={item.sku.image_url}
-              alt={item.sku.sku}
-              style={{
-                width: 50,
-                height: 50,
-                marginRight: 12,
-                objectFit: 'cover',
-                borderRadius: 4,
-              }}
-            />
-          )}
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontWeight: 500 }}>
-              {item.product_name} - {item.sku.sku}
-            </p>
-            <p style={{ margin: '4px 0', color: 'gray' }}>
-              Số lượng: {item.quantity}
-            </p>
-            <p style={{ margin: 0, color: 'red' }}>{item.unit_price} VND</p>
+    <Card style={{ width: 400 }}>
+      {cartItems?.length > 0 ? (
+        cartItems.map((item) => (
+          <div key={item.id} style={{ marginBottom: 12 }}>
+            <Row gutter={12} align="middle">
+              <Col>
+                {item.sku.image_url && (
+                  <Image
+                    src={item.sku.image_url}
+                    alt={item.sku.sku}
+                    width={50}
+                    height={50}
+                    style={{ borderRadius: 4, objectFit: 'cover' }}
+                  />
+                )}
+              </Col>
+              <Col flex="auto">
+                <Typography.Text strong>{item.product_name}</Typography.Text>
+                <Typography.Paragraph
+                  type="secondary"
+                  style={{ margin: '4px 0' }}
+                >
+                  {item.sku.sku} | Số lượng:
+                  <Button
+                    size="small"
+                    style={{ margin: '0 5px' }}
+                    onClick={() => handleDecrement(item.id, item.quantity)}
+                    disabled={item.quantity <= 1}
+                  >
+                    -
+                  </Button>
+                  {item.quantity}
+                  <Button
+                    size="small"
+                    style={{ margin: '0 5px' }}
+                    onClick={() => handleIncrement(item.id)}
+                  >
+                    +
+                  </Button>
+                </Typography.Paragraph>
+                <Typography.Text type="danger" strong>
+                  {formatCurrency(item.unit_price)}
+                </Typography.Text>
+              </Col>
+            </Row>
+            <Divider style={{ margin: '8px 0' }} />
           </div>
-        </div>
-      ))}
-      <div
-        style={{
-          borderTop: '1px solid #ddd',
-          paddingTop: 12,
-          textAlign: 'right',
-          fontWeight: 'bold',
-        }}
-      >
-        Tổng tiền: {cartTotal.toLocaleString()} VND
-      </div>
-      <button
-        style={{
-          marginTop: 12,
-          width: '100%',
-          padding: 10,
-          background: 'green',
-          color: 'white',
-          border: 'none',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: 16,
-          fontWeight: 500,
-        }}
-        onClick={handleCheckout}
-      >
-        Thanh toán
-      </button>
-    </div>
+        ))
+      ) : (
+        <Typography.Text
+          type="secondary"
+          style={{ textAlign: 'center', display: 'block' }}
+        >
+          Giỏ hàng trống
+        </Typography.Text>
+      )}
+      <Divider />
+      <Row justify="space-between">
+        <Col>
+          <Typography.Text strong>Tổng tiền:</Typography.Text>
+        </Col>
+        <Col>
+          <Typography.Text strong>{formatCurrency(cartTotal)}</Typography.Text>
+        </Col>
+      </Row>
+      <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
+        <Button
+          type="primary"
+          block
+          onClick={handleCheckout}
+          disabled={!cartItems?.length}
+        >
+          Thanh toán
+        </Button>
+        <Button type="default" block onClick={() => navigate('/carts')}>
+          Xem giỏ hàng
+        </Button>
+      </Space>
+    </Card>
   )
 
   const authMenu = (
@@ -187,7 +229,7 @@ const AppHeader = () => {
       </Menu>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <HeartOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
-        <Popover content={cartContent} title="Giỏ hàng" trigger="hover">
+        <Popover content={cartContent} title="Giỏ hàng của bạn" trigger="hover">
           <Badge count={cartItems.length}>
             <ShoppingCartOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
           </Badge>

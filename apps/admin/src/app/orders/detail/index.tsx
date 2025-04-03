@@ -1,74 +1,40 @@
-import { Card, Descriptions, Table, Select, Button, message } from 'antd'
-import { useState } from 'react'
-
-const { Option } = Select
+import { Card, Descriptions, Button, message } from 'antd'
+import { useParams } from 'react-router'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@store/store'
+import { useEffect } from 'react'
+import { fetchOrderById } from '@store/slices/orderSlice'
 
 const OrderDetails = () => {
-  const [orderStatus, setOrderStatus] = useState('Pending')
+  const { id } = useParams<{ id: string }>()
+  const { data } = useSelector((state: RootState) => state.orders)
+  const dispatch = useDispatch<AppDispatch>()
 
-  const order = {
-    id: 'ORD001',
-    customer: 'Nguyễn Văn A',
-    total: 500000,
-    status: 'Pending',
-    date: '2025-03-25',
-    items: [
-      { id: 1, name: 'Laptop Acer', quantity: 1, price: 15000000 },
-      { id: 2, name: 'Chuột Logitech', quantity: 2, price: 600000 },
-    ],
-  }
-
-  const handleStatusChange = (value) => {
-    setOrderStatus(value)
-    message.success(`Cập nhật trạng thái: ${value}`)
-  }
-
-  const handleNotifyCustomer = () => {
-    message.info('Đã gửi thông báo cho khách hàng')
-  }
-
-  const columns = [
-    { title: 'Sản phẩm', dataIndex: 'name', key: 'name' },
-    { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
-    {
-      title: 'Giá',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price) => `${price.toLocaleString()} đ`,
-    },
-  ]
+  useEffect(() => {
+    if (id) {
+      const orderId = Number(id)
+      if (!isNaN(orderId)) {
+        dispatch(fetchOrderById(orderId))
+      } else {
+        console.error('ID không hợp lệ')
+      }
+    }
+  }, [dispatch, id])
 
   return (
-    <Card title={`Chi tiết đơn hàng ${order.id}`}>
+    <Card title={`Chi tiết đơn hàng ${data.id}`}>
       <Descriptions bordered>
         <Descriptions.Item label="Khách hàng">
-          {order.customer}
+          {data.user?.name}
         </Descriptions.Item>
         <Descriptions.Item label="Tổng tiền">
-          {order.total.toLocaleString()} đ
+          {data.final_total} đ
         </Descriptions.Item>
         <Descriptions.Item label="Ngày đặt hàng">
-          {order.date}
-        </Descriptions.Item>
-        <Descriptions.Item label="Trạng thái">
-          <Select value={orderStatus} onChange={handleStatusChange}>
-            <Option value="Pending">Chờ xử lý</Option>
-            <Option value="Completed">Hoàn thành</Option>
-            <Option value="Cancelled">Đã hủy</Option>
-          </Select>
+          {data.created_at}
         </Descriptions.Item>
       </Descriptions>
-      <Table
-        columns={columns}
-        dataSource={order.items}
-        rowKey="id"
-        style={{ marginTop: 20 }}
-      />
-      <Button
-        type="primary"
-        onClick={handleNotifyCustomer}
-        style={{ marginTop: 20 }}
-      >
+      <Button type="primary" style={{ marginTop: 20 }}>
         Gửi thông báo cho khách hàng
       </Button>
     </Card>

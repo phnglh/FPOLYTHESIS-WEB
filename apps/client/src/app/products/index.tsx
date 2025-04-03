@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Layout, Row, Col } from 'antd'
+import { Col, Layout, Row } from 'antd'
 
 import { useProductList } from '@hooks/useProductQuery'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
@@ -42,7 +42,7 @@ const ProductPage = () => {
   useEffect(() => {
     if (!data) return
 
-    const result = data.filter((product) => {
+    const result = data.data.filter((product) => {
       if (!product.is_published) {
         return false
       }
@@ -82,10 +82,11 @@ const ProductPage = () => {
 
       return true
     })
-
+    console.log('Filtered Products:', result)
     setFilteredProducts(result)
   }, [data, selectedFilters])
 
+  console.log(data, selectedFilters)
   return (
     <Layout style={{ margin: '0 100px', padding: '10px' }}>
       <FilterComponent

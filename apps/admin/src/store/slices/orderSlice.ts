@@ -31,7 +31,21 @@ export const fetchOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/orders')
-      return res.data
+      return res.data.data
+    } catch (error: unknown) {
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
+      return rejectWithValue(errMsg)
+    }
+  },
+)
+
+export const fetchOrderById = createAsyncThunk(
+  'order/fetchOrderById',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/orders/${orderId}`)
+      return res.data.data
     } catch (error: unknown) {
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
@@ -82,13 +96,25 @@ const orderSlice = createSlice({
       .addCase(
         fetchOrders.fulfilled,
         (state, action: PayloadAction<Order[]>) => {
-          state.data = action.payload // Gán thẳng danh sách đơn hàng
+          state.data = action.payload
           state.loading = false
         },
       )
       .addCase(fetchOrders.rejected, (state, action) => {
         state.error = action.payload as string
         state.loading = false
+      })
+      .addCase(fetchOrderById.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchOrderById.fulfilled, (state, action) => {
+        state.loading = false
+        state.data = action.payload
+      })
+      .addCase(fetchOrderById.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string // Lưu thông báo lỗi vào state
       })
       .addCase(
         cancelOrder.fulfilled,

@@ -1,35 +1,15 @@
 import { ApiErrorResponse } from '#types/api'
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { Order, OrderItem, OrderState } from '#types/order'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
 
-export interface OrderItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
-
-export interface Order {
-  id: number
-  items: OrderItem[]
-  totalPrice: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  createdAt: string
-}
-
-interface OrderState {
-  orders: Order[]
-  loading: boolean
-  error: string | null
-}
-
-const initialState: OrderState = {
-  orders: [],
+const initialOrderState: OrderState = {
+  data: [],
+  selectedItem: null,
   loading: false,
   error: null,
 }
 
-// Tạo đơn hàng mới
 export const createOrder = createAsyncThunk(
   'order/createOrder',
   async (items: OrderItem[], { rejectWithValue }) => {
@@ -37,9 +17,6 @@ export const createOrder = createAsyncThunk(
       const res = await apiClient.post('/orders', { items })
       return res.data
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -47,7 +24,6 @@ export const createOrder = createAsyncThunk(
   },
 )
 
-// Lấy danh sách đơn hàng
 export const fetchOrders = createAsyncThunk(
   'order/fetchOrders',
   async (_, { rejectWithValue }) => {
@@ -55,9 +31,6 @@ export const fetchOrders = createAsyncThunk(
       const res = await apiClient.get('/orders')
       return res.data
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -65,7 +38,25 @@ export const fetchOrders = createAsyncThunk(
   },
 )
 
-// Hủy đơn hàng
+export const fetchOrderById = createAsyncThunk<
+  Order,
+  number,
+  { rejectValue: string }
+>('orders/fetchOrderById', async (id, { rejectWithValue }) => {
+  try {
+    const response = await apiClient.get(`/orders/${id}`)
+    return response.data.data
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return rejectWithValue(error.message)
+    }
+    const errMsg =
+      (error as ApiErrorResponse)?.message ||
+      'Lỗi không xác định khi lấy danh mục'
+    return rejectWithValue(errMsg)
+  }
+})
+
 export const cancelOrder = createAsyncThunk(
   'order/cancelOrder',
   async (orderId: number, { rejectWithValue }) => {
@@ -73,9 +64,6 @@ export const cancelOrder = createAsyncThunk(
       await apiClient.post(`/orders/${orderId}/cancel`)
       return orderId
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
-      }
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
       return rejectWithValue(errMsg)
@@ -85,7 +73,7 @@ export const cancelOrder = createAsyncThunk(
 
 const orderSlice = createSlice({
   name: 'order',
-  initialState,
+  initialState: initialOrderState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -93,7 +81,11 @@ const orderSlice = createSlice({
         state.loading = true
       })
       .addCase(createOrder.fulfilled, (state, action: PayloadAction<Order>) => {
-        state.orders.push(action.payload)
+        if (state.data) {
+          state.data.push(action.payload)
+        } else {
+          state.data = [action.payload]
+        }
         state.loading = false
       })
       .addCase(createOrder.rejected, (state, action) => {
@@ -106,7 +98,7 @@ const orderSlice = createSlice({
       .addCase(
         fetchOrders.fulfilled,
         (state, action: PayloadAction<Order[]>) => {
-          state.orders = action.payload
+          state.data = action.payload
           state.loading = false
         },
       )
@@ -114,12 +106,24 @@ const orderSlice = createSlice({
         state.error = action.payload as string
         state.loading = false
       })
+      .addCase(fetchOrderById.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(fetchOrderById.fulfilled, (state, action) => {
+        state.loading = false
+        state.selectedItem = action.payload
+      })
+      .addCase(fetchOrderById.rejected, (state) => {
+        state.loading = false
+      })
       .addCase(
         cancelOrder.fulfilled,
         (state, action: PayloadAction<number>) => {
-          state.orders = state.orders.filter(
-            (order) => order.id !== action.payload,
-          )
+          if (state.data) {
+            state.data = state.data.filter(
+              (order) => order.id !== action.payload,
+            )
+          }
         },
       )
   },

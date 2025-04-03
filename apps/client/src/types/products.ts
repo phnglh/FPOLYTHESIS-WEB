@@ -39,7 +39,7 @@ export interface Sku {
 export interface Attribute {
   id: number
   name: string
-  values: AttributeValue
+  value: AttributeValue
 }
 
 export interface AttributeValue {

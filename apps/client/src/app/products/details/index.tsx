@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Image, Select, Button, InputNumber, message, Radio } from 'antd'
+import { Image, Button, InputNumber, message, Radio } from 'antd'
 import { useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { fetchAttributes } from '@store/slices/attributeSlice'
+import { toast } from 'react-toastify'
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>()
@@ -70,16 +71,15 @@ const ProductDetailPage = () => {
     dispatch(addToCart({ sku_id: selectedSku.id, quantity }))
       .unwrap()
       .then(() => {
-        message.success('Thêm vào giỏ hàng thành công!')
+        toast.success('Thêm vào giỏ hàng thành công!')
         dispatch(fetchCart())
       })
       .catch((error) => {
         console.error('Lỗi khi thêm vào giỏ hàng:', error)
-        message.error('Không thể thêm vào giỏ hàng!')
+        toast.error('Không thể thêm vào giỏ hàng!')
       })
   }
 
-  console.log(product)
   return (
     <div className="container mx-auto justify-center p-8 flex gap-20">
       <div className="flex gap-6">

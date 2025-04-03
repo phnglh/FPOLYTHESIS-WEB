@@ -12,7 +12,7 @@ export const useCheckout = () => {
       name: item.sku.sku,
       price: item.unit_price,
       quantity: item.quantity,
-      image: item.sku.image_url,
+      image_url: item.sku.image_url,
     }))
 
     localStorage.setItem('checkout_items', JSON.stringify(selectedItems))

@@ -27,6 +27,7 @@ const LoginPage = () => {
       })
   }
 
+  console.log(user)
   if (user && user.role === 'admin') {
     return <Navigate to="/dashboard" replace />
   }

@@ -20,9 +20,11 @@ import {
 } from '@store/slices/cartSlice'
 import { CartItem } from '#types/cart'
 import { useCheckout } from '@hooks/useCheckout'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const CartPage = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const { formatCurrency } = useCurrencyFormatter()
   const { data } = useSelector((state: RootState) => state.cart)
   const items = data?.items || []
   const { handleCheckout } = useCheckout()
@@ -58,11 +60,7 @@ const CartPage = () => {
       render: (_: string, record: CartItem) => (
         <Space>
           <Image
-            src={
-              Array.isArray(record?.sku.image_url)
-                ? record?.sku.image_url[0]
-                : JSON.parse(record?.sku.image_url)[0]
-            }
+            src={record?.sku.image_url}
             alt={record.sku.sku}
             width={50}
             height={50}
@@ -84,7 +82,7 @@ const CartPage = () => {
       key: 'unit_price',
       render: (price: number) => (
         <Typography.Text strong type="danger">
-          {price.toLocaleString()} đ
+          {formatCurrency(price)}
         </Typography.Text>
       ),
     },
@@ -118,7 +116,7 @@ const CartPage = () => {
       key: 'total',
       render: (_: string, record: CartItem) => (
         <Typography.Text strong type="danger">
-          {(record.unit_price * record.quantity).toLocaleString()} đ
+          {formatCurrency(record.unit_price * record.quantity)}
         </Typography.Text>
       ),
     },
