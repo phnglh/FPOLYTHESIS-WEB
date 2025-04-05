@@ -9,7 +9,6 @@ import {
   Divider,
   Radio,
   Space,
-  Select,
 } from 'antd'
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
@@ -24,7 +23,6 @@ const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState<any[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
   const [user, setUser] = useState<any>(null)
-  const [addresses, setAddresses] = useState<any[]>([])
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
@@ -32,48 +30,18 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem('access_token')
-        if (!token) {
-          toast.error('Vui lòng đăng nhập để tiếp tục.')
-          return
-        }
-
-        // Lấy thông tin người dùng
-        const response = await apiClient.get('/user_addresses', {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header
-          },
-        })
-
+        const response = await apiClient.get('/users/profile')
         const userData = response.data
         setUser(userData)
         form.setFieldsValue({
           email: userData.email,
-          receiver_name: userData.name, // Đặt tên người nhận mặc định từ dữ liệu người dùng
-          payment_method: 'vnpay', // Mặc định là VNPay
+          receiver_name: userData.name,
+          receiver_phone: userData.phone,
+          address: userData.address,
+          payment_method: 'vnpay',
         })
-
-        // Lấy danh sách địa chỉ của người dùng
-        const addressResponse = await apiClient.get('/user_addresses', {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header
-          },
-        })
-
-        if (Array.isArray(addressResponse.data)) {
-          setAddresses(addressResponse.data)
-          if (addressResponse.data.length > 0) {
-            const defaultPhone = addressResponse.data[0].receiver_phone // Lấy số điện thoại mặc định từ địa chỉ đầu tiên
-            form.setFieldsValue({
-              receiver_phone: defaultPhone, // Đặt giá trị cho receiver_phone trong form
-            })
-          }
-        } else {
-          console.error('Dữ liệu địa chỉ không phải mảng')
-        }
       } catch (error) {
         console.error('Lỗi khi lấy thông tin người dùng:', error)
-        toast.error('Lỗi khi lấy thông tin người dùng!')
       }
     }
 
@@ -105,7 +73,7 @@ const CheckoutPage = () => {
       payment_method: values.payment_method,
       new_address: {
         receiver_name: values.receiver_name,
-        receiver_phone: values.receiver_phone, // Sử dụng receiver_phone trong checkout data
+        receiver_phone: values.receiver_phone,
         address: values.address,
         city: values.city || '',
         state: values.state || '',
@@ -115,15 +83,9 @@ const CheckoutPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        toast.error('Vui lòng đăng nhập để tiếp tục.')
-        return
-      }
-
       const response = await apiClient.post('/orders/create', checkoutData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       })
       if (values.payment_method === 'vnpay') {
@@ -166,14 +128,14 @@ const CheckoutPage = () => {
 
           <Form layout="vertical" form={form} onFinish={onFinish}>
             <Form.Item label="Email" name="email">
-              <Input placeholder="Email" disabled />
+              <Input placeholder="Email" />
             </Form.Item>
             <Form.Item
               label="Họ và tên"
               name="receiver_name"
               rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
             >
-              <Input placeholder="Họ và tên" disabled />
+              <Input placeholder="Họ và tên" />
             </Form.Item>
             <Form.Item
               label="Số điện thoại"
@@ -187,18 +149,7 @@ const CheckoutPage = () => {
                 },
               ]}
             >
-              <Select placeholder="Chọn số điện thoại đã lưu hoặc nhập số mới">
-                {Array.isArray(addresses) &&
-                  addresses.length > 0 &&
-                  addresses.map((address) => (
-                    <Select.Option
-                      key={address.id}
-                      value={address.receiver_phone}
-                    >
-                      {address.receiver_phone}
-                    </Select.Option>
-                  ))}
-              </Select>
+              <Input placeholder="Số điện thoại" />
             </Form.Item>
             <Form.Item
               label="Địa chỉ"
