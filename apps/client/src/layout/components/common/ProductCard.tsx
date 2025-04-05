@@ -17,7 +17,7 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
   return (
     <Card
       hoverable
-      onClick={() => navigate(`/products/${product.id}`)}
+      // onClick={() => navigate(`/products/${product.id}`)}
       cover={
         <Image
           src={product.image_url}

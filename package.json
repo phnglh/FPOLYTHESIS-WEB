@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "dev": "pnpm -C apps/client dev & pnpm -C apps/admin dev",
+    "dev-admin": "npm --prefix apps/admin run dev",
+    "dev-client": "npm --prefix apps/client run dev",
+    "dev": "npm-run-all --parallel dev-admin dev-client",
     "build": "pnpm -C apps/client build && pnpm -C apps/admin build",
     "preview": "pnpm -C apps/client preview & pnpm -C apps/admin preview",
     "typecheck": "tsc --noEmit",

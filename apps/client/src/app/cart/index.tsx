@@ -10,7 +10,7 @@ import {
 import { DeleteOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   decrementCartItem,
   fetchCart,
@@ -19,31 +19,44 @@ import {
   updateCartItem,
 } from '@store/slices/cartSlice'
 import { CartItem } from '#types/cart'
-import { useCheckout } from '@hooks/useCheckout'
+import { useNavigate } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
+import { toast } from 'react-toastify'
 
 const CartPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { formatCurrency } = useCurrencyFormatter()
   const { data } = useSelector((state: RootState) => state.cart)
   const items = data?.items || []
-  const { handleCheckout } = useCheckout()
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     dispatch(fetchCart())
   }, [dispatch])
 
+  useEffect(() => {
+    setSelectedRowKeys([]) // Reset selected keys if items change
+  }, [items])
+
   const handleUpdateQuantity = (id: number, quantity: number) => {
-    dispatch(updateCartItem({ id, quantity })).then(() => dispatch(fetchCart()))
+    // Update quantity and keep the selected items intact
+    dispatch(updateCartItem({ id, quantity })).then(() => {
+      dispatch(fetchCart()) // Re-fetch cart data
+    })
   }
 
   const handleIncrement = (id: number) => {
-    dispatch(incrementCartItem(id)).then(() => dispatch(fetchCart()))
+    dispatch(incrementCartItem(id)).then(() => {
+      dispatch(fetchCart())
+    })
   }
 
   const handleDecrement = (id: number, quantity: number) => {
     if (quantity > 1) {
-      dispatch(decrementCartItem(id)).then(() => dispatch(fetchCart()))
+      dispatch(decrementCartItem(id)).then(() => {
+        dispatch(fetchCart())
+      })
     }
   }
 
@@ -52,9 +65,45 @@ const CartPage = () => {
     await dispatch(fetchCart())
   }
 
+  const handleSelectChange = (selectedKeys: React.Key[]) => {
+    setSelectedRowKeys(selectedKeys)
+  }
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: handleSelectChange,
+  }
+
+  const selectedItems = items.filter((item) =>
+    selectedRowKeys.includes(item.id),
+  )
+
+  const totalAmount = selectedItems.reduce(
+    (total, item) => total + item.unit_price * item.quantity,
+    0,
+  )
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      toast.warning('Vui lòng chọn sản phẩm để thanh toán!')
+      return
+    }
+
+    const checkoutData = selectedItems.map((item) => ({
+      id: item.id,
+      sku_id: item.sku.id,
+      sku: item.sku.sku,
+      price: item.unit_price,
+      quantity: item.quantity,
+      image_url: item.sku.image_url,
+    }))
+    localStorage.setItem('checkout_items', JSON.stringify(checkoutData))
+    navigate('/checkout')
+  }
+
   const columns = [
     {
-      title: 'Sản phẩm',
+      title: 'Ảnh',
       dataIndex: 'product',
       key: 'product',
       render: (_: string, record: CartItem) => (
@@ -65,14 +114,16 @@ const CartPage = () => {
             width={50}
             height={50}
           />
-          <div>
-            <Typography.Text strong>
-              {record.sku?.product?.name}
-            </Typography.Text>
-            <Typography.Text type="secondary">
-              SKU: {record.sku.sku}
-            </Typography.Text>
-          </div>
+        </Space>
+      ),
+    },
+    {
+      title: 'Tên sản phẩm',
+      dataIndex: 'product_name',
+      render: (_: string, record: CartItem) => (
+        <Space direction="vertical" size={0}>
+          <Typography.Text strong>{record.sku?.product?.name}</Typography.Text>
+          <Typography.Text type="secondary">{record.sku.sku}</Typography.Text>
         </Space>
       ),
     },
@@ -139,6 +190,7 @@ const CartPage = () => {
       style={{ maxWidth: '800px', margin: '0 auto' }}
     >
       <Table
+        rowSelection={rowSelection}
         columns={columns}
         dataSource={items}
         pagination={false}
@@ -151,16 +203,14 @@ const CartPage = () => {
         <Typography.Title level={4}>
           Tổng tiền:{' '}
           <Typography.Text type="danger" strong>
-            {items
-              .reduce(
-                (total, item) => total + item.unit_price * item.quantity,
-                0,
-              )
-              .toLocaleString()}{' '}
-            đ
+            {formatCurrency(totalAmount)} đ
           </Typography.Text>
         </Typography.Title>
-        <Button type="primary" onClick={handleCheckout}>
+        <Button
+          type="primary"
+          onClick={handleCheckout}
+          disabled={selectedItems.length === 0}
+        >
           Thanh toán
         </Button>
       </Card>
