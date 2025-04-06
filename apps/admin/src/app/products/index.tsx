@@ -49,7 +49,7 @@ const ProductPage = () => {
     }
   }
   const handleUpdateProduct = (id: number) => {
-    navigate(`/admin/products/update/${id}`)
+    navigate(`/products/update/${id}`)
   }
 
   const handleViewProduct = async (id: number) => {
