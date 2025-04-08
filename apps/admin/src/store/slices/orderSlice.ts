@@ -25,7 +25,7 @@ export const createOrder = createAsyncThunk(
   },
 )
 
-// Lấy danh sách đơn hàng
+// Lấy danh sách đơn hàng (của user hiện tại)
 export const fetchOrders = createAsyncThunk(
   'order/fetchOrders',
   async (_, { rejectWithValue }) => {
@@ -40,6 +40,22 @@ export const fetchOrders = createAsyncThunk(
   },
 )
 
+// Lấy toàn bộ đơn hàng (cho admin)
+export const fetchAllOrders = createAsyncThunk(
+  'order/fetchAllOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get('/orders/all')
+      return res.data.data
+    } catch (error: unknown) {
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
+      return rejectWithValue(errMsg)
+    }
+  },
+)
+
+// Lấy đơn hàng theo ID
 export const fetchOrderById = createAsyncThunk(
   'order/fetchOrderById',
   async (orderId: number, { rejectWithValue }) => {
@@ -75,21 +91,20 @@ const orderSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Tạo đơn hàng
       .addCase(createOrder.pending, (state) => {
         state.loading = true
       })
       .addCase(createOrder.fulfilled, (state, action: PayloadAction<Order>) => {
-        if (state.data) {
-          state.data.push(action.payload)
-        } else {
-          state.data = [action.payload]
-        }
+        state.data.push(action.payload)
         state.loading = false
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.error = action.payload as string
         state.loading = false
       })
+
+      // Lấy danh sách đơn hàng (user)
       .addCase(fetchOrders.pending, (state) => {
         state.loading = true
       })
@@ -104,26 +119,45 @@ const orderSlice = createSlice({
         state.error = action.payload as string
         state.loading = false
       })
+
+      // Lấy tất cả đơn hàng (admin)
+      .addCase(fetchAllOrders.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(
+        fetchAllOrders.fulfilled,
+        (state, action: PayloadAction<Order[]>) => {
+          state.data = action.payload
+          state.loading = false
+        },
+      )
+      .addCase(fetchAllOrders.rejected, (state, action) => {
+        state.error = action.payload as string
+        state.loading = false
+      })
+
+      // Lấy đơn hàng theo ID
       .addCase(fetchOrderById.pending, (state) => {
         state.loading = true
         state.error = null
       })
-      .addCase(fetchOrderById.fulfilled, (state, action) => {
-        state.loading = false
-        state.data = action.payload
-      })
+      .addCase(
+        fetchOrderById.fulfilled,
+        (state, action: PayloadAction<Order>) => {
+          state.selectedItem = action.payload
+          state.loading = false
+        },
+      )
       .addCase(fetchOrderById.rejected, (state, action) => {
+        state.error = action.payload as string
         state.loading = false
-        state.error = action.payload as string // Lưu thông báo lỗi vào state
       })
+
+      // Hủy đơn hàng
       .addCase(
         cancelOrder.fulfilled,
         (state, action: PayloadAction<number>) => {
-          if (state.data) {
-            state.data = state.data.filter(
-              (order) => order.id !== action.payload,
-            )
-          }
+          state.data = state.data.filter((order) => order.id !== action.payload)
         },
       )
   },
