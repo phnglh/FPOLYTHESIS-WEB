@@ -157,7 +157,7 @@ const CheckoutPage = () => {
         const paymentUrl = res.data?.data?.payment_url
         if (paymentUrl) {
           localStorage.removeItem('checkout_items')
-          navigate(paymentUrl)
+          window.location.href = paymentUrl
         } else {
           toast.error('Không lấy được URL thanh toán VNPay!')
         }
