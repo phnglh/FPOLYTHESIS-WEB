@@ -32,7 +32,6 @@ import {
 } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
 import { Link, useNavigate } from 'react-router'
-import { useCheckout } from '@hooks/useCheckout'
 import { useTranslation } from 'react-i18next'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
@@ -43,7 +42,6 @@ const AppHeader = () => {
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
   const dispatch = useDispatch<AppDispatch>()
-  const { handleCheckout } = useCheckout()
   const { user, access_token } = useSelector((state: RootState) => state.auth)
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
@@ -54,11 +52,6 @@ const AppHeader = () => {
       dispatch(fetchCart())
     }
   }, [access_token, user, dispatch])
-
-  const cartTotal = cartItems.reduce((total, item) => {
-    const price = item.unit_price
-    return total + item.quantity * (isNaN(price) ? 0 : price)
-  }, 0)
 
   useEffect(() => {
     if (
