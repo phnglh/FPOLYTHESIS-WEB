@@ -61,10 +61,6 @@ export const items = [
             key: '/attributes/list',
             label: <Link to="/attributes">Tất cả thuộc tính</Link>,
           },
-          {
-            key: '/attributes/create',
-            label: <Link to="/attributes/create">Tạo thuộc tính</Link>,
-          },
         ],
       },
       {
@@ -97,20 +93,20 @@ export const items = [
           },
         ],
       },
+    ],
+  },
+  {
+    key: '/users',
+    icon: <UserOutlined />,
+    label: 'Users',
+    children: [
       {
-        key: '/users',
-        icon: <UserOutlined />,
-        label: 'Users',
-        children: [
-          {
-            key: '/users/list',
-            label: <Link to="/users">Quản lý người dùng</Link>,
-          },
-          {
-            key: '/users/create',
-            label: <Link to="/users/create">Thêm người dùng</Link>,
-          },
-        ],
+        key: '/users/list',
+        label: <Link to="/users">Quản lý người dùng</Link>,
+      },
+      {
+        key: '/users/create',
+        label: <Link to="/users/create">Thêm người dùng</Link>,
       },
     ],
   },

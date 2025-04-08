@@ -111,6 +111,7 @@ const OrderDetailPage = () => {
   if (loading) return <Spin size="large" />
   if (!order) return <Text>Không tìm thấy đơn hàng!</Text>
 
+  console.log(order)
   return (
     <Layout style={{ padding: '24px', background: '#fff' }}>
       <Content
@@ -234,13 +235,7 @@ const OrderDetailPage = () => {
               render: (text, record) => (
                 <Row>
                   <Col span={4}>
-                    {record.id === 'total' ? null : (
-                      <img
-                        src={JSON.parse(record.sku.image_url)[0]}
-                        alt={text}
-                        width={50}
-                      />
-                    )}
+                    <img src={record.sku.image_url} alt={text} width={50} />
                   </Col>
                   <Col span={20}>{text}</Col>
                 </Row>
