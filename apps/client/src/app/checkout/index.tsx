@@ -28,57 +28,65 @@ const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState<any[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
   const [useDefaultAddress, setUseDefaultAddress] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const fillDefaultAddress = (userData: any) => {
-    const defaultAddr = userData.user_addresses?.find(
-      (addr: any) => addr.is_default === 1,
-    )
-    if (defaultAddr) {
-      form.setFieldsValue({
-        receiver_name: defaultAddr.receiver_name,
-        receiver_phone: defaultAddr.receiver_phone,
-        address: defaultAddr.address,
-      })
-    }
-  }
+  const token = localStorage.getItem('access_token')
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserData = async () => {
       try {
-        const res = await apiClient.get('/users/profile')
-        const userData = res.data
+        const userRes = await apiClient.get('/users/profile')
+        const userData = userRes.data
         setUser(userData)
-
-        const defaultAddress = userData.user_addresses?.find(
-          (addr: any) => addr.is_default === 1,
-        )
 
         form.setFieldsValue({
           email: userData.email,
           payment_method: 'vnpay',
-          is_default: defaultAddress ? 1 : 0,
         })
-
-        if (defaultAddress) {
-          setUseDefaultAddress(true)
-          fillDefaultAddress(userData)
-        } else {
-          setUseDefaultAddress(false)
-        }
       } catch (err) {
         console.error('Lỗi khi lấy thông tin người dùng:', err)
       }
     }
 
-    const token = localStorage.getItem('access_token')
+    const fetchDefaultAddress = async () => {
+      try {
+        const addrRes = await apiClient.get('/user_addresses')
+        const addresses = addrRes.data?.data || []
+
+        const defaultAddr = addresses.find((addr) => addr.is_default === 1)
+
+        if (defaultAddr) {
+          setUseDefaultAddress(true)
+          form.setFieldsValue({
+            receiver_name: defaultAddr.receiver_name,
+            receiver_phone: defaultAddr.receiver_phone,
+            address: defaultAddr.address,
+            is_default: 1,
+          })
+        } else {
+          setUseDefaultAddress(false)
+          form.setFieldsValue({ is_default: 0 })
+        }
+      } catch (err) {
+        console.error('Không có địa chỉ mặc định hoặc lỗi API:', err)
+        setUseDefaultAddress(false)
+        form.setFieldsValue({ is_default: 0 })
+      }
+    }
+
     if (token) {
-      fetchUserProfile()
+      fetchUserData()
+      fetchDefaultAddress()
     }
 
     const storedItems = localStorage.getItem('checkout_items')
     if (storedItems) {
       try {
         const parsedItems = JSON.parse(storedItems)
+        if (parsedItems.length === 0) {
+          toast.warning('Giỏ hàng trống, vui lòng thêm sản phẩm!')
+          navigate('/cart')
+        }
         setCartItems(parsedItems)
         const total = parsedItems.reduce(
           (sum: number, item: any) => sum + item.price * item.quantity,
@@ -102,10 +110,12 @@ const CheckoutPage = () => {
   }, [])
 
   const onFinish = async (values: any) => {
+    setIsSubmitting(true)
     const checkoutData = {
       selected_sku_ids: cartItems.map((item) => item.sku_id),
       voucher_code: values.voucher_code || '',
       payment_method: values.payment_method,
+      note: values.note || '',
       new_address: {
         receiver_name: values.receiver_name,
         receiver_phone: values.receiver_phone,
@@ -117,7 +127,7 @@ const CheckoutPage = () => {
     try {
       const res = await apiClient.post('/orders/create', checkoutData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${token}`,
         },
       })
 
@@ -137,6 +147,8 @@ const CheckoutPage = () => {
     } catch (err: any) {
       console.error(err)
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra!')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -163,13 +175,24 @@ const CheckoutPage = () => {
                 onChange={(e) => {
                   const isDefault = e.target.value === 1
                   setUseDefaultAddress(isDefault)
+                  form.setFieldsValue({ is_default: isDefault ? 1 : 0 })
 
-                  form.setFieldsValue({
-                    is_default: isDefault ? 1 : 0,
-                  })
-
-                  if (isDefault && user) {
-                    fillDefaultAddress(user)
+                  if (isDefault) {
+                    apiClient
+                      .get('/user_addresses')
+                      .then((res) => {
+                        const addr = res.data?.data
+                        if (addr) {
+                          form.setFieldsValue({
+                            receiver_name: addr.receiver_name,
+                            receiver_phone: addr.receiver_phone,
+                            address: addr.address,
+                          })
+                        }
+                      })
+                      .catch(() => {
+                        toast.error('Không lấy được địa chỉ mặc định!')
+                      })
                   } else {
                     form.setFieldsValue({
                       receiver_name: '',
@@ -229,7 +252,6 @@ const CheckoutPage = () => {
               </Radio.Group>
             </Form.Item>
 
-            {/* Đơn hàng */}
             <Card
               title={
                 <Title level={5}>
@@ -286,7 +308,12 @@ const CheckoutPage = () => {
               </Row>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={isSubmitting}
+                >
                   ĐẶT HÀNG
                 </Button>
               </Form.Item>

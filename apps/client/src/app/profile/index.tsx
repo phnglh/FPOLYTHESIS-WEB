@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
 import {
-  Layout,
-  Menu,
+  Row,
+  Col,
   Card,
-  Typography,
-  Avatar,
-  Table,
-  Spin,
-  Tag,
-  Button,
   Space,
+  Typography,
+  Tag,
+  Divider,
+  Button,
+  Spin,
+  Menu,
+  Layout,
+  Avatar,
   Form,
   Input,
+  Table,
 } from 'antd'
+
 import {
   UserOutlined,
   HomeOutlined,
@@ -242,47 +246,66 @@ export default function ProfilePage() {
 
             {selectedMenu === 'address' && (
               <>
-                <Title level={4}>Danh sách địa chỉ</Title>
+                <Title level={4}>Địa chỉ của bạn</Title>
                 {loadingState ? (
                   <Spin />
                 ) : (
-                  <Table
-                    dataSource={addresses}
-                    columns={addressColumns}
-                    rowKey="id"
-                    pagination={{ pageSize: 5 }}
-                  />
-                )}
-              </>
-            )}
+                  <>
+                    {/* Địa chỉ mặc định */}
+                    {addresses.find((a: any) => a.is_default === 1) ? (
+                      <Card
+                        type="inner"
+                        title="Địa chỉ mặc định"
+                        style={{
+                          marginBottom: 24,
+                          backgroundColor: '#f6ffed',
+                          borderColor: '#b7eb8f',
+                        }}
+                      >
+                        {(() => {
+                          const defaultAddress = addresses.find(
+                            (a: any) => a.is_default === 1,
+                          )
+                          return (
+                            <>
+                              <p>
+                                <strong>Tên:</strong>{' '}
+                                {defaultAddress.receiver_name}
+                              </p>
+                              <p>
+                                <strong>SĐT:</strong>{' '}
+                                {defaultAddress.receiver_phone}
+                              </p>
+                              <p>
+                                <strong>Địa chỉ:</strong>{' '}
+                                {defaultAddress.address}
+                              </p>
+                            </>
+                          )
+                        })()}
+                      </Card>
+                    ) : (
+                      <Card
+                        type="inner"
+                        title="Địa chỉ mặc định"
+                        style={{
+                          marginBottom: 24,
+                          backgroundColor: '#fff1f0',
+                          borderColor: '#ffa39e',
+                        }}
+                      >
+                        <p>Chưa có địa chỉ mặc định.</p>
+                      </Card>
+                    )}
 
-            {selectedMenu === 'orders' && (
-              <>
-                <Title level={4}>Danh sách đơn hàng</Title>
-                {loadingState ? (
-                  <Spin />
-                ) : (
-                  <Table
-                    dataSource={orders}
-                    columns={orderColumns}
-                    rowKey="id"
-                    pagination={false}
-                  />
-                )}
-              </>
-            )}
-
-            {selectedMenu === 'ordered' && (
-              <>
-                <Title level={4}>Đơn hàng đã giao</Title>
-                {loadingState ? (
-                  <Spin />
-                ) : (
-                  <Table
-                    dataSource={payments}
-                    columns={paymentColumns}
-                    rowKey="id"
-                  />
+                    {/* Danh sách tất cả địa chỉ */}
+                    <Table
+                      dataSource={addresses}
+                      columns={addressColumns}
+                      rowKey="id"
+                      pagination={{ pageSize: 5 }}
+                    />
+                  </>
                 )}
               </>
             )}

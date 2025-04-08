@@ -1,191 +1,171 @@
+import { useEffect, useState } from 'react'
 import {
-  Form,
-  Input,
-  Button,
+  Layout,
   Card,
   Typography,
+  Table,
+  Spin,
+  Tag,
+  Button,
+  Modal,
   Row,
   Col,
-  Divider,
-  Radio,
-  Space,
 } from 'antd'
-import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
-import { useEffect, useState } from 'react'
-import apiClient from '@store/services/apiClient'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router'
-import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
+import apiClient from '@store/services/apiClient.ts'
+import { useDispatch } from 'react-redux'
+import { cancelOrder } from '@store/slices/orderSlice'
+import { AppDispatch } from '@store/store'
 
 const { Title, Text } = Typography
+const { Content } = Layout
 
-const CheckoutPage = () => {
-  const [form] = Form.useForm()
-  const navigate = useNavigate()
-  const { formatCurrency } = useCurrencyFormatter()
-
-  const [user, setUser] = useState<any>(null)
-  const [cartItems, setCartItems] = useState<any[]>([])
-  const [totalPrice, setTotalPrice] = useState(0)
-  const [useDefaultAddress, setUseDefaultAddress] = useState(true)
-  const [defaultAddress, setDefaultAddress] = useState<any>(null)
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([])
-
-  const fetchDefaultAddress = async () => {
-    try {
-      const res = await apiClient.get('/user_addresses/default', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      })
-
-      if (res.data && res.data.data) {
-        const addr = res.data.data
-        setDefaultAddress(addr)
-        form.setFieldsValue({
-          receiver_name: addr.receiver_name,
-          receiver_phone: addr.receiver_phone,
-          address: addr.address,
-          is_default: 1,
-        })
-      } else {
-        setUseDefaultAddress(false)
-        form.setFieldsValue({ is_default: 0 })
-      }
-    } catch (err) {
-      console.error('Lỗi lấy địa chỉ mặc định:', err)
-      setUseDefaultAddress(false)
-      form.setFieldsValue({ is_default: 0 })
-    }
+interface OrderDetail {
+  id: number
+  order_number: string
+  ordered_at: string
+  final_total: string
+  status: string
+  payment_status: string
+  items: {
+    id: number
+    product_name: string
+    unit_price: string
+    quantity: number
+    total_price: string
+    sku: { image_url: string }
+  }[]
+  address: {
+    receiver_name: string
+    receiver_phone: string
+    address: string
   }
+}
 
-  const fetchSavedAddresses = async () => {
-    try {
-      const res = await apiClient.get('/user_addresses', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      })
-
-      if (res.data.status === 'success' && Array.isArray(res.data.data)) {
-        setSavedAddresses(res.data.data)
-      }
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách địa chỉ đã lưu:', err)
-    }
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'Chờ xác nhận'
+    case 'processing':
+      return 'Xử lý'
+    case 'cancelled':
+      return 'Đã hủy'
+    case 'shipped':
+      return 'Đang giao'
+    case 'delivered':
+      return 'Đã giao hàng'
+    case 'returned':
+      return 'Đã trả lại'
+    default:
+      return status
   }
+}
+
+const getPaymentStatusLabel = (paymentStatus: string) => {
+  switch (paymentStatus) {
+    case 'unpaid':
+      return 'Chưa thanh toán'
+    case 'pending':
+      return 'Chờ xác nhận'
+    case 'paid':
+      return 'Thanh toán thành công'
+    case 'failed':
+      return 'Thanh toán thất bại'
+    case 'refunded':
+      return 'Đã hoàn tiền'
+    default:
+      return paymentStatus
+  }
+}
+
+const OrderDetailPage = () => {
+  const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [cancelModalVisible, setCancelModalVisible] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const res = await apiClient.get('/users/profile', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          },
-        })
-        setUser(res.data)
-        form.setFieldsValue({ email: res.data.email })
-      } catch (err) {
-        console.error('Lỗi lấy thông tin người dùng:', err)
-      }
-    }
+    const orderId = window.location.pathname.split('/').pop()
+    if (!orderId) return
 
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      fetchUserProfile()
-      fetchDefaultAddress()
-      fetchSavedAddresses()
-    }
-
-    const storedItems = localStorage.getItem('checkout_items')
-    if (storedItems) {
-      try {
-        const parsedItems = JSON.parse(storedItems)
-        setCartItems(parsedItems)
-        const total = parsedItems.reduce(
-          (sum: number, item: any) => sum + item.price * item.quantity,
-          0,
-        )
-        setTotalPrice(total)
-      } catch (err) {
-        console.error('Lỗi khi parse checkout_items:', err)
-      }
-    }
+    apiClient
+      .get(`/orders/${orderId}`)
+      .then((response) => {
+        if (response.data.status === 'success') {
+          setOrder(response.data.data)
+        }
+      })
+      .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
+      .finally(() => setLoading(false))
   }, [])
 
-  const handleChangeAddressOption = (e: any) => {
-    const isDefault = e.target.value === 1
-    setUseDefaultAddress(isDefault)
-
-    if (isDefault && defaultAddress) {
-      form.setFieldsValue({
-        receiver_name: defaultAddress.receiver_name,
-        receiver_phone: defaultAddress.receiver_phone,
-        address: defaultAddress.address,
-      })
-    } else {
-      form.setFieldsValue({
-        receiver_name: '',
-        receiver_phone: '',
-        address: '',
-      })
-    }
-  }
-
-  const onFinish = async (values: any) => {
-    const checkoutData = {
-      selected_sku_ids: cartItems.map((item) => item.sku_id),
-      voucher_code: values.voucher_code || '',
-      payment_method: values.payment_method,
-      new_address: {
-        receiver_name: values.receiver_name,
-        receiver_phone: values.receiver_phone,
-        address: values.address,
-        is_default: values.is_default === 1,
-      },
-    }
-
+  const handleCancelOrder = async () => {
     try {
-      const res = await apiClient.post('/orders/create', checkoutData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      })
-
-      if (values.payment_method === 'vnpay') {
-        const paymentUrl = res.data?.data?.payment_url
-        if (paymentUrl) {
-          localStorage.removeItem('checkout_items')
-          window.location.href = paymentUrl
-        } else {
-          toast.error('Không lấy được URL thanh toán VNPay!')
-        }
-      } else {
-        toast.success('Đặt hàng thành công!')
-        localStorage.removeItem('checkout_items')
-        navigate('/order-success')
-      }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra!')
+      if (!order) return
+      await dispatch(cancelOrder(order.id)).unwrap()
+      setCancelModalVisible(false)
+      window.location.reload()
+    } catch (error) {
+      console.error('Lỗi khi hủy đơn hàng:', error)
     }
   }
 
-  console.log(order)
+  const retryPayment = async () => {
+    try {
+      if (!order) return
+
+      const response = await apiClient.post(`/payment/retry/${order.id}`)
+      const resData = response.data as RetryPaymentResponse
+
+      console.log('==> response from retry:', resData)
+
+      if (resData.status === 'success') {
+        localStorage.setItem('checkout', JSON.stringify(order.items))
+        navigate('/checkout')
+      } else {
+        Modal.warning({
+          title: 'Không thể thanh toán lại',
+          content: resData.message || 'Vui lòng thử lại sau.',
+        })
+      }
+    } catch (error) {
+      Modal.error({
+        title: 'Lỗi',
+        content: 'Không thể thực hiện lại thanh toán. Vui lòng thử lại sau.',
+      })
+      console.error('Lỗi khi gửi lại thanh toán:', error)
+    }
+  }
+
+  if (loading) return <Spin size="large" />
+  if (!order) return <Text>Không tìm thấy đơn hàng!</Text>
+
   return (
-    <Row gutter={[16, 16]} justify="center">
-      <Col xs={24} sm={20} md={16} lg={12}>
-        <Card style={{ borderRadius: 8, padding: 16 }}>
-          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-            <Title level={4}>Thông tin nhận hàng</Title>
-            {!user && <Button type="link">Đăng nhập</Button>}
-          </Space>
+    <Layout style={{ padding: '24px', background: '#fff' }}>
+      <Content
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          paddingLeft: '100px',
+        }}
+      >
+        <Card>
+          <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
 
-          <Form layout="vertical" form={form} onFinish={onFinish}>
-            <Form.Item label="Email" name="email">
-              <Input disabled />
-            </Form.Item>
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Người nhận:</strong>
+              </Col>
+              <Col span={18}>{order.address.receiver_name}</Col>
+            </Row>
+          </Text>
 
-<<<<<<< HEAD
           <Text
             style={{
               fontSize: '18px',
@@ -260,6 +240,39 @@ const CheckoutPage = () => {
               </Col>
             </Row>
           </Text>
+
+          <Text
+            style={{
+              fontSize: '18px',
+              lineHeight: '2.8',
+              marginBottom: '12px',
+            }}
+          >
+            <Row>
+              <Col span={6}>
+                <strong>Trạng thái thanh toán:</strong>
+              </Col>
+              <Col span={18}>
+                <Tag
+                  color={
+                    order.payment_status === 'paid'
+                      ? 'green'
+                      : order.payment_status === 'unpaid'
+                        ? 'red'
+                        : order.payment_status === 'pending'
+                          ? 'blue'
+                          : order.payment_status === 'failed'
+                            ? 'orange'
+                            : order.payment_status === 'refunded'
+                              ? 'purple'
+                              : 'default'
+                  }
+                >
+                  {getPaymentStatusLabel(order.payment_status)}
+                </Tag>
+              </Col>
+            </Row>
+          </Text>
         </Card>
 
         <Title level={4}>Sản phẩm trong đơn</Title>
@@ -282,7 +295,13 @@ const CheckoutPage = () => {
               render: (text, record) => (
                 <Row>
                   <Col span={4}>
-                    <img src={record.sku.image_url} alt={text} width={50} />
+                    {record.id === 'total' ? null : (
+                      <img
+                        src={JSON.parse(record.sku.image_url)[0]}
+                        alt={text}
+                        width={50}
+                      />
+                    )}
                   </Col>
                   <Col span={20}>{text}</Col>
                 </Row>
@@ -305,178 +324,55 @@ const CheckoutPage = () => {
           rowKey="id"
         />
 
-        <Row justify="center" gutter={16}>
-          <Col span={11}>
+        <Row justify="center" gutter={16} style={{ marginTop: '16px' }}>
+          <Col span={8}>
             <Button
               type="primary"
               style={{ width: '100%' }}
               onClick={() => (window.location.href = '/account')}
-=======
-            <Form.Item
-              name="is_default"
-              label="Chọn địa chỉ giao hàng"
-              rules={[{ required: true }]}
->>>>>>> f4b94c1 (fix: profile checkout)
             >
-              <Radio.Group onChange={handleChangeAddressOption}>
-                <Radio value={1}>Sử dụng địa chỉ đã lưu</Radio>
-                <Radio value={0}>Nhập địa chỉ mới</Radio>
-              </Radio.Group>
-            </Form.Item>
+              Quay lại
+            </Button>
+          </Col>
 
-            {useDefaultAddress && savedAddresses.length > 0 && (
-              <Form.Item
-                name="selected_address_id"
-                label="Danh sách địa chỉ đã lưu"
-                rules={[{ required: true, message: 'Vui lòng chọn địa chỉ' }]}
-              >
-                <Radio.Group
-                  onChange={(e) => {
-                    const selected = savedAddresses.find(
-                      (addr) => addr.id === e.target.value,
-                    )
-                    if (selected) {
-                      form.setFieldsValue({
-                        receiver_name: selected.receiver_name,
-                        receiver_phone: selected.receiver_phone,
-                        address: selected.address,
-                      })
-                    }
-                  }}
-                >
-                  <Space direction="vertical">
-                    {savedAddresses.map((addr) => (
-                      <Radio key={addr.id} value={addr.id}>
-                        {addr.receiver_name} - {addr.receiver_phone} -{' '}
-                        {addr.address}
-                      </Radio>
-                    ))}
-                  </Space>
-                </Radio.Group>
-              </Form.Item>
-            )}
-
-            <Form.Item
-              label="Họ và tên"
-              name="receiver_name"
-              rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
-            >
-              <Input placeholder="Họ và tên" disabled={useDefaultAddress} />
-            </Form.Item>
-
-            <Form.Item
-              label="Số điện thoại"
-              name="receiver_phone"
-              rules={[
-                { required: true, message: 'Vui lòng nhập số điện thoại' },
-                {
-                  pattern: /^0\d{9}$/,
-                  message: 'Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số',
-                },
-              ]}
-            >
-              <Input placeholder="Số điện thoại" disabled={useDefaultAddress} />
-            </Form.Item>
-
-            <Form.Item
-              label="Địa chỉ"
-              name="address"
-              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
-            >
-              <Input placeholder="Địa chỉ" disabled={useDefaultAddress} />
-            </Form.Item>
-
-            <Form.Item label="Ghi chú" name="note">
-              <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
-            </Form.Item>
-
-            <Form.Item
-              label="Phương thức thanh toán"
-              name="payment_method"
-              rules={[{ required: true }]}
-              initialValue="vnpay"
-            >
-              <Radio.Group>
-                <Radio value="vnpay">VNPay</Radio>
-                <Radio value="cod">Thanh toán khi nhận hàng</Radio>
-              </Radio.Group>
-            </Form.Item>
-
-            <Card
-              title={
-                <Title level={5}>
-                  <ShoppingCartOutlined /> Đơn hàng ({cartItems.length} sản
-                  phẩm)
-                </Title>
-              }
-              style={{ borderRadius: 8, marginTop: 16 }}
-            >
-              <Row gutter={[12, 12]} style={{ fontWeight: 'bold' }}>
-                <Col span={6}>Ảnh</Col>
-                <Col span={6}>Tên sản phẩm</Col>
-                <Col span={6}>Số lượng</Col>
-                <Col span={6}>Đơn giá</Col>
-              </Row>
-
-              {cartItems.map((item, index) => (
-                <Row gutter={[12, 12]} align="middle" key={index}>
-                  <Col span={6}>
-                    <img
-                      src={item.image_url}
-                      alt={item.sku}
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: 8,
-                        objectFit: 'cover',
-                      }}
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Text strong>{item.name}</Text>
-                  </Col>
-                  <Col span={6}>
-                    <Text>{item.quantity}</Text>
-                  </Col>
-                  <Col span={6}>
-                    <Text strong>{formatCurrency(item.price)}</Text>
-                  </Col>
-                </Row>
-              ))}
-
-              <Divider />
-
-              <Row justify="space-between">
-                <Col>
-                  <Text>Tổng cộng</Text>
-                </Col>
-                <Col>
-                  <Title level={3} type="success">
-                    {formatCurrency(totalPrice)}
-                  </Title>
-                </Col>
-              </Row>
-
-              <Form.Item>
-                <Button type="primary" htmlType="submit" block>
-                  ĐẶT HÀNG
-                </Button>
-              </Form.Item>
-
+          {['pending', 'processing'].includes(order.status) && (
+            <Col span={8}>
               <Button
-                type="link"
-                block
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/cart')}
+                type="default"
+                danger
+                style={{ width: '100%' }}
+                onClick={() => setCancelModalVisible(true)}
               >
-                Quay về giỏ hàng
+                Hủy đơn hàng
               </Button>
-            </Card>
-          </Form>
-        </Card>
-      </Col>
-    </Row>
+            </Col>
+          )}
+
+          {order.payment_status === 'failed' && (
+            <Col span={8}>
+              <Button
+                type="primary"
+                danger
+                style={{ width: '100%' }}
+                onClick={retryPayment}
+              >
+                Thanh toán lại
+              </Button>
+            </Col>
+          )}
+        </Row>
+
+        <Modal
+          title="Xác nhận hủy đơn hàng"
+          open={cancelModalVisible}
+          onOk={handleCancelOrder}
+          onCancel={() => setCancelModalVisible(false)}
+        >
+          <Text>Bạn có chắc chắn muốn hủy đơn hàng này không?</Text>
+        </Modal>
+      </Content>
+    </Layout>
   )
 }
 
-export default CheckoutPage
+export default OrderDetailPage
