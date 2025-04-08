@@ -105,6 +105,9 @@ const EditProduct = () => {
 
     try {
       await dispatch(updateProduct({ id, data: formData }))
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1])
+      }
       toast.success('Cập nhật sản phẩm thành công!')
     } catch (error) {
       console.error('Lỗi cập nhật:', error)

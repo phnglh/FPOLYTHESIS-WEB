@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '../services/apiClient'
 import { Product, ProductsState } from '#types/product'
+import { ApiErrorResponse } from '#types/api'
 
 const initialProductsState: ProductsState = {
   data: [],
@@ -60,9 +61,12 @@ export const updateProduct = createAsyncThunk(
         `/products/${updatedProduct.id}`,
         updatedProduct,
       )
-      return response.data
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Lỗi không xác định')
+      console.log('updateProduct response:', response)
+      return response.data.data
+    } catch (error: unknown) {
+      const errMsg =
+        (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
+      return rejectWithValue(errMsg)
     }
   },
 )

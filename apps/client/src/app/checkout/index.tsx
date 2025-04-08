@@ -50,7 +50,7 @@ const CheckoutPage = () => {
 
     const fetchDefaultAddress = async () => {
       try {
-        const addrRes = await apiClient.get('/user_addresses')
+        const addrRes = await apiClient.get('/user-addresses')
         const addresses = addrRes.data?.data || []
 
         const defaultAddr = addresses.find((addr) => addr.is_default === 1)
@@ -111,17 +111,39 @@ const CheckoutPage = () => {
 
   const onFinish = async (values: any) => {
     setIsSubmitting(true)
-    const checkoutData = {
+
+    const checkoutData: any = {
       selected_sku_ids: cartItems.map((item) => item.sku_id),
       voucher_code: values.voucher_code || '',
       payment_method: values.payment_method,
       note: values.note || '',
-      new_address: {
+    }
+
+    if (useDefaultAddress) {
+      // Lấy danh sách địa chỉ rồi tìm địa chỉ mặc định để lấy ID
+      try {
+        const res = await apiClient.get('/user-addresses')
+        const addresses = res.data?.data || []
+        const defaultAddr = addresses.find((addr) => addr.is_default === 1)
+
+        if (defaultAddr) {
+          checkoutData.address_id = defaultAddr.id
+        } else {
+          throw new Error('Không tìm thấy địa chỉ mặc định')
+        }
+      } catch (err) {
+        toast.error('Không lấy được địa chỉ mặc định!')
+        setIsSubmitting(false)
+        return
+      }
+    } else {
+      // Nếu là địa chỉ mới thì gửi new_address
+      checkoutData.new_address = {
         receiver_name: values.receiver_name,
         receiver_phone: values.receiver_phone,
         address: values.address,
         is_default: values.is_default === 1,
-      },
+      }
     }
 
     try {
@@ -179,7 +201,7 @@ const CheckoutPage = () => {
 
                   if (isDefault) {
                     apiClient
-                      .get('/user_addresses')
+                      .get('/user-addresses')
                       .then((res) => {
                         const addr = res.data?.data
                         if (addr) {

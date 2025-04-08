@@ -11,13 +11,29 @@ import {
   Row,
   Col,
 } from 'antd'
-import apiClient from '@store/services/apiClient.ts'
+import apiClient from '@store/services/apiClient'
 import { useDispatch } from 'react-redux'
 import { cancelOrder } from '@store/slices/orderSlice'
 import { AppDispatch } from '@store/store'
+import { useNavigate } from 'react-router'
 
 const { Title, Text } = Typography
 const { Content } = Layout
+
+interface OrderItem {
+  id: number
+  product_name: string
+  unit_price: string
+  quantity: number
+  total_price: string
+  sku: { image_url: string }
+}
+
+interface AddressInfo {
+  receiver_name: string
+  receiver_phone: string
+  address: string
+}
 
 interface OrderDetail {
   id: number
@@ -26,62 +42,56 @@ interface OrderDetail {
   final_total: string
   status: string
   payment_status: string
-  items: {
-    id: number
-    product_name: string
-    unit_price: string
-    quantity: number
-    total_price: string
-    sku: { image_url: string }
-  }[]
-  address: {
-    receiver_name: string
-    receiver_phone: string
-    address: string
-  }
+  items: OrderItem[]
+  address: AddressInfo
+}
+
+const statusColors: Record<string, string> = {
+  pending: 'blue',
+  processing: 'blue',
+  cancelled: 'red',
+  shipped: 'green',
+  delivered: 'green',
+  returned: 'gray',
+}
+
+const paymentColors: Record<string, string> = {
+  unpaid: 'red',
+  pending: 'blue',
+  paid: 'green',
+  failed: 'orange',
+  refunded: 'purple',
 }
 
 const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'Chờ xác nhận'
-    case 'processing':
-      return 'Xử lý'
-    case 'cancelled':
-      return 'Đã hủy'
-    case 'shipped':
-      return 'Đang giao'
-    case 'delivered':
-      return 'Đã giao hàng'
-    case 'returned':
-      return 'Đã trả lại'
-    default:
-      return status
+  const labels: Record<string, string> = {
+    pending: 'Chờ xác nhận',
+    processing: 'Xử lý',
+    cancelled: 'Đã hủy',
+    shipped: 'Đang giao',
+    delivered: 'Đã giao hàng',
+    returned: 'Đã trả lại',
   }
+  return labels[status] || status
 }
 
-const getPaymentStatusLabel = (paymentStatus: string) => {
-  switch (paymentStatus) {
-    case 'unpaid':
-      return 'Chưa thanh toán'
-    case 'pending':
-      return 'Chờ xác nhận'
-    case 'paid':
-      return 'Thanh toán thành công'
-    case 'failed':
-      return 'Thanh toán thất bại'
-    case 'refunded':
-      return 'Đã hoàn tiền'
-    default:
-      return paymentStatus
+const getPaymentStatusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    unpaid: 'Chưa thanh toán',
+    pending: 'Chờ xác nhận',
+    paid: 'Thanh toán thành công',
+    failed: 'Thanh toán thất bại',
+    refunded: 'Đã hoàn tiền',
   }
+  return labels[status] || status
 }
 
 const OrderDetailPage = () => {
   const [order, setOrder] = useState<OrderDetail | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState(true)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const orderId = window.location.pathname.split('/').pop()
@@ -89,273 +99,140 @@ const OrderDetailPage = () => {
 
     apiClient
       .get(`/orders/${orderId}`)
-      .then((response) => {
-        if (response.data.status === 'success') {
-          setOrder(response.data.data)
-        }
+      .then(({ data }) => {
+        if (data.status === 'success') setOrder(data.data)
       })
-      .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
+      .catch((err) => console.error('Lỗi khi tải đơn hàng:', err))
       .finally(() => setLoading(false))
   }, [])
 
   const handleCancelOrder = async () => {
+    if (!order) return
     try {
-      if (!order) return
       await dispatch(cancelOrder(order.id)).unwrap()
       setCancelModalVisible(false)
       window.location.reload()
-    } catch (error) {
-      console.error('Lỗi khi hủy đơn hàng:', error)
+    } catch (err) {
+      console.error('Lỗi khi hủy đơn hàng:', err)
     }
   }
 
   const retryPayment = async () => {
+    if (!order) return
     try {
-      if (!order) return
-
-      const response = await apiClient.post(`/payment/retry/${order.id}`)
-      const resData = response.data as RetryPaymentResponse
-
-      console.log('==> response from retry:', resData)
-
-      if (resData.status === 'success') {
+      const { data } = await apiClient.post(`/payment/retry/${order.id}`)
+      if (data.status === 'success') {
         localStorage.setItem('checkout', JSON.stringify(order.items))
         navigate('/checkout')
       } else {
         Modal.warning({
           title: 'Không thể thanh toán lại',
-          content: resData.message || 'Vui lòng thử lại sau.',
+          content: data.message || 'Vui lòng thử lại sau.',
         })
       }
-    } catch (error) {
+    } catch (err) {
       Modal.error({
         title: 'Lỗi',
         content: 'Không thể thực hiện lại thanh toán. Vui lòng thử lại sau.',
       })
-      console.error('Lỗi khi gửi lại thanh toán:', error)
+      console.error('Lỗi khi gửi lại thanh toán:', err)
     }
   }
 
   if (loading) return <Spin size="large" />
   if (!order) return <Text>Không tìm thấy đơn hàng!</Text>
 
+  const detailRows = [
+    { label: 'Người nhận', value: order.address.receiver_name },
+    { label: 'Điện thoại', value: order.address.receiver_phone },
+    { label: 'Địa chỉ', value: order.address.address },
+    { label: 'Ngày đặt', value: order.ordered_at },
+    {
+      label: 'Trạng thái đơn hàng',
+      value: (
+        <Tag color={statusColors[order.status]}>
+          {getStatusLabel(order.status)}
+        </Tag>
+      ),
+    },
+    {
+      label: 'Trạng thái thanh toán',
+      value: (
+        <Tag color={paymentColors[order.payment_status]}>
+          {getPaymentStatusLabel(order.payment_status)}
+        </Tag>
+      ),
+    },
+  ]
+
   return (
     <Layout style={{ padding: '24px', background: '#fff' }}>
       <Content
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          paddingLeft: '100px',
-        }}
+        style={{ maxWidth: '1200px', margin: '0 auto', paddingLeft: '100px' }}
       >
         <Card>
           <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
+          {detailRows.map(({ label, value }) => (
+            <Row
+              key={label}
+              style={{ fontSize: 18, lineHeight: 2.8, marginBottom: 12 }}
+            >
               <Col span={6}>
-                <strong>Người nhận:</strong>
+                <strong>{label}:</strong>
               </Col>
-              <Col span={18}>{order.address.receiver_name}</Col>
+              <Col span={18}>{value}</Col>
             </Row>
-          </Text>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Điện thoại:</strong>
-              </Col>
-              <Col span={18}>{order.address.receiver_phone}</Col>
-            </Row>
-          </Text>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Địa chỉ:</strong>
-              </Col>
-              <Col span={18}>{order.address.address}</Col>
-            </Row>
-          </Text>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Ngày đặt:</strong>
-              </Col>
-              <Col span={18}>{order.ordered_at}</Col>
-            </Row>
-          </Text>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Trạng thái đơn hàng:</strong>
-              </Col>
-              <Col span={18}>
-                <Tag
-                  color={
-                    order.status === 'pending' || order.status === 'processing'
-                      ? 'blue'
-                      : order.status === 'cancelled'
-                        ? 'red'
-                        : order.status === 'shipped' ||
-                            order.status === 'delivered'
-                          ? 'green'
-                          : 'gray'
-                  }
-                >
-                  {getStatusLabel(order.status)}
-                </Tag>
-              </Col>
-            </Row>
-          </Text>
-
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Trạng thái thanh toán:</strong>
-              </Col>
-              <Col span={18}>
-                <Tag
-                  color={
-                    order.payment_status === 'paid'
-                      ? 'green'
-                      : order.payment_status === 'unpaid'
-                        ? 'red'
-                        : order.payment_status === 'pending'
-                          ? 'blue'
-                          : order.payment_status === 'failed'
-                            ? 'orange'
-                            : order.payment_status === 'refunded'
-                              ? 'purple'
-                              : 'default'
-                  }
-                >
-                  {getPaymentStatusLabel(order.payment_status)}
-                </Tag>
-              </Col>
-            </Row>
-          </Text>
+          ))}
         </Card>
 
-        <Title level={4}>Sản phẩm trong đơn</Title>
+        <Title level={4} style={{ marginTop: 32 }}>
+          Sản phẩm trong đơn
+        </Title>
         <Table
-          dataSource={[
-            ...order.items,
-            {
-              id: 'total',
-              product_name: 'Tổng tiền',
-              unit_price: '',
-              quantity: '',
-              total_price: '',
-            },
-          ]}
+          dataSource={order.items}
           columns={[
             {
               title: 'Sản phẩm',
               dataIndex: 'product_name',
-              key: 'product_name',
               render: (text, record) => (
-                <Row>
-                  <Col span={4}>
-                    {record.id === 'total' ? null : (
-                      <img
-                        src={JSON.parse(record.sku.image_url)[0]}
-                        alt={text}
-                        width={50}
-                      />
+                <Row gutter={8} align="middle">
+                  <Col>
+                    {record.sku?.image_url && (
+                      <img src={record.sku.image_url} alt={text} width={50} />
                     )}
                   </Col>
-                  <Col span={20}>{text}</Col>
+                  <Col>{text}</Col>
                 </Row>
               ),
             },
-            { title: 'Đơn giá', dataIndex: 'unit_price', key: 'unit_price' },
-            { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
+            { title: 'Đơn giá', dataIndex: 'unit_price' },
+            { title: 'Số lượng', dataIndex: 'quantity' },
             {
               title: 'Thành tiền',
-              dataIndex: 'total_price',
-              key: 'total_price',
-              render: (text, record) => {
-                if (record.id === 'total') {
-                  return `${order.items.reduce((total, item) => total + Number(item.unit_price) * item.quantity, 0).toLocaleString()} VND`
-                }
-                return `${(Number(record.unit_price) * record.quantity).toLocaleString()} VND`
-              },
+              render: (_, record) =>
+                `${(Number(record.unit_price) * record.quantity).toLocaleString()} VND`,
             },
           ]}
           rowKey="id"
+          pagination={false}
         />
 
-        <Row justify="center" gutter={16} style={{ marginTop: '16px' }}>
+        <Row justify="center" gutter={16} style={{ marginTop: 24 }}>
           <Col span={8}>
-            <Button
-              type="primary"
-              style={{ width: '100%' }}
-              onClick={() => (window.location.href = '/account')}
-            >
+            <Button type="primary" block onClick={() => navigate('/account')}>
               Quay lại
             </Button>
           </Col>
-
           {['pending', 'processing'].includes(order.status) && (
             <Col span={8}>
-              <Button
-                type="default"
-                danger
-                style={{ width: '100%' }}
-                onClick={() => setCancelModalVisible(true)}
-              >
+              <Button danger block onClick={() => setCancelModalVisible(true)}>
                 Hủy đơn hàng
               </Button>
             </Col>
           )}
-
           {order.payment_status === 'failed' && (
             <Col span={8}>
-              <Button
-                type="primary"
-                danger
-                style={{ width: '100%' }}
-                onClick={retryPayment}
-              >
+              <Button type="primary" danger block onClick={retryPayment}>
                 Thanh toán lại
               </Button>
             </Col>
