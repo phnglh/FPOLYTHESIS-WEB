@@ -39,9 +39,11 @@ const UserManagement = () => {
     },
     {
       title: 'Vai trò',
-      dataIndex: 'role_id',
+      dataIndex: 'role',
       key: 'role',
-      render: (role_id: number) => (role_id === 1 ? 'Customer' : 'Admin'),
+      render: (_: string, record: { role: string }) => {
+        return record.role === 'customer' ? 'Customer' : 'Admin'
+      },
     },
   ]
 
