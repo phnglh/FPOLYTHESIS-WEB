@@ -20,28 +20,53 @@ import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 const { Title, Text } = Typography
 
 const CheckoutPage = () => {
-  const [cartItems, setCartItems] = useState<any[]>([])
-  const [totalPrice, setTotalPrice] = useState(0)
-  const [user, setUser] = useState<any>(null)
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
 
+  const [user, setUser] = useState<any>(null)
+  const [cartItems, setCartItems] = useState<any[]>([])
+  const [totalPrice, setTotalPrice] = useState(0)
+  const [useDefaultAddress, setUseDefaultAddress] = useState(true)
+
+  const fillDefaultAddress = (userData: any) => {
+    const defaultAddr = userData.user_addresses?.find(
+      (addr: any) => addr.is_default === 1,
+    )
+    if (defaultAddr) {
+      form.setFieldsValue({
+        receiver_name: defaultAddr.receiver_name,
+        receiver_phone: defaultAddr.receiver_phone,
+        address: defaultAddr.address,
+      })
+    }
+  }
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await apiClient.get('/users/profile')
-        const userData = response.data
+        const res = await apiClient.get('/users/profile')
+        const userData = res.data
         setUser(userData)
+
+        const defaultAddress = userData.user_addresses?.find(
+          (addr: any) => addr.is_default === 1,
+        )
+
         form.setFieldsValue({
           email: userData.email,
-          receiver_name: userData.name,
-          receiver_phone: userData.phone,
-          address: userData.address,
           payment_method: 'vnpay',
+          is_default: defaultAddress ? 1 : 0,
         })
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin người dùng:', error)
+
+        if (defaultAddress) {
+          setUseDefaultAddress(true)
+          fillDefaultAddress(userData)
+        } else {
+          setUseDefaultAddress(false)
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy thông tin người dùng:', err)
       }
     }
 
@@ -56,15 +81,28 @@ const CheckoutPage = () => {
         const parsedItems = JSON.parse(storedItems)
         setCartItems(parsedItems)
         const total = parsedItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
+
+          (sum: number, item: any) => sum + item.price * item.quantity,
           0,
         )
         setTotalPrice(total)
-      } catch (error) {
-        console.error('Lỗi khi phân tích checkout_items:', error)
+      } catch (err) {
+        console.error('Lỗi khi phân tích checkout_items:', err)
+
       }
     }
   }, [form])
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search)
+    const vnpayStatus = queryParams.get('vnpay_status')
+
+    if (vnpayStatus === 'success') {
+      toast.success('Đặt hàng thành công!')
+      navigate('/order-success')
+    }
+  }, [])
+
 
   const onFinish = async (values: any) => {
     const checkoutData = {
@@ -75,21 +113,18 @@ const CheckoutPage = () => {
         receiver_name: values.receiver_name,
         receiver_phone: values.receiver_phone,
         address: values.address,
-        city: values.city || '',
-        state: values.state || '',
-        zip_code: values.zip_code || '',
-        is_default: true,
+        is_default: values.is_default === 1,
       },
     }
 
     try {
-      const response = await apiClient.post('/orders/create', checkoutData, {
+      const res = await apiClient.post('/orders/create', checkoutData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       })
       if (values.payment_method === 'vnpay') {
-        const paymentUrl = response.data?.data?.payment_url
+        const paymentUrl = res.data?.data?.payment_url
         if (paymentUrl) {
           localStorage.removeItem('checkout_items')
           window.location.href = paymentUrl
@@ -101,9 +136,11 @@ const CheckoutPage = () => {
         localStorage.removeItem('checkout_items')
         navigate('/order-success')
       }
-    } catch (error: any) {
-      console.error(error)
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra!')
+
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra!')
+
     }
   }
 
@@ -120,7 +157,7 @@ const CheckoutPage = () => {
   return (
     <Row gutter={[16, 16]} justify="center">
       <Col xs={24} sm={20} md={16} lg={12}>
-        <Card variant="borderless" style={{ borderRadius: 8, padding: 16 }}>
+        <Card style={{ borderRadius: 8, padding: 16 }}>
           <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Title level={4}>Thông tin nhận hàng</Title>
             {!user && <Button type="link">Đăng nhập</Button>}
@@ -128,15 +165,47 @@ const CheckoutPage = () => {
 
           <Form layout="vertical" form={form} onFinish={onFinish}>
             <Form.Item label="Email" name="email">
-              <Input placeholder="Email" />
+              <Input disabled />
             </Form.Item>
+
+            <Form.Item
+              name="is_default"
+              label="Chọn địa chỉ giao hàng"
+              rules={[{ required: true }]}
+            >
+              <Radio.Group
+                onChange={(e) => {
+                  const isDefault = e.target.value === 1
+                  setUseDefaultAddress(isDefault)
+
+                  form.setFieldsValue({
+                    is_default: isDefault ? 1 : 0,
+                  })
+
+                  if (isDefault && user) {
+                    fillDefaultAddress(user)
+                  } else {
+                    form.setFieldsValue({
+                      receiver_name: '',
+                      receiver_phone: '',
+                      address: '',
+                    })
+                  }
+                }}
+              >
+                <Radio value={1}>Sử dụng địa chỉ đã lưu</Radio>
+                <Radio value={0}>Nhập địa chỉ mới</Radio>
+              </Radio.Group>
+            </Form.Item>
+
             <Form.Item
               label="Họ và tên"
               name="receiver_name"
-              rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
+              rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
             >
-              <Input placeholder="Họ và tên" />
+              <Input placeholder="Họ và tên" disabled={useDefaultAddress} />
             </Form.Item>
+
             <Form.Item
               label="Số điện thoại"
               name="receiver_phone"
@@ -144,20 +213,23 @@ const CheckoutPage = () => {
                 { required: true, message: 'Vui lòng nhập số điện thoại' },
                 {
                   pattern: /^0\d{9}$/,
-                  message:
-                    'Số điện thoại phải bắt đầu bằng 0 và có đủ 10 chữ số!',
+
+                  message: 'Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số!',
+
                 },
               ]}
             >
-              <Input placeholder="Số điện thoại" />
+              <Input placeholder="Số điện thoại" disabled={useDefaultAddress} />
             </Form.Item>
+
             <Form.Item
               label="Địa chỉ"
               name="address"
               rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
             >
-              <Input placeholder="Địa chỉ" />
+              <Input placeholder="Địa chỉ" disabled={useDefaultAddress} />
             </Form.Item>
+
             <Form.Item label="Ghi chú" name="note">
               <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
             </Form.Item>
@@ -165,12 +237,7 @@ const CheckoutPage = () => {
             <Form.Item
               label="Phương thức thanh toán"
               name="payment_method"
-              rules={[
-                {
-                  required: true,
-                  message: 'Vui lòng chọn phương thức thanh toán!',
-                },
-              ]}
+              rules={[{ required: true }]}
             >
               <Radio.Group>
                 <Radio value="vnpay">VNPay</Radio>
@@ -178,7 +245,7 @@ const CheckoutPage = () => {
               </Radio.Group>
             </Form.Item>
 
-            {/* Thông tin đơn hàng */}
+            {/* Đơn hàng */}
             <Card
               title={
                 <Title level={5}>
@@ -186,7 +253,6 @@ const CheckoutPage = () => {
                   phẩm)
                 </Title>
               }
-              variant="borderless"
               style={{ borderRadius: 8, marginTop: 16 }}
             >
               <Row gutter={[12, 12]} style={{ fontWeight: 'bold' }}>
@@ -214,9 +280,8 @@ const CheckoutPage = () => {
                   <Col span={6}>
                     <Text strong>{item.name}</Text>
                   </Col>
-
                   <Col span={6}>
-                    <Text type="secondary">{item.quantity}</Text>
+                    <Text>{item.quantity}</Text>
                   </Col>
 
                   <Col span={6}>
@@ -239,12 +304,7 @@ const CheckoutPage = () => {
               </Row>
 
               <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  block
-                  style={{ marginTop: 16 }}
-                >
+                <Button type="primary" htmlType="submit" block>
                   ĐẶT HÀNG
                 </Button>
               </Form.Item>
@@ -253,7 +313,6 @@ const CheckoutPage = () => {
                 type="link"
                 block
                 icon={<ArrowLeftOutlined />}
-                style={{ marginTop: 8 }}
                 onClick={() => navigate('/cart')}
               >
                 Quay về giỏ hàng
