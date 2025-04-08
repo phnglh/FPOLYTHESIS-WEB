@@ -31,7 +31,13 @@ export const fetchOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/orders')
-      return res.data.data
+      console.log('Kết quả API /orders:', res)
+      if (res.data && res.data.data && res.data.data.data) {
+        console.log('Kết quả API /orders:', res.data.data.data)
+        return res.data.data.data
+      } else {
+        throw new Error('Dữ liệu không hợp lệ từ API')
+      }
     } catch (error: unknown) {
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'

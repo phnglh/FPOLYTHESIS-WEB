@@ -8,11 +8,17 @@ import { useNavigate } from 'react-router'
 const OrderList = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { orders, loading } = useSelector((state: RootState) => state.orders)
+  const { data: orders, loading } = useSelector(
+    (state: RootState) => state.orders,
+  )
 
   useEffect(() => {
     dispatch(fetchAllOrders())
   }, [dispatch])
+
+  useEffect(() => {
+    console.log('orders từ Redux:', orders)
+  }, [orders])
 
   const columns = [
     {
@@ -62,8 +68,8 @@ const OrderList = () => {
       <Table
         loading={loading}
         columns={columns}
-        dataSource={orders}
-        rowKey="id"
+        dataSource={Array.isArray(orders) ? orders : []}
+        rowKey={(record) => record.id?.toString() || Math.random().toString()}
         pagination={{ pageSize: 10 }}
       />
     </Card>

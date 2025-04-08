@@ -13,13 +13,15 @@ import {
   Image,
   Divider,
   Space,
+  Checkbox,
 } from 'antd'
 import {
   HeartOutlined,
   UserOutlined,
   ShoppingCartOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
@@ -45,6 +47,7 @@ const AppHeader = () => {
   const { user, access_token } = useSelector((state: RootState) => state.auth)
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
 
   useEffect(() => {
     if (access_token && user) {
@@ -93,45 +96,78 @@ const AppHeader = () => {
       {cartItems?.length > 0 ? (
         cartItems.map((item) => (
           <div key={item.id} style={{ marginBottom: 12 }}>
-            <Row gutter={12} align="middle">
+            <Row gutter={12} align="middle" justify="space-between">
               <Col>
-                {item.sku.image_url && (
-                  <Image
-                    src={item.sku.image_url}
-                    alt={item.sku.sku}
-                    width={50}
-                    height={50}
-                    style={{ borderRadius: 4, objectFit: 'cover' }}
-                  />
-                )}
+                <Row gutter={8} align="middle">
+                  <Col>
+                    {item.sku.image_url && (
+                      <Image
+                        src={item.sku.image_url}
+                        alt={item.sku.sku}
+                        width={50}
+                        height={50}
+                        style={{ borderRadius: 4, objectFit: 'cover' }}
+                      />
+                    )}
+                  </Col>
+                  <Col>
+                    <Checkbox
+                      checked={selectedItems.includes(item.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setSelectedItems((prev) =>
+                          checked
+                            ? [...prev, item.id]
+                            : prev.filter((id) => id !== item.id),
+                        )
+                      }}
+                    >
+                      <Typography.Text strong>
+                        {item.product_name}
+                      </Typography.Text>
+                    </Checkbox>
+                    <Typography.Paragraph
+                      type="secondary"
+                      style={{ margin: '4px 0' }}
+                    >
+                      {item.sku.sku} | Số lượng:
+                      <Button
+                        size="small"
+                        style={{ margin: '0 5px' }}
+                        onClick={() => handleDecrement(item.id, item.quantity)}
+                        disabled={item.quantity <= 1}
+                      >
+                        -
+                      </Button>
+                      {item.quantity}
+                      <Button
+                        size="small"
+                        style={{ margin: '0 5px' }}
+                        onClick={() => handleIncrement(item.id)}
+                      >
+                        +
+                      </Button>
+                    </Typography.Paragraph>
+                    <Typography.Text type="danger" strong>
+                      {formatCurrency(item.unit_price)}
+                    </Typography.Text>
+                  </Col>
+                </Row>
               </Col>
-              <Col flex="auto">
-                <Typography.Text strong>{item.product_name}</Typography.Text>
-                <Typography.Paragraph
-                  type="secondary"
-                  style={{ margin: '4px 0' }}
-                >
-                  {item.sku.sku} | Số lượng:
-                  <Button
-                    size="small"
-                    style={{ margin: '0 5px' }}
-                    onClick={() => handleDecrement(item.id, item.quantity)}
-                    disabled={item.quantity <= 1}
-                  >
-                    -
-                  </Button>
-                  {item.quantity}
-                  <Button
-                    size="small"
-                    style={{ margin: '0 5px' }}
-                    onClick={() => handleIncrement(item.id)}
-                  >
-                    +
-                  </Button>
-                </Typography.Paragraph>
-                <Typography.Text type="danger" strong>
-                  {formatCurrency(item.unit_price)}
-                </Typography.Text>
+              <Col>
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => {
+                    dispatch(decrementCartItem(item.id))
+                    toast.success('Đã xóa sản phẩm khỏi giỏ hàng!')
+                    setTimeout(() => dispatch(fetchCart()), 300)
+                    setSelectedItems((prev) =>
+                      prev.filter((id) => id !== item.id),
+                    )
+                  }}
+                />
               </Col>
             </Row>
             <Divider style={{ margin: '8px 0' }} />
@@ -151,20 +187,57 @@ const AppHeader = () => {
           <Typography.Text strong>Tổng tiền:</Typography.Text>
         </Col>
         <Col>
-          <Typography.Text strong>{formatCurrency(cartTotal)}</Typography.Text>
+          <Typography.Text strong>
+            {formatCurrency(
+              cartItems.reduce((total, item) => {
+                if (!selectedItems.includes(item.id)) return total
+                const price = Number(item.unit_price)
+                return total + item.quantity * (isNaN(price) ? 0 : price)
+              }, 0),
+            )}
+          </Typography.Text>
         </Col>
       </Row>
       <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
         <Button
           type="primary"
           block
-          onClick={handleCheckout}
-          disabled={!cartItems?.length}
+          onClick={() => {
+            const selectedProducts = cartItems
+              .filter((item) => selectedItems.includes(item.id))
+              .map((item) => ({
+                ...item,
+                unit_price: Number(item.unit_price) || 0, // đảm bảo unit_price là số
+              }))
+
+            localStorage.setItem(
+              'checkout_items',
+              JSON.stringify(selectedProducts),
+            )
+            navigate('/checkout')
+          }}
+          disabled={selectedItems.length === 0}
         >
           Thanh toán
         </Button>
+
         <Button type="default" block onClick={() => navigate('/carts')}>
           Xem giỏ hàng
+        </Button>
+        <Button
+          danger
+          block
+          onClick={() => {
+            selectedItems.forEach((id) => {
+              dispatch(decrementCartItem(id)) // hoặc removeCartItem nếu có
+            })
+            toast.success('Đã xóa sản phẩm đã chọn!')
+            setSelectedItems([])
+            setTimeout(() => dispatch(fetchCart()), 300)
+          }}
+          disabled={selectedItems.length === 0}
+        >
+          Xóa sản phẩm đã chọn
         </Button>
       </Space>
     </Card>

@@ -88,10 +88,10 @@ const CheckoutPage = () => {
           navigate('/cart')
         }
         setCartItems(parsedItems)
-        const total = parsedItems.reduce(
-          (sum: number, item: any) => sum + item.price * item.quantity,
-          0,
-        )
+        const total = parsedItems.reduce((sum: number, item: any) => {
+          const price = Number(item.unit_price)
+          return sum + item.quantity * (isNaN(price) ? 0 : price)
+        }, 0)
         setTotalPrice(total)
       } catch (err) {
         console.error('Lỗi khi phân tích checkout_items:', err)
@@ -289,7 +289,9 @@ const CheckoutPage = () => {
                     <Text>{item.quantity}</Text>
                   </Col>
                   <Col span={6}>
-                    <Text strong>{formatCurrency(item.price)}</Text>
+                    <Text strong>
+                      {formatCurrency(Number(item.unit_price) || 0)}
+                    </Text>
                   </Col>
                 </Row>
               ))}
