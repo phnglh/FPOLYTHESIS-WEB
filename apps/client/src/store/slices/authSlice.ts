@@ -3,6 +3,7 @@ import { AuthState } from '#types/auth'
 import { User } from '#types/user'
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
+import axios from 'axios'
 
 const initialState: AuthState = {
   user: null,
@@ -23,12 +24,24 @@ export const login = createAsyncThunk(
 
       return { user, access_token }
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
+      console.log('Raw error:', error)
+
+      if (axios.isAxiosError(error)) {
+        // Kiểm tra nếu phản hồi có status là 'error'
+        if (error.response) {
+          const { data } = error.response
+          if (data.status === 'error' && data.errors) {
+            return rejectWithValue(data.errors) // Trả về lỗi "Email không tồn tại."
+          } else if (!data.success && data.message) {
+            return rejectWithValue(data.message) // Trả về lỗi "Email hoặc mật khẩu không đúng."
+          }
+        }
+
+        // Xử lý lỗi chung khác
+        return rejectWithValue('Đăng nhập không thành công!')
       }
-      const errMsg =
-        (error as ApiErrorResponse)?.message || 'Đăng nhập không thành công!'
-      return rejectWithValue(errMsg)
+
+      return rejectWithValue('Lỗi không xác định!')
     }
   },
 )

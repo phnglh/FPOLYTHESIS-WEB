@@ -40,6 +40,42 @@ interface OrderDetail {
   }
 }
 
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'Chờ xác nhận'
+    case 'processing':
+      return 'Xử lý'
+    case 'cancelled':
+      return 'Đã hủy'
+    case 'shipped':
+      return 'Đang giao'
+    case 'delivered':
+      return 'Đã giao hàng'
+    case 'returned':
+      return 'Đã trả lại'
+    default:
+      return status
+  }
+}
+
+const getPaymentStatusLabel = (paymentStatus: string) => {
+  switch (paymentStatus) {
+    case 'unpaid':
+      return 'Chưa thanh toán'
+    case 'pending':
+      return 'Chờ xác nhận'
+    case 'paid':
+      return 'Thanh toán thành công'
+    case 'failed':
+      return 'Thanh toán thất bại'
+    case 'refunded':
+      return 'Đã hoàn tiền'
+    default:
+      return paymentStatus
+  }
+}
+
 const OrderDetailPage = () => {
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -78,9 +114,16 @@ const OrderDetailPage = () => {
   console.log(order)
   return (
     <Layout style={{ padding: '24px', background: '#fff' }}>
-      <Content>
+      <Content
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          paddingLeft: '100px',
+        }}
+      >
         <Card>
           <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
+
           <Text
             style={{
               fontSize: '18px',
@@ -150,17 +193,22 @@ const OrderDetailPage = () => {
           >
             <Row>
               <Col span={6}>
-                <strong>Trạng thái:</strong>
+                <strong>Trạng thái đơn hàng:</strong>
               </Col>
               <Col span={18}>
                 <Tag
                   color={
                     order.status === 'pending' || order.status === 'processing'
                       ? 'blue'
-                      : 'red'
+                      : order.status === 'cancelled'
+                        ? 'red'
+                        : order.status === 'shipped' ||
+                            order.status === 'delivered'
+                          ? 'green'
+                          : 'gray'
                   }
                 >
-                  {order.status}
+                  {getStatusLabel(order.status)}
                 </Tag>
               </Col>
             </Row>
@@ -169,7 +217,16 @@ const OrderDetailPage = () => {
 
         <Title level={4}>Sản phẩm trong đơn</Title>
         <Table
-          dataSource={order.items}
+          dataSource={[
+            ...order.items,
+            {
+              id: 'total',
+              product_name: 'Tổng tiền',
+              unit_price: '',
+              quantity: '',
+              total_price: '',
+            },
+          ]}
           columns={[
             {
               title: 'Sản phẩm',
@@ -190,28 +247,38 @@ const OrderDetailPage = () => {
               title: 'Thành tiền',
               dataIndex: 'total_price',
               key: 'total_price',
-              render: (total_price: string) =>
-                `${Number(total_price).toLocaleString()} VND`,
+              render: (text, record) => {
+                if (record.id === 'total') {
+                  return `${order.items.reduce((total, item) => total + Number(item.unit_price) * item.quantity, 0).toLocaleString()} VND`
+                }
+                return `${(Number(record.unit_price) * record.quantity).toLocaleString()} VND`
+              },
             },
           ]}
           rowKey="id"
         />
 
-        <Row justify="center" style={{ marginTop: 20 }}>
-          <Button
-            type="primary"
-            onClick={() => (window.location.href = '/account/orders')}
-          >
-            Quay lại danh sách đơn hàng
-          </Button>
-          {['pending', 'processing'].includes(order.status) && (
+        <Row justify="center" gutter={16}>
+          <Col span={11}>
             <Button
-              type="default"
-              danger
-              onClick={() => setCancelModalVisible(true)}
+              type="primary"
+              style={{ width: '100%' }}
+              onClick={() => (window.location.href = '/account')}
             >
-              Hủy đơn hàng
+              Quay lại
             </Button>
+          </Col>
+          {['pending', 'processing'].includes(order.status) && (
+            <Col span={11}>
+              <Button
+                type="default"
+                danger
+                style={{ width: '100%' }}
+                onClick={() => setCancelModalVisible(true)}
+              >
+                Hủy đơn hàng
+              </Button>
+            </Col>
           )}
         </Row>
 

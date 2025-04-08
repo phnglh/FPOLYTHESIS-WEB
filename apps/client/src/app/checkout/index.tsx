@@ -7,9 +7,8 @@ import {
   Row,
   Col,
   Divider,
-  Badge,
-  Space,
   Radio,
+  Space,
 } from 'antd'
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
@@ -21,9 +20,9 @@ import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 const { Title, Text } = Typography
 
 const CheckoutPage = () => {
-  const [cartItems, setCartItems] = useState([])
+  const [cartItems, setCartItems] = useState<any[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<any>(null)
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
@@ -32,12 +31,13 @@ const CheckoutPage = () => {
     const fetchUserProfile = async () => {
       try {
         const response = await apiClient.get('/users/profile')
-        setUser(response.data)
+        const userData = response.data
+        setUser(userData)
         form.setFieldsValue({
-          email: response.data.email,
-          receiver_name: response.data.name,
-          receiver_phone: response.data.phone,
-          address: response.data.address,
+          email: userData.email,
+          receiver_name: userData.name,
+          receiver_phone: userData.phone,
+          address: userData.address,
           payment_method: 'vnpay',
         })
       } catch (error) {
@@ -52,20 +52,21 @@ const CheckoutPage = () => {
 
     const storedItems = localStorage.getItem('checkout_items')
     if (storedItems) {
-      let parsedItems = JSON.parse(storedItems)
-      parsedItems = parsedItems.map((item) => ({
-        ...item,
-        image:
-          typeof item.image === 'string' ? JSON.parse(item.image) : item.image,
-      }))
-      setCartItems(parsedItems)
-      setTotalPrice(
-        parsedItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      )
+      try {
+        const parsedItems = JSON.parse(storedItems)
+        setCartItems(parsedItems)
+        const total = parsedItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        )
+        setTotalPrice(total)
+      } catch (error) {
+        console.error('Lỗi khi phân tích checkout_items:', error)
+      }
     }
   }, [form])
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     const checkoutData = {
       selected_sku_ids: cartItems.map((item) => item.sku_id),
       voucher_code: values.voucher_code || '',
@@ -74,9 +75,9 @@ const CheckoutPage = () => {
         receiver_name: values.receiver_name,
         receiver_phone: values.receiver_phone,
         address: values.address,
-        city: values.city,
-        state: values.state,
-        zip_code: values.zip_code,
+        city: values.city || '',
+        state: values.state || '',
+        zip_code: values.zip_code || '',
         is_default: true,
       },
     }
@@ -84,18 +85,13 @@ const CheckoutPage = () => {
     try {
       const response = await apiClient.post('/orders/create', checkoutData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       })
-
-      // toast.success('Thanh toán thành công!')
-      // localStorage.removeItem('checkout_items')
-      // localStorage.setItem('orderSuccess', 'true')
-      // navigate('/order-success')
-
       if (values.payment_method === 'vnpay') {
         const paymentUrl = response.data?.data?.payment_url
         if (paymentUrl) {
+          localStorage.removeItem('checkout_items')
           window.location.href = paymentUrl
         } else {
           toast.error('Không lấy được URL thanh toán VNPay!')
@@ -105,11 +101,21 @@ const CheckoutPage = () => {
         localStorage.removeItem('checkout_items')
         navigate('/order-success')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra!')
     }
   }
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search)
+    const vnpayStatus = queryParams.get('vnpay_status')
+
+    if (vnpayStatus === 'success') {
+      toast.success('Đặt hàng thành công!')
+      navigate('/order-success')
+    }
+  }, [])
 
   return (
     <Row gutter={[16, 16]} justify="center">
@@ -136,6 +142,11 @@ const CheckoutPage = () => {
               name="receiver_phone"
               rules={[
                 { required: true, message: 'Vui lòng nhập số điện thoại' },
+                {
+                  pattern: /^0\d{9}$/,
+                  message:
+                    'Số điện thoại phải bắt đầu bằng 0 và có đủ 10 chữ số!',
+                },
               ]}
             >
               <Input placeholder="Số điện thoại" />
@@ -178,31 +189,44 @@ const CheckoutPage = () => {
               variant="borderless"
               style={{ borderRadius: 8, marginTop: 16 }}
             >
+              <Row gutter={[12, 12]} style={{ fontWeight: 'bold' }}>
+                <Col span={6}>Ảnh</Col>
+                <Col span={6}>Tên sản phẩm</Col>
+                <Col span={6}>Số lượng</Col>
+                <Col span={6}>Đơn giá</Col>
+              </Row>
+
               {cartItems.map((item, index) => (
                 <Row gutter={[12, 12]} align="middle" key={index}>
                   <Col span={6}>
-                    <Badge count={item.quantity}>
-                      <img
-                        src={item.image_url}
-                        alt={item.sku}
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          borderRadius: 8,
-                          objectFit: 'cover',
-                        }}
-                      />
-                    </Badge>
+                    <img
+                      src={item.image_url}
+                      alt={item.sku}
+                      style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: 8,
+                        objectFit: 'cover',
+                      }}
+                    />
                   </Col>
-                  <Col span={12}>
+
+                  <Col span={6}>
                     <Text strong>{item.name}</Text>
                   </Col>
-                  <Col span={6} style={{ textAlign: 'right' }}>
+
+                  <Col span={6}>
+                    <Text type="secondary">{item.quantity}</Text>
+                  </Col>
+
+                  <Col span={6}>
                     <Text strong>{formatCurrency(item.price)}</Text>
                   </Col>
                 </Row>
               ))}
+
               <Divider />
+
               <Row justify="space-between">
                 <Col>
                   <Text>Tổng cộng</Text>
@@ -213,6 +237,7 @@ const CheckoutPage = () => {
                   </Title>
                 </Col>
               </Row>
+
               <Form.Item>
                 <Button
                   type="primary"
@@ -223,6 +248,7 @@ const CheckoutPage = () => {
                   ĐẶT HÀNG
                 </Button>
               </Form.Item>
+
               <Button
                 type="link"
                 block
