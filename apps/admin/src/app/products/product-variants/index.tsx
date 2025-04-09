@@ -42,10 +42,11 @@ const ProductVariants = () => {
         const variants = skus.map((sku: any) => ({
           id: sku.id,
           name: sku.sku,
-          quantity: sku.stock,
+          stock: sku.stock,
           price: sku.price,
           image_url: sku.image_url,
           combination: sku.attributes.map((attr: any) => attr.value).join(', '),
+          attributes: sku.attributes,
         }))
 
         form.setFieldsValue({ variants })
@@ -66,24 +67,58 @@ const ProductVariants = () => {
         const imageFile = variant.image?.[0]?.originFileObj
         const formData = new FormData()
         formData.append('combination', variant.combination || '')
-        formData.append('quantity', variant.quantity)
+        formData.append('stock', variant.stock)
         formData.append('price', variant.price)
-
+        if (Array.isArray(variant.attributes)) {
+          variant.attributes.forEach((attr: any, index: number) => {
+            formData.append(
+              `attributes[${index}][attribute_id]`,
+              attr.attribute_id,
+            )
+            formData.append(`attributes[${index}][value]`, attr.value)
+          })
+        }
         if (imageFile) {
           formData.append('image', imageFile)
         }
 
-        if (variant.id) {
-          return apiClient.put(`/products/skus/${variant.id}`, formData)
-        } else {
-          return apiClient.post(`/products/${id}/skus`, formData)
+        // const url = variant.id ? `/skus/${variant.id}` : `/${id}/skus`
+        // console.log(`Request URL: ${url}`)
+
+        try {
+          const response = variant.id
+            ? await apiClient.put(`/skus/${variant.id}`, formData)
+            : await apiClient.post(`/products/${id}`, formData)
+
+          if (response.status === 200 || response.status === 201) {
+            message.success('Cập nhật biến thể thành công!')
+          } else {
+            throw new Error(
+              `Lỗi khi lưu biến thể: ${response.data?.message || 'Không xác định'}`,
+            )
+          }
+        } catch (error: any) {
+          if (error.response && error.response.status === 404) {
+            console.error('API Error (404): Route not found')
+            message.error(
+              'Lỗi: Không tìm thấy đường dẫn (Route not found). Vui lòng kiểm tra lại URL hoặc đường dẫn API.',
+            )
+          } else {
+            console.error(
+              'API Error:',
+              error.response ? error.response.data : error,
+            )
+            message.error(
+              `Lỗi khi lưu biến thể: ${error.response?.data?.message || error.message || 'Không xác định'}`,
+            )
+          }
         }
       })
 
       await Promise.all(promises)
       message.success('Cập nhật biến thể thành công!')
     } catch (error) {
-      console.error(error)
+      console.error('Lỗi khi lưu biến thể:', error)
       message.error('Lỗi khi lưu biến thể.')
     }
   }
@@ -91,10 +126,9 @@ const ProductVariants = () => {
   const uploadProps: UploadProps = {
     listType: 'picture',
     maxCount: 1,
-    beforeUpload: () => false, // Không upload ngay mà để cho người dùng chọn ảnh
+    beforeUpload: () => false,
   }
 
-  console.log('productName', productName)
   return (
     <Form form={form} onFinish={onFinish} layout="vertical">
       <Card>
@@ -131,7 +165,7 @@ const ProductVariants = () => {
                   <Form.Item
                     {...field}
                     label="Số lượng"
-                    name={[field.name, 'quantity']}
+                    name={[field.name, 'stock']}
                     rules={[
                       { required: true, message: 'Vui lòng nhập số lượng' },
                     ]}

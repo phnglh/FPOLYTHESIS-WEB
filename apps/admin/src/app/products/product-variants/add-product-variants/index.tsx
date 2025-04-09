@@ -91,8 +91,27 @@ const AddProductVariants = () => {
   const onFinish = (values: any) => {
     console.log('Form values:', values)
 
+    const promises = values.variants.map(async (variant: any) => {
+      const imageFile = variant.image?.[0]?.originFileObj
+      const formData = new FormData()
+      formData.append('combination', variant.combination || '')
+      formData.append('stock', variant.stock)
+      formData.append('price', variant.price)
+      if (Array.isArray(variant.attributes)) {
+        variant.attributes.forEach((attr: any, index: number) => {
+          formData.append(
+            `attributes[${index}][attribute_id]`,
+            attr.attribute_id,
+          )
+          formData.append(`attributes[${index}][value]`, attr.value)
+        })
+      }
+      if (imageFile) {
+        formData.append('image', imageFile)
+      }
+    })
     apiClient
-      .post(`/${id}/skus`, values)
+      .post(`/${id}/skus`, promises)
       .then((response) => {
         message.success('Biến thể sản phẩm đã được lưu')
         navigate('/products')
