@@ -13,7 +13,7 @@ const { Title } = Typography
 
 const ProductVariants = () => {
   const [form] = Form.useForm()
-  const { product_id } = useParams<{ id: string }>()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -22,28 +22,30 @@ const ProductVariants = () => {
   )
 
   useEffect(() => {
+    const fetchSkus = (id: number) => apiClient.get(`/${id}/skus`)
+    const fetchProduct = (id: number) => apiClient.get(`/products/${id}`)
     const fetchData = async () => {
       try {
+        const shouldFetchProduct = !productName
         const [skuRes, productRes] = await Promise.all([
-          apiClient.get(`/${product_id}/skus`),
-          productName ? null : apiClient.get(`/products/${product_id}`),
+          fetchSkus(Number(id)),
+          shouldFetchProduct ? fetchProduct(Number(id)) : Promise.resolve(null),
         ])
 
-        if (!skuRes?.data) {
-          throw new Error('Không tìm thấy dữ liệu biến thể.')
+        const skus = skuRes?.data.data
+        if (!skus) throw new Error('Không tìm thấy dữ liệu biến thể.')
+
+        if (shouldFetchProduct && productRes?.data?.data) {
+          setProductName(productRes.data.data.name)
         }
 
-        if (!productName && productRes?.data) {
-          setProductName(productRes?.data?.name || 'Không rõ')
-        }
-        console.log(skuRes)
-
-        const variants = skuRes.data.map((skus: any) => ({
-          id: skus.id,
-          name: skus.name,
-          quantity: skus.quantity,
-          price: skus.price,
-          image_url: skus.image_url,
+        const variants = skus.map((sku: any) => ({
+          id: sku.id,
+          name: sku.sku,
+          quantity: sku.stock,
+          price: sku.price,
+          image_url: sku.image_url,
+          combination: sku.attributes.map((attr: any) => attr.value).join(', '),
         }))
 
         form.setFieldsValue({ variants })
@@ -53,8 +55,10 @@ const ProductVariants = () => {
       }
     }
 
-    if (product_id) fetchData()
-  }, [product_id, form, productName])
+    if (id) {
+      fetchData()
+    }
+  }, [id, form, productName])
 
   const onFinish = async (values: any) => {
     try {
@@ -70,21 +74,9 @@ const ProductVariants = () => {
         }
 
         if (variant.id) {
-          return apiClient.post(
-            `/products/skus/${variant.id}?_method=PUT`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            },
-          )
+          return apiClient.put(`/products/skus/${variant.id}`, formData)
         } else {
-          return apiClient.post(`/products/${product_id}/skus`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
+          return apiClient.post(`/products/${id}/skus`, formData)
         }
       })
 
@@ -102,6 +94,7 @@ const ProductVariants = () => {
     beforeUpload: () => false, // Không upload ngay mà để cho người dùng chọn ảnh
   }
 
+  console.log('productName', productName)
   return (
     <Form form={form} onFinish={onFinish} layout="vertical">
       <Card>

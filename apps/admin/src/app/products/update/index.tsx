@@ -70,10 +70,9 @@ const EditProduct = () => {
         name: productDetail.name,
         category_id: productDetail.category_id,
         brand_id: productDetail.brand_id,
-        is_published: !!productDetail.is_published,
-        has_variant: !!productDetail.has_variant,
+        is_published: productDetail.is_published,
         description: productDetail.description,
-        thumbnail: productDetail.thumbnail
+        thumbnail: productDetail.image_url
           ? [
               {
                 uid: '-1',
@@ -96,12 +95,11 @@ const EditProduct = () => {
       formData.append('name', values.name)
       formData.append('category_id', values.category_id)
       formData.append('brand_id', values.brand_id)
-      formData.append('is_published', values.is_published ? '1' : '0')
-      formData.append('has_variant', values.has_variant ? '1' : '0')
-      formData.append('description', values.description || '')
-      const file = values.thumbnail?.[0]?.originFileObj
+      formData.append('is_published', values.is_published ? 1 : 0)
+      formData.append('description', values.description)
+      const file = values.thumbnail?.originFileObj
       if (file) {
-        formData.append('thumbnail', file)
+        formData.append('image_url', file)
       }
       const res = await apiClient.put(`products/${id}`, formData)
       console.log(res)
@@ -160,7 +158,7 @@ const EditProduct = () => {
         </Form.Item>
 
         <Form.Item label="Hiển thị" name="is_published" valuePropName="checked">
-          <Switch disabled={productDetail?.is_published === 0} />
+          <Switch />
         </Form.Item>
       </Card>
 
