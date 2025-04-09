@@ -13,7 +13,7 @@ const { Title } = Typography
 
 const ProductVariants = () => {
   const [form] = Form.useForm()
-  const { id } = useParams<{ id: string }>()
+  const { product_id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -25,8 +25,8 @@ const ProductVariants = () => {
     const fetchData = async () => {
       try {
         const [skuRes, productRes] = await Promise.all([
-          apiClient.get(`/${id}/skus`),
-          productName ? null : apiClient.get(`/products/${id}`),
+          apiClient.get(`/${product_id}/skus`),
+          productName ? null : apiClient.get(`/products/${product_id}`),
         ])
 
         if (!skuRes?.data) {
@@ -36,22 +36,14 @@ const ProductVariants = () => {
         if (!productName && productRes?.data) {
           setProductName(productRes?.data?.name || 'Không rõ')
         }
+        console.log(skuRes)
 
-        const variants = skuRes.data.map((sku: any) => ({
-          id: sku.id,
-          combination: sku.combination,
-          quantity: sku.quantity,
-          price: sku.price,
-          image: sku.image
-            ? [
-                {
-                  uid: `-${sku.id}`,
-                  name: 'Ảnh biến thể',
-                  status: 'done',
-                  url: sku.image,
-                },
-              ]
-            : [],
+        const variants = skuRes.data.map((skus: any) => ({
+          id: skus.id,
+          name: skus.name,
+          quantity: skus.quantity,
+          price: skus.price,
+          image_url: skus.image_url,
         }))
 
         form.setFieldsValue({ variants })
@@ -61,8 +53,8 @@ const ProductVariants = () => {
       }
     }
 
-    if (id) fetchData()
-  }, [id, form, productName])
+    if (product_id) fetchData()
+  }, [product_id, form, productName])
 
   const onFinish = async (values: any) => {
     try {
@@ -88,7 +80,7 @@ const ProductVariants = () => {
             },
           )
         } else {
-          return apiClient.post(`/products/${id}/skus`, formData, {
+          return apiClient.post(`/products/${product_id}/skus`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },

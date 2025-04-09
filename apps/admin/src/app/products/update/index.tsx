@@ -20,7 +20,6 @@ import { fetchCategories } from '@store/slices/categorySlice'
 import { fetchBrands } from '@store/slices/brandSlice'
 import { fetchProductById, updateProduct } from '@store/slices/productSlice'
 import { useParams, useNavigate } from 'react-router'
-import { log } from 'console'
 import apiClient from '@store/services/apiClient'
 
 const { Title } = Typography
@@ -56,6 +55,7 @@ const EditProduct = () => {
   const productDetail = useSelector(
     (state: RootState) => state.products.selectedItem,
   )
+
   useEffect(() => {
     dispatch(fetchCategories())
     dispatch(fetchBrands())
@@ -96,17 +96,13 @@ const EditProduct = () => {
       formData.append('name', values.name)
       formData.append('category_id', values.category_id)
       formData.append('brand_id', values.brand_id)
-      formData.append('is_show', values.is_show ? '1' : '0')
+      formData.append('is_published', values.is_published ? '1' : '0')
       formData.append('has_variant', values.has_variant ? '1' : '0')
       formData.append('description', values.description || '')
       const file = values.thumbnail?.[0]?.originFileObj
       if (file) {
         formData.append('thumbnail', file)
       }
-      // const response = await dispatch(
-      //   updateProduct({ id: Number(id), formData }),
-      // ).unwrap()
-      // message.success('Cập nhật sản phẩm thành công!')
       const res = await apiClient.put(`products/${id}`, formData)
       console.log(res)
       navigate('/products')
@@ -122,7 +118,7 @@ const EditProduct = () => {
       layout="vertical"
       onFinish={handleSubmit}
       initialValues={{
-        is_show: true,
+        is_published: true,
         has_variant: false,
       }}
     >
@@ -163,8 +159,8 @@ const EditProduct = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item label="Hiển thị" name="is_show" valuePropName="checked">
-          <Switch />
+        <Form.Item label="Hiển thị" name="is_published" valuePropName="checked">
+          <Switch disabled={productDetail?.is_published === 0} />
         </Form.Item>
       </Card>
 
@@ -187,15 +183,6 @@ const EditProduct = () => {
             </Button>
           </Col>
         </Row>
-
-        <Form.Item
-          label="Biến thể"
-          name="has_variant"
-          valuePropName="checked"
-          style={{ marginTop: 16 }}
-        >
-          <Switch />
-        </Form.Item>
       </Card>
 
       <Card style={{ marginTop: 24 }} title="Mô tả">
