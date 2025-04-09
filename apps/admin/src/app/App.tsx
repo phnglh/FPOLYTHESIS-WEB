@@ -21,6 +21,8 @@ import CreateUser from '@app/users/create'
 import PrivateRoute from '@routes/PrivateRoute.tsx'
 import OrderManagement from '@app/orders'
 import OrderDetails from '@app/orders/detail'
+import ProductVariants from '@app/products/product-variants'
+import AddProductVariants from '@app/products/product-variants/add-product-variants'
 
 function App() {
   const dispatch = useDispatch()
@@ -58,7 +60,15 @@ function App() {
         <Route path="products">
           <Route index element={<ProductPage />} />
           <Route path="create" element={<CreateProduct />} />
+          <Route
+            path="product-variants/:id"
+            element={<ProductVariants />}
+          ></Route>
           <Route path="update/:id" element={<UpdateProduct />} />
+          <Route
+            path="add-product-variants/:id"
+            element={<AddProductVariants />}
+          />
         </Route>
         <Route path="attributes">
           <Route index element={<AttributeManagement />} />

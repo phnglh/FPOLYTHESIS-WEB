@@ -120,7 +120,6 @@ const CheckoutPage = () => {
     }
 
     if (useDefaultAddress) {
-      // Lấy danh sách địa chỉ rồi tìm địa chỉ mặc định để lấy ID
       try {
         const res = await apiClient.get('/user-addresses')
         const addresses = res.data?.data || []
@@ -137,7 +136,6 @@ const CheckoutPage = () => {
         return
       }
     } else {
-      // Nếu là địa chỉ mới thì gửi new_address
       checkoutData.new_address = {
         receiver_name: values.receiver_name,
         receiver_phone: values.receiver_phone,
