@@ -1,157 +1,180 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Form, Button, Upload, Input, message, Radio } from 'antd'
+import {
+  Card,
+  Form,
+  Button,
+  Upload,
+  Input,
+  message,
+  Checkbox,
+  Typography,
+} from 'antd'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
 
-const colors = ['Đỏ', 'Xanh', 'Tím', 'Vàng']
-const sizes = ['S', 'M', 'L', 'XL']
+const { Title } = Typography
 
-const AddProductVariants = () => {
+interface AttributeValue {
+  id: number
+  attribute_id: number
+  value: string
+  created_at: string
+  updated_at: string
+}
+
+interface Attribute {
+  id: number
+  name: string
+  values: AttributeValue[]
+}
+
+interface VariantFormValue {
+  image?: any
+  quantity: number
+  price: number
+}
+
+const AddProductVariants: React.FC = () => {
   const [form] = Form.useForm()
-  const [combinations, setCombinations] = useState<
-    { color: string; size: string }[]
-  >([])
-  const [variantValues, setVariantValues] = useState<Record<string, any>>({})
-  const [productName, setProductName] = useState<string>('')
-
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const generateCombinations = () => {
-    const selectedColor = form.getFieldValue('colors')
-    const selectedSize = form.getFieldValue('sizes')
+  const [attributes, setAttributes] = useState<Attribute[]>([])
+  const [combinations, setCombinations] = useState<string[][]>([])
+  const [productName, setProductName] = useState<string>('')
+  const [fileList, setFileList] = useState([])
 
-    if (!selectedColor || !selectedSize) {
-      message.warning('Vui lòng chọn màu sắc và kích thước.')
-      return
+  const fetchAttributes = async () => {
+    try {
+      const res = await apiClient.get(`/attributes`)
+      setAttributes(res.data.data || [])
+    } catch (error) {
+      console.error(error)
+      message.error('Không thể tải thuộc tính sản phẩm.')
     }
+  }
 
-    const key = `${selectedColor}-${selectedSize}`
-    const combo = [{ color: selectedColor, size: selectedSize }]
-    setCombinations(combo)
-
-    form.setFieldsValue({
-      variants: combo.map((item) => {
-        const key = `${item.color}-${item.size}`
-        return (
-          variantValues[key] || {
-            quantity: 0,
-            price: 0,
-            image: [],
-          }
-        )
-      }),
-    })
+  const fetchProductName = async () => {
+    try {
+      const res = await apiClient.get(`/products/${id}`)
+      setProductName(res.data.data.name || '')
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [skuRes, productRes] = await Promise.all([
-          apiClient.get(`/${id}/skus`),
-          productName ? null : apiClient.get(`/products/${id}`),
-        ])
+    if (id) {
+      fetchAttributes()
+      fetchProductName()
+    }
+  }, [id])
 
-        if (!skuRes?.data) {
-          throw new Error('Không tìm thấy dữ liệu biến thể.')
-        }
+  const cartesian = (arr: any[][]): any[][] => {
+    return arr.reduce(
+      (a, b) => a.flatMap((d: any) => b.map((e: any) => [...d, e])),
+      [[]],
+    )
+  }
 
-        if (!productName && productRes?.data) {
-          setProductName(productRes?.data?.name || 'Không rõ')
-        }
-
-        const variants = skuRes.data.map((sku: any) => ({
-          id: sku.id,
-          combination: sku.combination,
-          quantity: sku.quantity,
-          price: sku.price,
-          image: sku.image
-            ? [
-                {
-                  uid: `-${sku.id}`,
-                  name: 'Ảnh biến thể',
-                  status: 'done',
-                  url: sku.image,
-                },
-              ]
-            : [],
-        }))
-
-        form.setFieldsValue({ variants })
-      } catch (error) {
-        console.error(error)
-        message.error('Lỗi khi tải dữ liệu sản phẩm.')
-      }
+  const generateCombinations = () => {
+    const selectedAttributes = form.getFieldValue('attributes')
+    if (!selectedAttributes) {
+      message.warning('Vui lòng chọn ít nhất một thuộc tính')
+      return
     }
 
-    if (id) fetchData()
-  }, [id, form, productName])
+    const valuesList = attributes
+      .map((attr) => selectedAttributes[attr.id] || [])
+      .filter((vals) => vals.length > 0)
 
-  const onFinish = (values: any) => {
-    console.log('Form values:', values)
+    if (valuesList.length === 0) {
+      message.warning('Vui lòng chọn ít nhất một thuộc tính')
+      return
+    }
 
-    const promises = values.variants.map(async (variant: any) => {
-      const imageFile = variant.image?.[0]?.originFileObj
-      const formData = new FormData()
-      formData.append('combination', variant.combination || '')
-      formData.append('stock', variant.stock)
-      formData.append('price', variant.price)
-      if (Array.isArray(variant.attributes)) {
-        variant.attributes.forEach((attr: any, index: number) => {
-          formData.append(
-            `attributes[${index}][attribute_id]`,
-            attr.attribute_id,
-          )
-          formData.append(`attributes[${index}][value]`, attr.value)
-        })
-      }
-      if (imageFile) {
-        formData.append('image', imageFile)
-      }
+    const combos = cartesian(valuesList)
+    setCombinations(combos)
+
+    form.setFieldsValue({
+      variants: combos.map(() => ({ quantity: 0, price: 0, image: [] })),
     })
-    apiClient
-      .post(`/${id}/skus`, promises)
-      .then((response) => {
-        message.success('Biến thể sản phẩm đã được lưu')
-        navigate('/products')
-      })
-      .catch((error) => {
-        console.error(error)
-        message.error('Lỗi khi lưu biến thể sản phẩm')
-      })
+  }
+
+  const handleImageChange = ({ fileList }) => {
+    setFileList(fileList)
+    form.setFieldsValue({ imageUrl: fileList })
+  }
+
+  const onFinish = async (values: any) => {
+    try {
+      const selectedAttributes = values.attributes
+
+      for (let i = 0; i < combinations.length; i++) {
+        const combo = combinations[i]
+        const formData = new FormData()
+
+        combo.forEach((val: AttributeValue, idx: number) => {
+          formData.append(
+            `attributes[${idx}][attribute_id]`,
+            val.attribute_id.toString(),
+          )
+          formData.append(`attributes[${idx}][value]`, val.value)
+        })
+
+        formData.append('combination', combo.map((v) => v.value).join(' - '))
+        // formData.append('stock', values.variants[i].quantity)
+        // formData.append('price', values.variants[i].price)
+        formData.append(
+          'stock',
+          Math.floor(values.variants[i].quantity).toString(),
+        )
+        formData.append(
+          'price',
+          Math.floor(values.variants[i].price).toString(),
+        )
+
+        const imageFile = values.variants[i]?.image?.[0]?.originFileObj
+        console.log(imageFile)
+
+        if (imageFile) {
+          formData.append('image_url', imageFile)
+        }
+
+        await apiClient.post(`/${id}/skus`, formData)
+      }
+
+      message.success('Tất cả biến thể đã được lưu')
+      navigate('/products')
+    } catch (error) {
+      console.error(error)
+      message.error('Lỗi khi lưu biến thể sản phẩm')
+    }
   }
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
-      <Card title="Thuộc tính sản phẩm" style={{ marginBottom: 24 }}>
-        <Form.Item
-          name="colors"
-          label="Chọn màu sắc"
-          rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}
-        >
-          <Radio.Group>
-            {colors.map((color) => (
-              <Radio key={color} value={color}>
-                {color}
-              </Radio>
-            ))}
-          </Radio.Group>
-        </Form.Item>
+      <Card title="Thông tin sản phẩm" style={{ marginBottom: 24 }}>
+        <Title level={4}>Tên sản phẩm: {productName}</Title>
+      </Card>
 
-        <Form.Item
-          name="sizes"
-          label="Chọn kích thước"
-          rules={[{ required: true, message: 'Vui lòng chọn kích thước' }]}
-        >
-          <Radio.Group>
-            {sizes.map((size) => (
-              <Radio key={size} value={size}>
-                {size}
-              </Radio>
-            ))}
-          </Radio.Group>
-        </Form.Item>
+      <Card title="Thuộc tính sản phẩm" style={{ marginBottom: 24 }}>
+        {attributes.map((attribute) => (
+          <Form.Item
+            key={attribute.id}
+            name={['attributes', attribute.id]}
+            label={`Chọn ${attribute.name}`}
+          >
+            <Checkbox.Group>
+              {attribute.values.map((val) => (
+                <Checkbox key={val.id} value={val}>
+                  {val.value}
+                </Checkbox>
+              ))}
+            </Checkbox.Group>
+          </Form.Item>
+        ))}
 
         <Button
           type="dashed"
@@ -166,26 +189,26 @@ const AddProductVariants = () => {
         <Card title="Biến thể sản phẩm">
           {combinations.map((combo, index) => (
             <Card
-              key={`${combo.color}-${combo.size}`}
+              key={combo.map((v) => v.id).join('-')}
               type="inner"
               style={{ marginBottom: 16 }}
-              title={`Kết hợp : (${combo.color}) - (${combo.size})`}
+              title={`Kết hợp: ${combo.map((v) => v.value).join(' - ')}`}
             >
               <Form.Item
-                name={['variants', index, 'image']}
-                label="Ảnh"
+                label="Hình ảnh"
+                name="imageUrl"
                 valuePropName="fileList"
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                getValueFromEvent={(e) => e.fileList}
               >
                 <Upload
                   listType="picture"
-                  maxCount={1}
                   beforeUpload={() => false}
+                  fileList={fileList}
+                  onChange={handleImageChange}
                 >
-                  <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+                  <Button icon={<UploadOutlined />}>Upload</Button>
                 </Upload>
               </Form.Item>
-
               <Form.Item
                 name={['variants', index, 'quantity']}
                 label="Số lượng"

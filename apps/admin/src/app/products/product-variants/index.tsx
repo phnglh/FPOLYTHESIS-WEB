@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, Input, Form, Button, Typography, message, Upload } from 'antd'
 import {
   MinusCircleOutlined,

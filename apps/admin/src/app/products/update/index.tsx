@@ -72,16 +72,7 @@ const EditProduct = () => {
         brand_id: productDetail.brand_id,
         is_published: productDetail.is_published,
         description: productDetail.description,
-        thumbnail: productDetail.image_url
-          ? [
-              {
-                uid: '-1',
-                name: 'thumbnail',
-                status: 'done',
-                url: productDetail.thumbnail,
-              },
-            ]
-          : [],
+        thumbnail: productDetail.image_url,
       })
     }
   }, [productDetail, form])
