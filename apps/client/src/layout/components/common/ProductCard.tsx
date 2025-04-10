@@ -17,9 +17,9 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
   return (
     <Card
       hoverable
-      // onClick={() => navigate(`/products/${product.id}`)}
       cover={
         <Image
+          onClick={() => navigate(`/products/${product.id}`)}
           src={product.image_url}
           preview={false}
           style={{
@@ -44,12 +44,20 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
     >
       <Meta
         title={
-          <Text strong style={{ fontSize: '14px' }}>
+          <Text
+            strong
+            style={{ fontSize: '14px' }}
+            onClick={() => navigate(`/products/${product.id}`)}
+          >
             {product.name}
           </Text>
         }
         description={
-          <Text type="secondary" ellipsis>
+          <Text
+            type="secondary"
+            ellipsis
+            onClick={() => navigate(`/products/${product.id}`)}
+          >
             {product.description}
           </Text>
         }

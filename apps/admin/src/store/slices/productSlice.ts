@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '../services/apiClient'
 import { Product, ProductsState } from '#types/product'
 import { ApiErrorResponse } from '#types/api'
+import axios from 'axios'
 
 const initialProductsState: ProductsState = {
   data: [],
@@ -38,7 +39,7 @@ export const fetchProductById = createAsyncThunk(
 // POST Product
 export const addProduct = createAsyncThunk(
   'products/addProduct',
-  async (newProduct: Omit<Product, 'id'>, { rejectWithValue }) => {
+  async (newProduct: FormData, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/products', newProduct, {
         headers: {
@@ -46,8 +47,24 @@ export const addProduct = createAsyncThunk(
         },
       })
       return response.data
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Lỗi không xác định')
+    } catch (error: unknown) {
+      console.log('Raw error:', error)
+
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const { data } = error.response
+          if (data.status === 'error' && data.errors) {
+            return rejectWithValue(data.errors)
+          } else if (!data.success && data.message) {
+            return rejectWithValue(data.message)
+          }
+        }
+
+        // Xử lý lỗi chung khác
+        return rejectWithValue('Đăng nhập không thành công!')
+      }
+
+      return rejectWithValue('Lỗi không xác định!')
     }
   },
 )

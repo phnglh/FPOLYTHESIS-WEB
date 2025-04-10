@@ -6,12 +6,13 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from '@store/store.ts'
 import { addProduct } from '@store/slices/productSlice.ts'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router'
 
 const { Title, Text } = Typography
 const CreateProduct = () => {
   const [form] = Form.useForm()
   const dispatch = useDispatch<AppDispatch>()
-
+  const navigate = useNavigate()
   const handleSubmit = async (values) => {
     console.log('🟢 Form values:', values)
 
@@ -56,16 +57,11 @@ const CreateProduct = () => {
     })
 
     try {
-      // Gửi FormData để tạo sản phẩm, bao gồm thông tin sản phẩm và ảnh
-      await dispatch(addProduct(formData)) // Giả sử api.createProduct là hàm API để tạo sản phẩm
-
-      // Sau khi gửi FormData thành công, bạn có thể làm gì đó như hiển thị thông báo thành công
+      await dispatch(addProduct(formData)).unwrap()
       toast.success('Sản phẩm đã được tạo thành công!')
-
-      // Bạn có thể dispatch các action khác nếu cần sau khi tạo sản phẩm thành công
+      navigate('/products')
     } catch (error) {
-      console.error('❌ Error submitting product:', error)
-      toast.error('Lỗi khi gửi dữ liệu. Vui lòng thử lại!')
+      toast.error(error)
     }
   }
 
