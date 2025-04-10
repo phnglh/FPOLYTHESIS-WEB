@@ -1,4 +1,4 @@
-import { Button, Input, Select, Space, Table, Tag } from 'antd'
+import { Button, Input, Select, Space, Table, Tag, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store.ts'
@@ -8,8 +8,6 @@ import { useNavigate } from 'react-router'
 import { Order } from '#types/order'
 import { User } from '#types/user'
 import apiClient from '@store/services/apiClient'
-
-const { Option } = Select
 
 const statusColors: Record<string, string> = {
   pending: 'gold',
@@ -23,6 +21,10 @@ const OrderList = () => {
   const dispatch = useDispatch<AppDispatch>()
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [confirmVisible, setConfirmVisible] = useState(false)
+
   const { data, loading } = useSelector((state: RootState) => state.orders)
   const { formatCurrency } = useCurrencyFormatter()
   const navigate = useNavigate()
@@ -37,17 +39,26 @@ const OrderList = () => {
       order.id.toString().includes(searchTerm.trim()),
   )
 
-  const updateOrderStatus = async (id: string, status: string) => {
+  const handleChangeStatus = (order: Order, newStatus: string) => {
+    setSelectedOrder(order)
+    setSelectedStatus(newStatus)
+    setConfirmVisible(true)
+  }
+
+  const handleConfirmStatusChange = async () => {
+    if (!selectedOrder) return
     try {
       await apiClient.put(
-        `/orders/${id}/status`,
-        { status }, // phải là object có key 'status'
+        `/orders/${selectedOrder.id}/status`,
+        { status: selectedStatus },
         { headers: { 'Content-Type': 'application/json' } },
       )
-      dispatch(fetchOrders()) // reload lại danh sách
+      message.success('Cập nhật trạng thái thành công')
+      setConfirmVisible(false)
+      dispatch(fetchOrders())
     } catch (error) {
       console.error('Failed to update status:', error)
-      // optional: hiển thị message ra UI
+      message.error('Có lỗi xảy ra khi cập nhật trạng thái')
     }
   }
 
@@ -74,17 +85,20 @@ const OrderList = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string, record: Order) => (
-        <Select
-          value={status}
-          onChange={(newStatus) => updateOrderStatus(record.id, newStatus)}
-          style={{ width: 160 }}
-        >
-          <Select.Option value="pending">Chờ xác nhận</Select.Option>
-          <Select.Option value="processing">Đang xử lý</Select.Option>
-          <Select.Option value="shipped">Đang giao</Select.Option>
-          <Select.Option value="delivered">Đã giao</Select.Option>
-          <Select.Option value="cancelled">Đã hủy</Select.Option>
-        </Select>
+        <Space>
+          <Tag color={statusColors[status]}>{status}</Tag>
+          <Select
+            value={status}
+            onChange={(newStatus) => handleChangeStatus(record, newStatus)}
+            style={{ width: 160 }}
+          >
+            <Select.Option value="pending">Chờ xác nhận</Select.Option>
+            <Select.Option value="processing">Đang xử lý</Select.Option>
+            <Select.Option value="shipped">Đang giao</Select.Option>
+            <Select.Option value="delivered">Đã giao</Select.Option>
+            <Select.Option value="cancelled">Đã hủy</Select.Option>
+          </Select>
+        </Space>
       ),
     },
     {
@@ -95,8 +109,15 @@ const OrderList = () => {
           <Button onClick={() => navigate(`/orders/${record.id}`)}>
             Chi tiết
           </Button>
-          <Button type="link" danger>
-            Hủy
+          <Button onClick={() => navigate(`/orders/${record.id}/invoice`)}>
+            Xem hóa đơn
+          </Button>
+          <Button
+            onClick={() =>
+              window.open(`/orders/${record.id}/invoice`, '_blank')
+            }
+          >
+            In hóa đơn
           </Button>
         </Space>
       ),
@@ -118,9 +139,11 @@ const OrderList = () => {
           style={{ width: 150 }}
           options={[
             { value: 'all', label: 'Tất cả' },
-            { value: 'Pending', label: 'Chờ xử lý' },
-            { value: 'Completed', label: 'Hoàn thành' },
-            { value: 'Cancelled', label: 'Đã hủy' },
+            { value: 'pending', label: 'Chờ xác nhận' },
+            { value: 'processing', label: 'Đang xử lý' },
+            { value: 'shipped', label: 'Đang giao' },
+            { value: 'delivered', label: 'Đã giao' },
+            { value: 'cancelled', label: 'Đã hủy' },
           ]}
         />
       </Space>
@@ -132,6 +155,21 @@ const OrderList = () => {
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
+
+      <Modal
+        title="Xác nhận thay đổi trạng thái"
+        open={confirmVisible}
+        onOk={handleConfirmStatusChange}
+        onCancel={() => setConfirmVisible(false)}
+        okText="Cập nhật"
+        cancelText="Hủy"
+      >
+        <p>
+          Bạn có chắc muốn đổi trạng thái đơn hàng{' '}
+          <strong>#{selectedOrder?.id}</strong> thành{' '}
+          <Tag color={statusColors[selectedStatus]}>{selectedStatus}</Tag>?
+        </p>
+      </Modal>
     </div>
   )
 }

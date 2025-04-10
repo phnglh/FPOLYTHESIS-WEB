@@ -16,6 +16,9 @@ import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
+import { ApiErrorResponse } from '#types/api'
+import { CartItem } from '#types/cart'
+import { User } from '#types/user'
 
 const { Title, Text } = Typography
 
@@ -24,8 +27,8 @@ const CheckoutPage = () => {
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
 
-  const [user, setUser] = useState<any>(null)
-  const [cartItems, setCartItems] = useState<any[]>([])
+  const [user, setUser] = useState<User>()
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
   const [useDefaultAddress, setUseDefaultAddress] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -88,7 +91,7 @@ const CheckoutPage = () => {
           navigate('/cart')
         }
         setCartItems(parsedItems)
-        const total = parsedItems.reduce((sum: number, item: any) => {
+        const total = parsedItems.reduce((sum: number, item: CartItem) => {
           const price = Number(item.unit_price)
           return sum + item.quantity * (isNaN(price) ? 0 : price)
         }, 0)
@@ -147,11 +150,7 @@ const CheckoutPage = () => {
     }
 
     try {
-      const res = await apiClient.post('/orders/create', checkoutData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const res = await apiClient.post('/orders/create', checkoutData)
 
       if (values.payment_method === 'vnpay') {
         const paymentUrl = res.data?.data?.payment_url
@@ -166,9 +165,9 @@ const CheckoutPage = () => {
         localStorage.removeItem('checkout_items')
         navigate('/order-success')
       }
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra!')
+    } catch (error: unknown) {
+      const errMsg = (error as ApiErrorResponse)?.message
+      toast.error(errMsg || 'Đặt hàng thất bại, vui lòng thử lại sau!')
     } finally {
       setIsSubmitting(false)
     }
