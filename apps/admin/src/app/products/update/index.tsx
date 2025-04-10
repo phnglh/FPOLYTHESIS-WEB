@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Card,
   Form,
@@ -10,7 +10,6 @@ import {
   Typography,
   Row,
   Col,
-  message,
 } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import { RcFile } from 'antd/es/upload'
@@ -21,6 +20,8 @@ import { fetchBrands } from '@store/slices/brandSlice'
 import { fetchProductById, updateProduct } from '@store/slices/productSlice'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const { Title } = Typography
 const { TextArea } = Input
@@ -33,14 +34,15 @@ const beforeUpload = (file: RcFile) => {
     'image/webp',
   ].includes(file.type)
   if (!isImage) {
-    message.error('Chỉ hỗ trợ ảnh .jpg, .jpeg, .png, .webp')
+    toast.error('Chỉ hỗ trợ ảnh .jpg, .jpeg, .png, .webp')
   }
 
   const isLt5MB = file.size / 1024 / 1024 < 5
   if (!isLt5MB) {
-    message.error('Ảnh phải nhỏ hơn 5MB')
+    toast.error('Ảnh phải nhỏ hơn 5MB')
   }
 
+  console.log('Uploading file to:', file)
   return isImage && isLt5MB
 }
 
@@ -49,6 +51,7 @@ const EditProduct = () => {
   const [form] = Form.useForm()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  // const [imageurl, setImageurl] = useState<string>('')
 
   const categories = useSelector((state: RootState) => state.categories.data)
   const brands = useSelector((state: RootState) => state.brands.data)
@@ -82,132 +85,163 @@ const EditProduct = () => {
 
     try {
       const formData = new FormData()
-      formData.append('id', id)
       formData.append('name', values.name)
-      formData.append('category_id', values.category_id)
-      formData.append('brand_id', values.brand_id)
-      formData.append('is_published', values.is_published ? 1 : 0)
+      formData.append('category_id', String(values.category_id))
+      formData.append('brand_id', String(values.brand_id))
+      formData.append('is_published', values.is_published ? '1' : '0')
       formData.append('description', values.description)
-      const file = values.thumbnail?.originFileObj
-      if (file) {
-        formData.append('image_url', file)
+
+      if (Array.isArray(values.thumbnail) && values.thumbnail.length > 0) {
+        const file = values.thumbnail[0].originFileObj
+        if (file instanceof File) {
+          formData.append('image_url', file)
+        } else {
+          console.log('Không có file mới, chỉ có URL cũ:', values.thumbnail[0])
+        }
+      } else {
+        console.log('Không có thumbnail nào được chọn.')
       }
-      const res = await apiClient.put(`products/${id}`, formData)
-      console.log(res)
-      navigate('/products')
+
+      // console.log('File object:', file)
+
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value)
+      }
+
+      const res = await apiClient.put(`/products/${id}`, formData)
+
+      if (res?.data) {
+        toast.success('Cập nhật sản phẩm thành công!')
+        navigate('/products')
+      } else {
+        toast.error('Không có dữ liệu trả về từ API')
+      }
     } catch (error) {
-      console.error(error)
-      message.error('Có lỗi xảy ra khi cập nhật sản phẩm.')
+      console.error('Error updating product:', error)
+      toast.error('Có lỗi xảy ra khi cập nhật sản phẩm.')
     }
   }
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleSubmit}
-      initialValues={{
-        is_published: true,
-        has_variant: false,
-      }}
-    >
-      <Card title="Thông tin sản phẩm">
-        <Form.Item
-          label="Tên sản phẩm"
-          name="name"
-          rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="Danh mục"
-          name="category_id"
-          rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
-        >
-          <Select placeholder="Chọn danh mục">
-            {categories.map((cat) => (
-              <Select.Option key={cat.id} value={cat.id}>
-                {cat.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          label="Thương hiệu"
-          name="brand_id"
-          rules={[{ required: true, message: 'Vui lòng chọn thương hiệu' }]}
-        >
-          <Select placeholder="Chọn thương hiệu">
-            {brands.map((brand) => (
-              <Select.Option key={brand.id} value={brand.id}>
-                {brand.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="Hiển thị" name="is_published" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-      </Card>
-
-      <Card style={{ marginTop: 24 }}>
-        <Row align="middle" justify="space-between">
-          <Col>
-            <Title level={5}>Biến thể sản phẩm</Title>
-          </Col>
-          <Col>
-            <Button
-              type="link"
-              disabled={!id}
-              onClick={() =>
-                navigate(`/products/product-variants/${id}`, {
-                  state: { productName: productDetail?.name },
-                })
-              }
-            >
-              Xem biến thể &rsaquo;
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
-      <Card style={{ marginTop: 24 }} title="Mô tả">
-        <Form.Item name="description">
-          <TextArea rows={4} />
-        </Form.Item>
-      </Card>
-
-      <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm (1 ảnh)">
-        <Form.Item
-          name="thumbnail"
-          label="Thumbnail"
-          rules={[{ required: true, message: 'Vui lòng chọn ảnh thumbnail' }]}
-          valuePropName="fileList"
-          getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-        >
-          <Upload
-            listType="picture-card"
-            maxCount={1}
-            beforeUpload={beforeUpload}
-            showUploadList={{ showPreviewIcon: false }}
+    <>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={{
+          is_published: true,
+          has_variant: false,
+        }}
+      >
+        <Card title="Thông tin sản phẩm">
+          <Form.Item
+            label="Tên sản phẩm"
+            name="name"
+            rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
           >
-            <div>
-              <UploadOutlined />
-              <div style={{ marginTop: 8 }}>Chọn ảnh</div>
-            </div>
-          </Upload>
-        </Form.Item>
-      </Card>
+            <Input />
+          </Form.Item>
 
-      <Form.Item style={{ marginTop: 24 }}>
-        <Button type="primary" htmlType="submit">
-          Lưu sản phẩm
-        </Button>
-      </Form.Item>
-    </Form>
+          <Form.Item
+            label="Danh mục"
+            name="category_id"
+            rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
+          >
+            <Select placeholder="Chọn danh mục">
+              {categories.map((cat) => (
+                <Select.Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Thương hiệu"
+            name="brand_id"
+            rules={[{ required: true, message: 'Vui lòng chọn thương hiệu' }]}
+          >
+            <Select placeholder="Chọn thương hiệu">
+              {brands.map((brand) => (
+                <Select.Option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Hiển thị"
+            name="is_published"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Card>
+
+        <Card style={{ marginTop: 24 }}>
+          <Row align="middle" justify="space-between">
+            <Col>
+              <Title level={5}>Biến thể sản phẩm</Title>
+            </Col>
+            <Col>
+              <Button
+                type="link"
+                disabled={!id}
+                onClick={() =>
+                  navigate(`/products/product-variants/${id}`, {
+                    state: { productName: productDetail?.name },
+                  })
+                }
+              >
+                Xem biến thể &rsaquo;
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+
+        <Card style={{ marginTop: 24 }} title="Mô tả">
+          <Form.Item name="description">
+            <TextArea rows={4} />
+          </Form.Item>
+        </Card>
+
+        <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm (1 ảnh)">
+          <Form.Item
+            name="thumbnail"
+            label="Thumbnail"
+            rules={[{ required: true, message: 'Vui lòng chọn ảnh thumbnail' }]}
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              return Array.isArray(e?.fileList) ? e.fileList : []
+            }}
+          >
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={beforeUpload}
+              showUploadList={{ showPreviewIcon: false }}
+              onChange={(info) => {
+                const { fileList } = info
+                form.setFieldsValue({
+                  thumbnail: Array.isArray(fileList) ? fileList : [],
+                })
+              }}
+            >
+              <UploadOutlined style={{ fontSize: 24 }} />
+              <span style={{ marginTop: 8 }}>Chọn ảnh</span>
+            </Upload>
+          </Form.Item>
+        </Card>
+
+        <Form.Item style={{ marginTop: 24 }}>
+          <Button type="primary" htmlType="submit">
+            Lưu sản phẩm
+          </Button>
+        </Form.Item>
+      </Form>
+      <ToastContainer />
+    </>
   )
 }
 
