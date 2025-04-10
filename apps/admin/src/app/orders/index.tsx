@@ -97,6 +97,7 @@ const OrderList = () => {
               setSelectedStatus(record.status)
               setConfirmVisible(true)
             }}
+            disabled={status === 'delivered' || status === 'cancelled'}
           >
             Cập nhật
           </Button>
