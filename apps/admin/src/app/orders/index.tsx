@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router'
 import { Order } from '#types/order'
 import { User } from '#types/user'
 import apiClient from '@store/services/apiClient'
+import { toast } from 'react-toastify'
 
 const statusColors: Record<string, string> = {
   pending: 'gold',
@@ -15,6 +16,14 @@ const statusColors: Record<string, string> = {
   shipped: 'cyan',
   delivered: 'green',
   cancelled: 'red',
+}
+
+const statusLabels: Record<string, string> = {
+  pending: 'Chờ xác nhận',
+  processing: 'Đang xử lý',
+  shipped: 'Đang giao',
+  delivered: 'Đã giao',
+  cancelled: 'Đã hủy',
 }
 
 const OrderList = () => {
@@ -39,12 +48,6 @@ const OrderList = () => {
       order.id.toString().includes(searchTerm.trim()),
   )
 
-  const handleChangeStatus = (order: Order, newStatus: string) => {
-    setSelectedOrder(order)
-    setSelectedStatus(newStatus)
-    setConfirmVisible(true)
-  }
-
   const handleConfirmStatusChange = async () => {
     if (!selectedOrder) return
     try {
@@ -53,12 +56,12 @@ const OrderList = () => {
         { status: selectedStatus },
         { headers: { 'Content-Type': 'application/json' } },
       )
-      message.success('Cập nhật trạng thái thành công')
+      toast.success('Cập nhật trạng thái thành công')
       setConfirmVisible(false)
       dispatch(fetchOrders())
     } catch (error) {
       console.error('Failed to update status:', error)
-      message.error('Có lỗi xảy ra khi cập nhật trạng thái')
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái')
     }
   }
 
@@ -86,18 +89,17 @@ const OrderList = () => {
       key: 'status',
       render: (status: string, record: Order) => (
         <Space>
-          <Tag color={statusColors[status]}>{status}</Tag>
-          <Select
-            value={status}
-            onChange={(newStatus) => handleChangeStatus(record, newStatus)}
-            style={{ width: 160 }}
+          <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
+          <Button
+            size="small"
+            onClick={() => {
+              setSelectedOrder(record)
+              setSelectedStatus(record.status)
+              setConfirmVisible(true)
+            }}
           >
-            <Select.Option value="pending">Chờ xác nhận</Select.Option>
-            <Select.Option value="processing">Đang xử lý</Select.Option>
-            <Select.Option value="shipped">Đang giao</Select.Option>
-            <Select.Option value="delivered">Đã giao</Select.Option>
-            <Select.Option value="cancelled">Đã hủy</Select.Option>
-          </Select>
+            Cập nhật
+          </Button>
         </Space>
       ),
     },
@@ -111,13 +113,6 @@ const OrderList = () => {
           </Button>
           <Button onClick={() => navigate(`/orders/${record.id}/invoice`)}>
             Xem hóa đơn
-          </Button>
-          <Button
-            onClick={() =>
-              window.open(`/orders/${record.id}/invoice`, '_blank')
-            }
-          >
-            In hóa đơn
           </Button>
         </Space>
       ),
@@ -157,7 +152,7 @@ const OrderList = () => {
       />
 
       <Modal
-        title="Xác nhận thay đổi trạng thái"
+        title="Cập nhật trạng thái đơn hàng"
         open={confirmVisible}
         onOk={handleConfirmStatusChange}
         onCancel={() => setConfirmVisible(false)}
@@ -165,10 +160,23 @@ const OrderList = () => {
         cancelText="Hủy"
       >
         <p>
-          Bạn có chắc muốn đổi trạng thái đơn hàng{' '}
-          <strong>#{selectedOrder?.id}</strong> thành{' '}
-          <Tag color={statusColors[selectedStatus]}>{selectedStatus}</Tag>?
+          Đơn hàng <strong>#{selectedOrder?.id}</strong> hiện đang ở trạng thái:{' '}
+          <Tag color={statusColors[selectedOrder?.status || '']}>
+            {statusLabels[selectedOrder?.status || '']}
+          </Tag>
         </p>
+        <p>Chọn trạng thái mới:</p>
+        <Select
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+          style={{ width: '100%' }}
+        >
+          <Select.Option value="pending">Chờ xác nhận</Select.Option>
+          <Select.Option value="processing">Đang xử lý</Select.Option>
+          <Select.Option value="shipped">Đang giao</Select.Option>
+          <Select.Option value="delivered">Đã giao</Select.Option>
+          <Select.Option value="cancelled">Đã hủy</Select.Option>
+        </Select>
       </Modal>
     </div>
   )

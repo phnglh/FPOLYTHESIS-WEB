@@ -21,6 +21,7 @@ import CreateUser from '@app/users/create'
 import PrivateRoute from '@routes/PrivateRoute.tsx'
 import OrderManagement from '@app/orders'
 import OrderDetails from '@app/orders/detail'
+import OrderInvoice from '@app/orders/invoice'
 
 function App() {
   const dispatch = useDispatch()
@@ -66,6 +67,7 @@ function App() {
         <Route path="orders">
           <Route index element={<OrderManagement />} />
           <Route path=":id" element={<OrderDetails />} />
+          <Route path=":id/invoice" element={<OrderInvoice />} />
         </Route>
         <Route path="users">
           <Route index element={<UserManagement />} />
