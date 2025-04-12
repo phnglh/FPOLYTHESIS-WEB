@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import {
   Card,
   Form,
@@ -8,16 +8,14 @@ import {
   Upload,
   Button,
   Typography,
-  Row,
-  Col,
 } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
-import { RcFile } from 'antd/es/upload'
+import { RcFile, UploadFile } from 'antd/es/upload'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { fetchCategories } from '@store/slices/categorySlice'
 import { fetchBrands } from '@store/slices/brandSlice'
-import { fetchProductById, updateProduct } from '@store/slices/productSlice'
+import { fetchProductById } from '@store/slices/productSlice'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
 import { ToastContainer, toast } from 'react-toastify'
@@ -25,6 +23,7 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const { Title } = Typography
 const { TextArea } = Input
+const { Option } = Select
 
 const beforeUpload = (file: RcFile) => {
   const isImage = [
@@ -33,17 +32,16 @@ const beforeUpload = (file: RcFile) => {
     'image/jpg',
     'image/webp',
   ].includes(file.type)
-  if (!isImage) {
-    toast.error('Chỉ hỗ trợ ảnh .jpg, .jpeg, .png, .webp')
-  }
+  if (!isImage) toast.error('Chỉ hỗ trợ ảnh .jpg, .jpeg, .png, .webp')
 
   const isLt5MB = file.size / 1024 / 1024 < 5
-  if (!isLt5MB) {
-    toast.error('Ảnh phải nhỏ hơn 5MB')
-  }
+  if (!isLt5MB) toast.error('Ảnh phải nhỏ hơn 5MB')
 
-  console.log('Uploading file to:', file)
   return isImage && isLt5MB
+}
+
+const normFile = (e: any) => {
+  return Array.isArray(e) ? e : e?.fileList
 }
 
 const EditProduct = () => {
@@ -51,7 +49,6 @@ const EditProduct = () => {
   const [form] = Form.useForm()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  // const [imageurl, setImageurl] = useState<string>('')
 
   const categories = useSelector((state: RootState) => state.categories.data)
   const brands = useSelector((state: RootState) => state.brands.data)
@@ -62,9 +59,7 @@ const EditProduct = () => {
   useEffect(() => {
     dispatch(fetchCategories())
     dispatch(fetchBrands())
-    if (id) {
-      dispatch(fetchProductById(id))
-    }
+    if (id) dispatch(fetchProductById(id))
   }, [dispatch, id])
 
   useEffect(() => {
@@ -73,66 +68,51 @@ const EditProduct = () => {
         name: productDetail.name,
         category_id: productDetail.category_id,
         brand_id: productDetail.brand_id,
-        is_published: productDetail.is_published,
+        is_published: productDetail.is_published === 1,
         description: productDetail.description,
-        thumbnail: productDetail.image_url,
+        image_url: productDetail.image_url
+          ? [
+              {
+                uid: '-1',
+                name: 'image.png',
+                status: 'done',
+                url: productDetail.image_url,
+              },
+            ]
+          : [],
       })
     }
   }, [productDetail, form])
 
   const handleSubmit = async (values: any) => {
-    if (!id) return
+    const formData = new FormData()
+    formData.append('_method', 'PUT')
+    formData.append('name', values.name)
+    formData.append('category_id', String(values.category_id))
+    formData.append('brand_id', String(values.brand_id))
+    formData.append('is_published', values.is_published ? '1' : '0')
+    formData.append('description', values.description || '')
+
+    const imageFile: UploadFile = values.image_url?.[0]
+    const file = imageFile?.originFileObj
+    if (file) formData.append('image_url', file)
 
     try {
-      const formData = new FormData()
-      formData.append('name', values.name)
-      formData.append('category_id', String(values.category_id))
-      formData.append('brand_id', String(values.brand_id))
-      formData.append('is_published', values.is_published ? '1' : '0')
-      formData.append('description', values.description)
-
-      if (Array.isArray(values.thumbnail) && values.thumbnail.length > 0) {
-        const file = values.thumbnail[0].originFileObj
-        if (file instanceof File) {
-          formData.append('image_url', file)
-        } else {
-          console.log('Không có file mới, chỉ có URL cũ:', values.thumbnail[0])
-        }
-      } else {
-        console.log('Không có thumbnail nào được chọn.')
-      }
-
-      // console.log('File object:', file)
-
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value)
-      }
-
-      const res = await apiClient.put(`/products/${id}`, formData)
-
-      if (res?.data) {
-        toast.success('Cập nhật sản phẩm thành công!')
-        navigate('/products')
-      } else {
-        toast.error('Không có dữ liệu trả về từ API')
-      }
-    } catch (error) {
-      console.error('Error updating product:', error)
-      toast.error('Có lỗi xảy ra khi cập nhật sản phẩm.')
+      await apiClient.post(`/products/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      toast.success('Cập nhật sản phẩm thành công!')
+      navigate('/products')
+    } catch (err) {
+      toast.error('Cập nhật thất bại.')
+      console.error(err)
     }
   }
 
   return (
     <>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          is_published: true,
-          has_variant: false,
-        }}
-      >
+      <Title level={3}>Cập nhật sản phẩm</Title>
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Card title="Thông tin sản phẩm">
           <Form.Item
             label="Tên sản phẩm"
@@ -149,9 +129,9 @@ const EditProduct = () => {
           >
             <Select placeholder="Chọn danh mục">
               {categories.map((cat) => (
-                <Select.Option key={cat.id} value={cat.id}>
+                <Option key={cat.id} value={cat.id}>
                   {cat.name}
-                </Select.Option>
+                </Option>
               ))}
             </Select>
           </Form.Item>
@@ -163,9 +143,9 @@ const EditProduct = () => {
           >
             <Select placeholder="Chọn thương hiệu">
               {brands.map((brand) => (
-                <Select.Option key={brand.id} value={brand.id}>
+                <Option key={brand.id} value={brand.id}>
                   {brand.name}
-                </Select.Option>
+                </Option>
               ))}
             </Select>
           </Form.Item>
@@ -179,57 +159,30 @@ const EditProduct = () => {
           </Form.Item>
         </Card>
 
-        <Card style={{ marginTop: 24 }}>
-          <Row align="middle" justify="space-between">
-            <Col>
-              <Title level={5}>Biến thể sản phẩm</Title>
-            </Col>
-            <Col>
-              <Button
-                type="link"
-                disabled={!id}
-                onClick={() =>
-                  navigate(`/products/product-variants/${id}`, {
-                    state: { productName: productDetail?.name },
-                  })
-                }
-              >
-                Xem biến thể &rsaquo;
-              </Button>
-            </Col>
-          </Row>
-        </Card>
-
-        <Card style={{ marginTop: 24 }} title="Mô tả">
+        <Card style={{ marginTop: 24 }} title="Mô tả sản phẩm">
           <Form.Item name="description">
             <TextArea rows={4} />
           </Form.Item>
         </Card>
 
-        <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm (1 ảnh)">
+        <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm">
           <Form.Item
-            name="thumbnail"
-            label="Thumbnail"
-            rules={[{ required: true, message: 'Vui lòng chọn ảnh thumbnail' }]}
+            name="image_url"
             valuePropName="fileList"
-            getValueFromEvent={(e) => {
-              return Array.isArray(e?.fileList) ? e.fileList : []
-            }}
+            getValueFromEvent={normFile}
           >
             <Upload
               listType="picture-card"
-              maxCount={1}
               beforeUpload={beforeUpload}
-              showUploadList={{ showPreviewIcon: false }}
-              onChange={(info) => {
-                const { fileList } = info
-                form.setFieldsValue({
-                  thumbnail: Array.isArray(fileList) ? fileList : [],
-                })
-              }}
+              customRequest={({ file, onSuccess }) =>
+                setTimeout(() => onSuccess?.('ok'), 0)
+              }
+              maxCount={1}
             >
-              <UploadOutlined style={{ fontSize: 24 }} />
-              <span style={{ marginTop: 8 }}>Chọn ảnh</span>
+              <div>
+                <UploadOutlined style={{ fontSize: 24 }} />
+                <div style={{ marginTop: 8 }}>Tải ảnh</div>
+              </div>
             </Upload>
           </Form.Item>
         </Card>
