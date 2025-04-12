@@ -8,6 +8,7 @@ import {
   message,
   Space,
   Typography,
+  Modal,
 } from 'antd'
 import { useParams } from 'react-router'
 import { useDispatch, useSelector } from 'react-redux'
@@ -15,6 +16,8 @@ import { AppDispatch, RootState } from '@store/store'
 import { useEffect } from 'react'
 import { fetchOrderById } from '@store/slices/orderSlice'
 import { ColumnsType } from 'antd/es/table'
+import apiClient from '@store/services/apiClient'
+import { toast } from 'react-toastify'
 
 const statusColors: Record<string, string> = {
   pending: 'gold',
@@ -37,10 +40,30 @@ const OrderDetails = () => {
       if (!isNaN(orderId)) {
         dispatch(fetchOrderById(orderId))
       } else {
-        message.error('ID không hợp lệ')
+        toast.error('ID không hợp lệ')
       }
     }
   }, [dispatch, id])
+
+  const handleCancelOrder = async () => {
+    Modal.confirm({
+      title: 'Xác nhận hủy đơn hàng',
+      content: 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
+      okText: 'Hủy đơn',
+      okType: 'danger',
+      cancelText: 'Không',
+      async onOk() {
+        try {
+          await apiClient.delete(`/orders/${id}`)
+          message.success('Đã hủy đơn hàng thành công')
+          dispatch(fetchOrderById(Number(id)))
+        } catch (error) {
+          console.error('Error cancelling order:', error)
+          toast.error('Không thể hủy đơn hàng. Vui lòng thử lại.')
+        }
+      },
+    })
+  }
 
   const productColumns: ColumnsType<any> = [
     {
@@ -70,7 +93,7 @@ const OrderDetails = () => {
     },
   ]
 
-  if (!order?.id) return null
+  const canCancel = ['pending', 'processing'].includes(order?.status)
 
   return (
     <Card title={`Chi tiết đơn hàng: ${order.order_number}`} loading={loading}>
@@ -150,7 +173,11 @@ const OrderDetails = () => {
 
       <Space style={{ marginTop: 24 }}>
         <Button type="primary">Gửi thông báo cho khách</Button>
-        <Button danger>Hủy đơn</Button>
+        {canCancel && (
+          <Button danger onClick={handleCancelOrder}>
+            Hủy đơn
+          </Button>
+        )}
       </Space>
     </Card>
   )
