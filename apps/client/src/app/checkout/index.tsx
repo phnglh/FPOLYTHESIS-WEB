@@ -36,12 +36,6 @@ const CheckoutPage = () => {
   const [useDefaultAddress, setUseDefaultAddress] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [provinces, setProvinces] = useState([])
-  const [districts, setDistricts] = useState([])
-  const [wards, setWards] = useState([])
-  const [selectedProvince, setSelectedProvince] = useState(null)
-  const [selectedDistrict, setSelectedDistrict] = useState(null)
-
   const token = localStorage.getItem('access_token')
 
   // Fetch user data and default address
@@ -83,35 +77,9 @@ const CheckoutPage = () => {
       }
     }
 
-    const fetchProvinces = async () => {
-      try {
-        const provincesRes = await apiClient.get(
-          'https://esgoo.net/api-tinhthanh/1/0.htm',
-        )
-        setProvinces(provincesRes.data)
-      } catch (err) {
-        console.error('Error fetching provinces:', err)
-      }
-    }
-
-    const handleProvinceChange = async (provinceId: number) => {
-      setSelectedProvince(provinceId)
-      try {
-        const districtRes = await apiClient.get(
-          `https://esgoo.net/api-tinhthanh/2/${provinceId}.htm`,
-        )
-        setDistricts(districtRes.data)
-        setWards([]) // Reset wards when province changes
-        form.setFieldsValue({ district: undefined }) // Clear district field
-      } catch (err) {
-        console.error('Error fetching districts:', err)
-      }
-    }
-
     if (token) {
       fetchUserData()
       fetchDefaultAddress()
-      fetchProvinces()
     }
 
     const storedItems = localStorage.getItem('checkout_items')
@@ -134,33 +102,6 @@ const CheckoutPage = () => {
       }
     }
   }, [form, navigate, token])
-
-  // Handle province change
-  const handleProvinceChange = async (provinceId: number) => {
-    setSelectedProvince(provinceId)
-    try {
-      const districtRes = await apiClient.get(
-        `https://esgoo.net/api-tinhthanh/2/${provinceId}.htm`,
-      )
-      setDistricts(districtRes.data)
-      setWards([])
-    } catch (err) {
-      console.error('Error fetching districts:', err)
-    }
-  }
-
-  // Handle district change
-  const handleDistrictChange = async (districtId: number) => {
-    setSelectedDistrict(districtId)
-    try {
-      const wardRes = await apiClient.get(
-        `https://esgoo.net/api-tinhthanh/3/${districtId}.htm`,
-      )
-      setWards(wardRes.data)
-    } catch (err) {
-      console.error('Error fetching wards:', err)
-    }
-  }
 
   const onFinish = async (values: any) => {
     setIsSubmitting(true)
@@ -240,9 +181,11 @@ const CheckoutPage = () => {
     },
     {
       title: 'Tên sản phẩm',
-      dataIndex: 'name',
-      key: 'name',
-      render: (_: any, record: CartItem) => <strong>{record.name}</strong>,
+      dataIndex: 'product_name',
+      key: 'product_name',
+      render: (_: any, record: CartItem) => (
+        <strong>{record.product_name}</strong>
+      ),
     },
     {
       title: 'Đơn giá',
@@ -259,40 +202,10 @@ const CheckoutPage = () => {
       title: 'Màu sắc,Size',
       key: 'color_size',
       render: (_: any, record: CartItem) => (
-        <span>
-          {record.sku.color || 'Không có'} - {record.sku.size || 'Không có'}
-        </span>
+        <span>{record.sku.attributes}</span>
       ),
     },
   ]
-  const handleUpdateAddress = async () => {
-    try {
-      const values = await form.validateFields([
-        'receiver_name',
-        'receiver_phone',
-        'address',
-        'is_default',
-        'province',
-        'district',
-      ])
-
-      const newAddress = {
-        receiver_name: values.receiver_name,
-        receiver_phone: values.receiver_phone,
-        address: values.address,
-        is_default: values.is_default ? 1 : 0,
-        province_id: values.province,
-        district_id: values.district,
-      }
-
-      await apiClient.post('/user-addresses', newAddress)
-      toast.success('Đã cập nhật địa chỉ thành công!')
-      setUseDefaultAddress(true)
-    } catch (err) {
-      console.error(err)
-      toast.error('Cập nhật địa chỉ thất bại!')
-    }
-  }
 
   return (
     <Form layout="vertical" form={form} onFinish={onFinish}>
@@ -370,104 +283,14 @@ const CheckoutPage = () => {
                 >
                   <Input placeholder="Số điện thoại" />
                 </Form.Item>
-                <Form.Item
-                  label="Tỉnh/Thành phố"
-                  name="province"
-                  rules={[
-                    { required: true, message: 'Vui lòng chọn tỉnh/thành phố' },
-                  ]}
-                >
-                  <Select
-                    placeholder="Chọn tỉnh/thành phố"
-                    onChange={handleProvinceChange}
-                    value={selectedProvince}
-                  >
-                    {provinces.map((province) => (
-                      <Select.Option key={province.id} value={province.id}>
-                        {province.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
 
-                <Form.Item
-                  label="Quận/Huyện"
-                  name="district"
-                  rules={[
-                    { required: true, message: 'Vui lòng chọn quận/huyện' },
-                  ]}
-                >
-                  <Select
-                    placeholder="Chọn quận/huyện"
-                    onChange={handleDistrictChange}
-                    value={selectedDistrict}
-                    disabled={!selectedProvince}
-                  >
-                    {districts.map((district) => (
-                      <Select.Option key={district.id} value={district.id}>
-                        {district.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-
-                <Form.Item
-                  label="Địa chỉ cụ thể"
-                  name="address"
-                  rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
-                >
-                  <Input placeholder="Địa chỉ" />
-                </Form.Item>
-                <Form.Item name="is_default" valuePropName="checked">
-                  <Checkbox>Đặt làm địa chỉ mặc định</Checkbox>
-                </Form.Item>
                 <Form.Item label="Ghi chú" name="note">
                   <Input.TextArea placeholder="Ghi chú cho đơn hàng" />
                 </Form.Item>
-                {!useDefaultAddress && (
-                  <Row justify="end" gutter={12}>
-                    <Col>
-                      <Button
-                        onClick={() => setUseDefaultAddress(true)}
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#ff4d4f',
-                          border: '1px solid #ff4d4f',
-                          fontWeight: 'bold',
-                          borderRadius: 4,
-                        }}
-                        onMouseEnter={(e) => {
-                          ;(e.target as HTMLElement).style.backgroundColor =
-                            '#fff1f0'
-                        }}
-                        onMouseLeave={(e) => {
-                          ;(e.target as HTMLElement).style.backgroundColor =
-                            '#fff'
-                        }}
-                      >
-                        Huỷ
-                      </Button>
-                    </Col>
-                    <Col>
-                      <Button
-                        type="primary"
-                        onClick={handleUpdateAddress}
-                        style={{
-                          backgroundColor: '#1890ff',
-                          borderColor: '#1890ff',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        Cập nhật
-                      </Button>
-                    </Col>
-                  </Row>
-                )}
               </>
             )}
           </Card>
 
-          {/* Đơn hàng */}
           <Card
             title={
               <Space>
@@ -477,7 +300,6 @@ const CheckoutPage = () => {
                 </Title>
               </Space>
             }
-            bordered={false}
           >
             <Table
               dataSource={cartItems}
@@ -518,11 +340,6 @@ const CheckoutPage = () => {
                     style={{ justifyContent: 'space-between', width: '100%' }}
                   >
                     <span>VNPay</span>
-                    <img
-                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTp1v7T287-ikP1m7dEUbs2n1SbbLEqkMd1ZA&s"
-                      alt="VNPay"
-                      style={{ width: 30, height: 30 }}
-                    />
                   </Space>
                 </Radio>
                 <br />
@@ -531,11 +348,6 @@ const CheckoutPage = () => {
                     style={{ justifyContent: 'space-between', width: '100%' }}
                   >
                     <span>Thanh toán khi nhận hàng</span>
-                    <img
-                      src="https://drive.gianhangvn.com/image/thanh-toan-khi-nhan-hang-2135165j32025.jpg"
-                      alt="COD"
-                      style={{ width: 30, height: 30 }}
-                    />
                   </Space>
                 </Radio>
               </Radio.Group>
