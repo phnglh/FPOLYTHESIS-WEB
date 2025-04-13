@@ -39,6 +39,11 @@ export const fetchCart = createAsyncThunk(
             image_url: item.sku.image_url,
             price: item.sku.price,
             stock: item.sku.stock,
+            attributes: item.sku.attributes.map((attr) => ({
+              id: attr.id,
+              name: attr.name,
+              value: attr.value,
+            })),
           },
         })),
       }

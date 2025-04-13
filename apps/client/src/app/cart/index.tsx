@@ -91,11 +91,17 @@ const CartPage = () => {
 
     const checkoutData = selectedItems.map((item) => ({
       id: item.id,
+      name: item.product_name,
       sku_id: item.sku.id,
       sku: item.sku.sku,
       price: item.unit_price,
       quantity: item.quantity,
       image_url: item.sku.image_url,
+      attributes: item.sku.attributes.map((attr) => ({
+        id: attr.id,
+        name: attr.name,
+        value: attr.value,
+      })),
     }))
     localStorage.setItem('checkout_items', JSON.stringify(checkoutData))
     navigate('/checkout')

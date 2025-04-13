@@ -47,6 +47,7 @@ const AppHeader = () => {
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
   const [selectedItems, setSelectedItems] = useState<number[]>([])
 
+  console.log('cartItems', cartItems)
   useEffect(() => {
     if (access_token && user) {
       dispatch(fetchCart())
