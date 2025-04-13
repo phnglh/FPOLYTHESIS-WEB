@@ -24,16 +24,13 @@ export const login = createAsyncThunk(
 
       return { user, access_token }
     } catch (error: unknown) {
-      console.log('Raw error:', error)
-
       if (axios.isAxiosError(error)) {
-        // Kiểm tra nếu phản hồi có status là 'error'
         if (error.response) {
           const { data } = error.response
           if (data.status === 'error' && data.errors) {
-            return rejectWithValue(data.errors) // Trả về lỗi "Email không tồn tại."
+            return rejectWithValue(data.errors)
           } else if (!data.success && data.message) {
-            return rejectWithValue(data.message) // Trả về lỗi "Email hoặc mật khẩu không đúng."
+            return rejectWithValue(data.message)
           }
         }
 

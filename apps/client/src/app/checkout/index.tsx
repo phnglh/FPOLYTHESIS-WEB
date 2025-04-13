@@ -15,6 +15,7 @@ import {
   Modal,
   Tag,
   Checkbox,
+  Spin,
 } from 'antd'
 import {
   ShoppingCartOutlined,
@@ -28,8 +29,7 @@ import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 import { ApiErrorResponse } from '#types/api'
-import { Cart, CartItem } from '#types/cart'
-import { User } from '#types/user'
+import { CartItem } from '#types/cart'
 
 const { Title, Text } = Typography
 
@@ -37,13 +37,10 @@ const CheckoutPage = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
-
-  const [user, setUser] = useState<User>()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
   const [useDefaultAddress, setUseDefaultAddress] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [addressList, setAddressList] = useState<any[]>([])
   const [currentAddress, setCurrentAddress] = useState<any>(null)
@@ -52,57 +49,57 @@ const CheckoutPage = () => {
   const [isAdding, setIsAdding] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editingAddress, setEditingAddress] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasCartItems, setHasCartItems] = useState(true)
 
+  const token = localStorage.getItem('access_token')
+
+  const fetchCartFromDB = async () => {
+    try {
+      const res = await apiClient.get('/cart')
+      const cart = res.data?.data
+
+      const allItems = cart?.items || []
+
+      if (allItems.length === 0) {
+        setHasCartItems(false)
+        toast.warning('Giỏ hàng trống, vui lòng thêm sản phẩm!')
+        return navigate('/products')
+      }
+
+      setCartItems(allItems)
+      const total = allItems.reduce(
+        (sum, item) => sum + item.quantity * parseFloat(item.unit_price),
+        0,
+      )
+      setTotalPrice(total)
+    } catch (err) {
+      console.error(err)
+      toast.error('Lỗi khi tải giỏ hàng')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  const fetchUserAndAddresses = async () => {
+    try {
+      const addrRes = await apiClient.get('/user-addresses')
+      const defaultAddr = addrRes.data?.data?.find(
+        (addr: any) => addr.is_default === 1,
+      )
+      setCurrentAddress(defaultAddr)
+      form.setFieldsValue({
+        payment_method: 'cod',
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
   useEffect(() => {
-    const fetchUserAndAddresses = async () => {
-      try {
-        const userRes = await apiClient.get('/users/profile')
-        const addrRes = await apiClient.get('/user-addresses')
-        const defaultAddr = addrRes.data?.data?.find(
-          (addr: any) => addr.is_default === 1,
-        )
-        setUser(userRes.data)
-        setCurrentAddress(defaultAddr)
-        form.setFieldsValue({
-          email: userRes.data.email,
-          payment_method: 'vnpay',
-        })
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    const fetchCartFromDB = async () => {
-      try {
-        const res = await apiClient.get('/cart')
-        const cart = res.data?.data
-
-        const allItems = cart?.items || []
-
-        if (allItems.length === 0) {
-          toast.warning('Giỏ hàng trống, vui lòng thêm sản phẩm!')
-          return navigate('/cart')
-        }
-
-        setCartItems(allItems)
-
-        const total = allItems.reduce(
-          (sum, item) => sum + item.quantity * parseFloat(item.unit_price),
-          0,
-        )
-        setTotalPrice(total)
-      } catch (err) {
-        console.error(err)
-        toast.error('Lỗi khi tải giỏ hàng')
-      }
-    }
-
-    const token = localStorage.getItem('access_token')
     if (token) {
       fetchUserAndAddresses()
       fetchCartFromDB()
     }
-  }, [form, navigate])
+  }, [form, navigate, token])
 
   const handleOpenModal = async () => {
     try {
@@ -220,12 +217,11 @@ const CheckoutPage = () => {
       if (values.payment_method === 'vnpay') {
         const paymentUrl = res.data?.data?.payment_url
         if (paymentUrl) {
-          localStorage.removeItem('checkout_items')
           window.location.href = paymentUrl
         } else toast.error('Không lấy được link thanh toán VNPay!')
       } else {
         toast.success('Đặt hàng thành công!')
-        localStorage.removeItem('checkout_items')
+
         navigate('/order-success')
       }
     } catch (error) {
@@ -273,8 +269,8 @@ const CheckoutPage = () => {
     },
     {
       title: <span style={{ fontSize: 25, fontWeight: 600 }}>Đơn giá</span>,
-      key: 'price',
-      dataIndex: 'price',
+      key: 'unit_price',
+      dataIndex: 'unit_price',
       render: (text: string) => formatCurrency(text),
     },
     {
@@ -283,6 +279,20 @@ const CheckoutPage = () => {
       key: 'quantity',
     },
   ]
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '100px 0',
+        }}
+      >
+        <Spin size="large" tip="Đang tải dữ liệu..." />
+      </div>
+    )
+  }
 
   return (
     <Form layout="vertical" form={form} onFinish={onFinish}>
@@ -522,9 +532,9 @@ const CheckoutPage = () => {
               rules={[{ required: true }]}
             >
               <Radio.Group>
+                <Radio value="cod">Thanh toán khi nhận hàng</Radio>
                 <Radio value="vnpay">VNPay</Radio>
                 <br />
-                <Radio value="cod">Thanh toán khi nhận hàng</Radio>
               </Radio.Group>
             </Form.Item>
 

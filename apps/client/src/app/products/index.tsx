@@ -82,11 +82,9 @@ const ProductPage = () => {
 
       return true
     })
-    console.log('Filtered Products:', result)
     setFilteredProducts(result)
   }, [data, selectedFilters])
 
-  console.log(data, selectedFilters)
   return (
     <Layout style={{ margin: '0 100px', padding: '10px' }}>
       <FilterComponent

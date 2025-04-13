@@ -52,15 +52,6 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
             {product.name}
           </Text>
         }
-        description={
-          <Text
-            type="secondary"
-            ellipsis
-            onClick={() => navigate(`/products/${product.id}`)}
-          >
-            {product.description}
-          </Text>
-        }
       />
       {product.skus && product.skus.length > 0 && (
         <div

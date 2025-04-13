@@ -13,7 +13,6 @@ import {
   Image,
   Divider,
   Space,
-  Checkbox,
 } from 'antd'
 import {
   HeartOutlined,
@@ -21,7 +20,7 @@ import {
   ShoppingCartOutlined,
   DeleteOutlined,
 } from '@ant-design/icons'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
@@ -45,9 +44,7 @@ const AppHeader = () => {
   const { user, access_token } = useSelector((state: RootState) => state.auth)
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
-  const [selectedItems, setSelectedItems] = useState<number[]>([])
 
-  console.log('cartItems', cartItems)
   useEffect(() => {
     if (access_token && user) {
       dispatch(fetchCart())
@@ -85,6 +82,7 @@ const AppHeader = () => {
       dispatch(decrementCartItem(id)).then(() => dispatch(fetchCart()))
     }
   }
+
   const cartContent = (
     <Card style={{ width: 400 }}>
       {cartItems?.length > 0 ? (
@@ -105,21 +103,9 @@ const AppHeader = () => {
                     )}
                   </Col>
                   <Col>
-                    <Checkbox
-                      checked={selectedItems.includes(item.id)}
-                      onChange={(e) => {
-                        const checked = e.target.checked
-                        setSelectedItems((prev) =>
-                          checked
-                            ? [...prev, item.id]
-                            : prev.filter((id) => id !== item.id),
-                        )
-                      }}
-                    >
-                      <Typography.Text strong>
-                        {item.product_name}
-                      </Typography.Text>
-                    </Checkbox>
+                    <Typography.Text strong>
+                      {item.product_name}
+                    </Typography.Text>
                     <Typography.Paragraph
                       type="secondary"
                       style={{ margin: '4px 0' }}
@@ -157,9 +143,6 @@ const AppHeader = () => {
                     dispatch(decrementCartItem(item.id))
                     toast.success('Đã xóa sản phẩm khỏi giỏ hàng!')
                     setTimeout(() => dispatch(fetchCart()), 300)
-                    setSelectedItems((prev) =>
-                      prev.filter((id) => id !== item.id),
-                    )
                   }}
                 />
               </Col>
@@ -184,7 +167,6 @@ const AppHeader = () => {
           <Typography.Text strong>
             {formatCurrency(
               cartItems.reduce((total, item) => {
-                if (!selectedItems.includes(item.id)) return total
                 const price = Number(item.unit_price)
                 return total + item.quantity * (isNaN(price) ? 0 : price)
               }, 0),
@@ -193,45 +175,8 @@ const AppHeader = () => {
         </Col>
       </Row>
       <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
-        <Button
-          type="primary"
-          block
-          onClick={() => {
-            const selectedProducts = cartItems
-              .filter((item) => selectedItems.includes(item.id))
-              .map((item) => ({
-                ...item,
-                unit_price: Number(item.unit_price) || 0, // đảm bảo unit_price là số
-              }))
-
-            localStorage.setItem(
-              'checkout_items',
-              JSON.stringify(selectedProducts),
-            )
-            navigate('/checkout')
-          }}
-          disabled={selectedItems.length === 0}
-        >
-          Thanh toán
-        </Button>
-
         <Button type="default" block onClick={() => navigate('/carts')}>
           Xem giỏ hàng
-        </Button>
-        <Button
-          danger
-          block
-          onClick={() => {
-            selectedItems.forEach((id) => {
-              dispatch(decrementCartItem(id)) // hoặc removeCartItem nếu có
-            })
-            toast.success('Đã xóa sản phẩm đã chọn!')
-            setSelectedItems([])
-            setTimeout(() => dispatch(fetchCart()), 300)
-          }}
-          disabled={selectedItems.length === 0}
-        >
-          Xóa sản phẩm đã chọn
         </Button>
       </Space>
     </Card>
@@ -245,6 +190,7 @@ const AppHeader = () => {
       </Link>
     </div>
   )
+
   const userMenu = (
     <Menu>
       <Menu.Item key="account">
@@ -296,6 +242,7 @@ const AppHeader = () => {
           <Link to="/stores">{t('menu.stores')}</Link>
         </Menu.Item>
       </Menu>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <HeartOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
         <Popover content={cartContent} title="Giỏ hàng của bạn" trigger="hover">
