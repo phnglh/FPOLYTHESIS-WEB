@@ -53,7 +53,7 @@ export default function Home() {
             gutter={[50, 30]}
             style={{ margin: '0 auto', maxWidth: '1400px' }}
           >
-            {data?.data?.map((product, index) => (
+            {data?.data?.slice(0, 8).map((product, index) => (
               <Col key={index} xs={24} sm={12} md={12} lg={6} xl={6}>
                 <ProductCard product={product} onAddToCart={handleAddToCart} />
               </Col>

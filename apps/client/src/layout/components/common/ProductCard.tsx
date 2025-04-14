@@ -11,7 +11,7 @@ type Props = {
   product: Product
   onAddToCart: (sku: Sku) => void
 }
-const ProductCard = ({ product, onAddToCart }: Props) => {
+const ProductCard = ({ product }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
   const navigate = useNavigate()
   return (
@@ -96,12 +96,12 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
           ${selectedSku.price}
         </Text>
         <Button
-          size="small"
+          size="large"
           type="primary"
           icon={<ShoppingCartOutlined />}
-          onClick={() => onAddToCart(selectedSku)}
+          onClick={() => navigate(`/products/${product.id}`)}
         >
-          Mua
+          Chi tiết
         </Button>
       </div>
     </Card>

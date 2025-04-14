@@ -1,28 +1,58 @@
-import { useEffect, useState } from 'react'
-import { Col, Layout, Row } from 'antd'
-
+import { useState, useEffect } from 'react'
+import {
+  Col,
+  Layout,
+  Row,
+  Select,
+  InputNumber,
+  Radio,
+  Space,
+  Pagination,
+} from 'antd'
 import { useProductList } from '@hooks/useProductQuery'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
-import { AppDispatch } from '@store/store'
-import { useDispatch } from 'react-redux'
 import ProductCard from '@layout/components/common/ProductCard'
-import { Product, Sku } from '#types/products'
-import FilterComponent from '@layout/components/products/FilterComponent'
+import { Sku } from '#types/products'
+import { fetchCategories } from '@store/slices/categorySlice'
+import { fetchBrands } from '@store/slices/brandSlice'
+
+const { Option } = Select
 
 const ProductPage = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { data } = useProductList()
-  const [selectedFilters, setSelectedFilters] = useState<{
-    category: number[]
-    brand: number[]
-    attributes: { [key: string]: string[] }
-  }>({
-    category: [],
-    brand: [],
-    attributes: {},
+
+  // Filter states
+  const [category, setCategory] = useState<number | undefined>()
+  const [brand, setBrand] = useState<number | undefined>()
+  const [minPrice, setMinPrice] = useState<number | undefined>()
+  const [maxPrice, setMaxPrice] = useState<number | undefined>()
+  const [sort, setSort] = useState<'newest' | undefined>('newest')
+
+  // Fetch categories and brands from API
+  const categories = useSelector((state: RootState) => state.categories.data)
+  const brands = useSelector((state: RootState) => state.brands.data)
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(12) // Set default pageSize to 12
+
+  const { data, pagination, isLoading, errorMessage } = useProductList({
+    category,
+    brand,
+    minPrice,
+    maxPrice,
+    sort,
+    page: currentPage,
+    per_page: pageSize,
   })
 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  useEffect(() => {
+    // Fetch categories and brands if not already loaded
+    if (!categories.length) dispatch(fetchCategories())
+    if (!brands.length) dispatch(fetchBrands())
+  }, [dispatch, categories.length, brands.length])
 
   const handleAddToCart = (selectedSku: Sku) => {
     if (!selectedSku) {
@@ -32,83 +62,105 @@ const ProductPage = () => {
 
     dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
       .unwrap()
-      .then(() => {
-        dispatch(fetchCart())
-      })
-      .catch((error) => {
-        console.error('Lỗi khi thêm vào giỏ hàng:', error)
-      })
+      .then(() => dispatch(fetchCart()))
+      .catch((error) => console.error('Lỗi khi thêm vào giỏ hàng:', error))
   }
-  useEffect(() => {
-    if (!data) return
 
-    const result = data.data.filter((product) => {
-      if (!product.is_published) {
-        return false
-      }
-
-      if (
-        selectedFilters.category.length > 0 &&
-        !selectedFilters.category.includes(Number(product.category_id))
-      ) {
-        return false
-      }
-
-      if (
-        selectedFilters.brand.length > 0 &&
-        !selectedFilters.brand.includes(Number(product.brand_id))
-      ) {
-        return false
-      }
-
-      if (Object.keys(selectedFilters.attributes).length > 0) {
-        const matchesAllAttributes = Object.keys(
-          selectedFilters.attributes,
-        ).every((attrName) =>
-          selectedFilters.attributes[attrName].some((selectedValue) =>
-            product.skus.some((sku) =>
-              sku.attributes.some(
-                (attr) =>
-                  attr.name === attrName && `${attr.value}` === selectedValue,
-              ),
-            ),
-          ),
-        )
-
-        if (!matchesAllAttributes) {
-          return false
-        }
-      }
-
-      return true
-    })
-    setFilteredProducts(result)
-  }, [data, selectedFilters])
+  const handlePageChange = (page: number, pageSize: number) => {
+    setCurrentPage(page)
+    setPageSize(pageSize)
+  }
 
   return (
     <Layout style={{ margin: '0 100px', padding: '10px' }}>
-      <FilterComponent
-        selectedFilters={selectedFilters}
-        setSelectedFilters={setSelectedFilters}
-      />
+      {/* Filter section */}
+      <Row gutter={16} style={{ marginBottom: 20 }}>
+        <Col span={6}>
+          <Select
+            allowClear
+            style={{ width: '100%' }}
+            placeholder="Chọn danh mục"
+            onChange={(value) => setCategory(value)}
+          >
+            {categories?.map((cat) => (
+              <Option key={cat.id} value={cat.id}>
+                {cat.name}
+              </Option>
+            ))}
+          </Select>
+        </Col>
 
+        <Col span={6}>
+          <Select
+            allowClear
+            style={{ width: '100%' }}
+            placeholder="Chọn thương hiệu"
+            onChange={(value) => setBrand(value)}
+          >
+            {brands?.map((brand) => (
+              <Option key={brand.id} value={brand.id}>
+                {brand.name}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+
+        <Col span={6}>
+          <Space>
+            <InputNumber
+              style={{ width: 100 }}
+              placeholder="Giá từ"
+              min={0}
+              onChange={(value) => setMinPrice(value)}
+            />
+            <InputNumber
+              style={{ width: 100 }}
+              placeholder="Đến"
+              min={0}
+              onChange={(value) => setMaxPrice(value)}
+            />
+          </Space>
+        </Col>
+
+        <Col span={6}>
+          <Radio.Group
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            optionType="button"
+            buttonStyle="solid"
+          >
+            <Radio.Button value="newest">Mới nhất</Radio.Button>
+          </Radio.Group>
+        </Col>
+      </Row>
+
+      {/* Product list */}
       <Layout style={{ padding: '10px' }}>
         <Row gutter={[30, 30]} justify="center">
-          {/* {data?.map((product) => ( */}
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
-              <Col xs={20} sm={12} md={8} lg={8} key={product.id}>
-                <ProductCard
-                  product={product}
-                  onAddToCart={(selectedSku) => handleAddToCart(selectedSku)}
-                />
-              </Col>
-            ))
-          ) : (
-            <p>Không tìm thấy sản phẩm phù hợp.</p>
-          )}
+          {data?.map((product) => (
+            <Col xs={20} sm={12} md={8} lg={5} key={product.id}>
+              <ProductCard
+                product={product}
+                onAddToCart={(selectedSku) => handleAddToCart(selectedSku)}
+              />
+            </Col>
+          ))}
         </Row>
       </Layout>
+
+      {/* Pagination */}
+      <Row justify="end">
+        <Col>
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePageChange}
+            showSizeChanger
+            onShowSizeChange={(current, size) => setPageSize(size)}
+          />
+        </Col>
+      </Row>
     </Layout>
   )
 }

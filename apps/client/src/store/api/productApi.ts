@@ -16,9 +16,38 @@ export const productApi = createApi({
   endpoints: (builder) => ({
     getProducts: builder.query<
       { data: Product[]; meta: Meta },
-      { page: number; limit: number }
+      {
+        page: number
+        per_page: number
+        category?: number
+        brand?: number
+        minPrice?: number
+        maxPrice?: number
+        sort?: 'newest'
+      }
     >({
-      query: ({ page, limit }) => `/products?page=${page}&per_page=${limit}`,
+      query: ({
+        page,
+        per_page,
+        category,
+        brand,
+        minPrice,
+        maxPrice,
+        sort,
+      }) => {
+        const params = new URLSearchParams()
+
+        params.append('page', String(page))
+        params.append('per_page', String(per_page))
+
+        if (category !== undefined) params.append('category', String(category))
+        if (brand !== undefined) params.append('brand', String(brand))
+        if (minPrice !== undefined) params.append('min_price', String(minPrice))
+        if (maxPrice !== undefined) params.append('max_price', String(maxPrice))
+        if (sort) params.append('sort', sort)
+
+        return `/products?${params.toString()}`
+      },
       transformResponse: (response: { data: Product[]; meta: Meta }) => ({
         data: response.data,
         meta: response.meta,
