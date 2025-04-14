@@ -16,18 +16,23 @@ import {
   Tag,
   Checkbox,
   Spin,
+  Image,
 } from 'antd'
 import {
   ShoppingCartOutlined,
   ArrowLeftOutlined,
   EnvironmentOutlined,
   PlusOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
 import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
+import { AppDispatch, RootState } from '@store/store'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchCart } from '@store/slices/cartSlice'
 import { ApiErrorResponse } from '#types/api'
 import { CartItem } from '#types/cart'
 
@@ -36,8 +41,13 @@ const { Title, Text } = Typography
 const CheckoutPage = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
+  const location = useLocation()
+  const dispatch = useDispatch<AppDispatch>()
   const { formatCurrency } = useCurrencyFormatter()
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const { data, loading, error } = useSelector((state: RootState) => state.cart)
+  const cartItemsFromRedux = data?.items || []
+
+  const [selectedItems, setSelectedItems] = useState<CartItem[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
   const [useDefaultAddress, setUseDefaultAddress] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,56 +60,112 @@ const CheckoutPage = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editingAddress, setEditingAddress] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [hasCartItems, setHasCartItems] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   const token = localStorage.getItem('access_token')
 
-  const fetchCartFromDB = async () => {
-    try {
-      const res = await apiClient.get('/cart')
-      const cart = res.data?.data
-
-      const allItems = cart?.items || []
-
-      if (allItems.length === 0) {
-        setHasCartItems(false)
-        toast.warning('Giỏ hàng trống, vui lòng thêm sản phẩm!')
-        return navigate('/products')
-      }
-
-      setCartItems(allItems)
-      const total = allItems.reduce(
-        (sum, item) => sum + item.quantity * parseFloat(item.unit_price),
-        0,
-      )
-      setTotalPrice(total)
-    } catch (err) {
-      console.error(err)
-      toast.error('Lỗi khi tải giỏ hàng')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  const fetchUserAndAddresses = async () => {
-    try {
-      const addrRes = await apiClient.get('/user-addresses')
-      const defaultAddr = addrRes.data?.data?.find(
-        (addr: any) => addr.is_default === 1,
-      )
-      setCurrentAddress(defaultAddr)
-      form.setFieldsValue({
-        payment_method: 'cod',
-      })
-    } catch (error) {
-      console.error(error)
-    }
-  }
   useEffect(() => {
+    if (!token) {
+      toast.error('Vui lòng đăng nhập để thanh toán!')
+      navigate('/login')
+      return
+    }
+
+    const params = new URLSearchParams(location.search)
+    const skuIds = params.get('skus')?.split(',').map(Number) || []
+
+    if (skuIds.length === 0) {
+      toast.warning('Không có sản phẩm nào được chọn!')
+      navigate('/cart')
+      return
+    }
+
+    dispatch(fetchCart())
+      .unwrap()
+      .then(() => {
+        if (!cartItemsFromRedux || cartItemsFromRedux.length === 0) {
+          setFetchError('Giỏ hàng trống, vui lòng thêm sản phẩm!')
+          return
+        }
+
+        const filteredItems = cartItemsFromRedux.filter((item) =>
+          skuIds.includes(item.sku_id),
+        )
+        if (filteredItems.length === 0) {
+          setFetchError('Không tìm thấy sản phẩm được chọn trong giỏ hàng!')
+          return
+        }
+
+        setSelectedItems(filteredItems)
+        const total = filteredItems.reduce((sum, item) => {
+          const price = Number(item.unit_price)
+          return sum + item.quantity * (isNaN(price) ? 0 : price)
+        }, 0)
+        setTotalPrice(total)
+      })
+      .catch((err) => {
+        setFetchError(
+          'Lỗi khi tải dữ liệu giỏ hàng: ' + (err.message || 'Thử lại sau!'),
+        )
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }, [dispatch, navigate, location.search, token])
+
+  useEffect(() => {
+    if (
+      cartItemsFromRedux.length > 0 &&
+      selectedItems.length === 0 &&
+      !fetchError
+    ) {
+      const params = new URLSearchParams(location.search)
+      const skuIds = params.get('skus')?.split(',').map(Number) || []
+      const filteredItems = cartItemsFromRedux.filter((item) =>
+        skuIds.includes(item.sku_id),
+      )
+      if (filteredItems.length > 0) {
+        setSelectedItems(filteredItems)
+        const total = filteredItems.reduce((sum, item) => {
+          const price = Number(item.unit_price)
+          return sum + item.quantity * (isNaN(price) ? 0 : price)
+        }, 0)
+        setTotalPrice(total)
+      }
+    }
+  }, [cartItemsFromRedux, location.search])
+
+  useEffect(() => {
+    const fetchUserAndAddresses = async () => {
+      try {
+        const addrRes = await apiClient.get('/user-addresses')
+        const addresses = addrRes.data?.data || []
+        const defaultAddr = addresses.find((addr: any) => addr.is_default === 1)
+        setAddressList(addresses)
+        setCurrentAddress(defaultAddr)
+        setSelectedAddressId(defaultAddr?.id)
+        form.setFieldsValue({
+          payment_method: 'cod',
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
     if (token) {
       fetchUserAndAddresses()
-      fetchCartFromDB()
     }
-  }, [form, navigate, token])
+  }, [form, token])
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search)
+    const vnpayStatus = queryParams.get('vnpay_status')
+
+    if (vnpayStatus === 'success') {
+      toast.success('Đặt hàng thành công!')
+      navigate('/order-success')
+    }
+  }, [navigate, location.search])
 
   const handleOpenModal = async () => {
     try {
@@ -179,7 +245,6 @@ const CheckoutPage = () => {
       setIsAddingNewAddress(false)
       setIsEditing(false)
       setEditingAddress(null)
-      //   fetchAddresses() // reload lại danh sách
     } catch (err) {
       toast.error('Có lỗi xảy ra!')
     } finally {
@@ -190,27 +255,24 @@ const CheckoutPage = () => {
   const onFinish = async (values: any) => {
     setIsSubmitting(true)
     const checkoutData: any = {
-      selected_sku_ids: cartItems.map((item) => item.sku_id),
+      selected_sku_ids: selectedItems.map((item) => item.sku_id),
       voucher_code: values.voucher_code || '',
       payment_method: values.payment_method,
       note: values.note || '',
     }
 
     try {
-      if (useDefaultAddress) {
-        const addrRes = await apiClient.get('/user-addresses')
-        const defaultAddr = addrRes.data?.data?.find(
-          (addr: any) => addr.is_default === 1,
-        )
-        if (!defaultAddr) throw new Error('No default address found')
-        checkoutData.address_id = defaultAddr.id
-      } else {
+      if (useDefaultAddress && currentAddress) {
+        checkoutData.address_id = currentAddress.id
+      } else if (currentAddress) {
         checkoutData.new_address = {
-          receiver_name: currentAddress?.receiver_name,
-          receiver_phone: currentAddress?.receiver_phone,
-          address: currentAddress?.address,
+          receiver_name: currentAddress.receiver_name,
+          receiver_phone: currentAddress.receiver_phone,
+          address: currentAddress.address,
           is_default: false,
         }
+      } else {
+        throw new Error('Không có địa chỉ giao hàng!')
       }
 
       const res = await apiClient.post('/orders/create', checkoutData)
@@ -218,10 +280,11 @@ const CheckoutPage = () => {
         const paymentUrl = res.data?.data?.payment_url
         if (paymentUrl) {
           window.location.href = paymentUrl
-        } else toast.error('Không lấy được link thanh toán VNPay!')
+        } else {
+          toast.error('Không lấy được link thanh toán VNPay!')
+        }
       } else {
         toast.success('Đặt hàng thành công!')
-
         navigate('/order-success')
       }
     } catch (error) {
@@ -234,49 +297,71 @@ const CheckoutPage = () => {
 
   const columns = [
     {
-      title: <span style={{ fontSize: 25, fontWeight: 600 }}>Sản phẩm</span>,
+      title: 'Ảnh sản phẩm',
+      dataIndex: 'product',
       key: 'product',
-      render: (_: any, record: CartItem) => (
-        <div
+      render: (_: string, record: CartItem) => (
+        <Image
+          src={record?.sku?.image_url || 'https://via.placeholder.com/60'}
+          alt={record?.sku?.sku || 'Sản phẩm'}
+          width={100}
+          height={100}
+          preview={false}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 24,
-            padding: '8px 0',
+            objectFit: 'cover',
+            borderRadius: 8,
+            border: '1px solid #eee',
           }}
-        >
-          <img
-            src={record.sku.image_url}
-            alt={record.sku.sku}
-            style={{
-              width: 60,
-              height: 60,
-              objectFit: 'cover',
-              borderRadius: 8,
-              border: '1px solid #eee',
-            }}
-          />
-          <div style={{ fontWeight: 500, fontSize: 18 }}>
-            {record.product_name}
-          </div>
-
-          <div style={{ fontSize: 14, color: '#555' }}>
-            Loại:{' '}
-            {record.sku.attributes?.map((attr: any) => attr.value).join(', ')}
-          </div>
-        </div>
+        />
       ),
     },
     {
-      title: <span style={{ fontSize: 25, fontWeight: 600 }}>Đơn giá</span>,
-      key: 'unit_price',
-      dataIndex: 'unit_price',
-      render: (text: string) => formatCurrency(text),
+      title: 'Tên sản phẩm',
+      dataIndex: 'product_name',
+      render: (_: string, record: CartItem) => (
+        <Space direction="vertical" size={2}>
+          <Text strong style={{ fontSize: 16 }}>
+            {record?.product_name || 'Sản phẩm không xác định'}
+          </Text>
+          {record?.sku?.attributes && record.sku.attributes.length > 0 ? (
+            <Text type="secondary" style={{ fontSize: 14 }}>
+              Loại:{' '}
+              {record.sku.attributes.map((attr) => attr.value).join(' / ')}
+            </Text>
+          ) : (
+            <Text type="secondary" style={{ fontSize: 14 }}>
+              Không có thuộc tính
+            </Text>
+          )}
+        </Space>
+      ),
     },
     {
-      title: <span style={{ fontSize: 25, fontWeight: 600 }}>Số lượng</span>,
+      title: 'Đơn giá',
+      dataIndex: 'unit_price',
+      key: 'unit_price',
+      render: (price: number) => (
+        <Text strong type="danger" style={{ fontSize: 16 }}>
+          {formatCurrency(price || 0)}
+        </Text>
+      ),
+    },
+    {
+      title: 'Số lượng',
       dataIndex: 'quantity',
       key: 'quantity',
+      render: (quantity: number) => (
+        <Text style={{ fontSize: 16 }}>{quantity}</Text>
+      ),
+    },
+    {
+      title: 'Thành tiền',
+      key: 'total',
+      render: (_: string, record: CartItem) => (
+        <Text strong type="danger" style={{ fontSize: 16 }}>
+          {formatCurrency((record.unit_price || 0) * (record.quantity || 0))}
+        </Text>
+      ),
     },
   ]
 
@@ -286,7 +371,9 @@ const CheckoutPage = () => {
         style={{
           display: 'flex',
           justifyContent: 'center',
-          padding: '100px 0',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: '#f0f2f5',
         }}
       >
         <Spin size="large" tip="Đang tải dữ liệu..." />
@@ -295,26 +382,119 @@ const CheckoutPage = () => {
   }
 
   return (
-    <Form layout="vertical" form={form} onFinish={onFinish}>
-      <Row gutter={24} justify="center">
-        <Col xs={24} md={18}>
+    <div
+      style={{
+        backgroundColor: '#f0f2f5',
+        padding: '24px 0',
+        minHeight: '100vh',
+      }}
+    >
+      <Row gutter={[24, 24]} style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {/* Cột bên trái: Thông tin đơn hàng */}
+        <Col xs={24} md={16}>
+          <Card
+            title={
+              <Space>
+                <ShoppingCartOutlined
+                  style={{ fontSize: 24, color: '#1890ff' }}
+                />
+                <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                  Đơn hàng của bạn ({selectedItems.length} sản phẩm)
+                </Title>
+              </Space>
+            }
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              marginBottom: 24,
+            }}
+            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
+          >
+            {fetchError ? (
+              <Text type="danger" style={{ fontSize: 16 }}>
+                {fetchError}
+              </Text>
+            ) : (
+              <Table
+                dataSource={selectedItems}
+                columns={columns}
+                pagination={false}
+                rowKey="id"
+                loading={loading}
+                style={{ marginBottom: 16 }}
+                rowClassName={() => 'ant-table-row-custom'}
+              />
+            )}
+
+            <Form.Item
+              name="voucher_code"
+              label="Mã giảm giá"
+              style={{ marginBottom: 16 }}
+            >
+              <Row gutter={8}>
+                <Col span={18}>
+                  <Input
+                    placeholder="Nhập mã voucher"
+                    size="large"
+                    style={{ borderRadius: 8 }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <Button
+                    type="primary"
+                    block
+                    size="large"
+                    style={{
+                      borderRadius: 8,
+                      backgroundColor: '#52c41a',
+                      borderColor: '#52c41a',
+                    }}
+                  >
+                    Áp dụng
+                  </Button>
+                </Col>
+              </Row>
+            </Form.Item>
+
+            <Divider style={{ margin: '16px 0' }} />
+
+            <Row justify="space-between" style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 18 }}>
+                Tổng cộng:
+              </Text>
+              <Title level={3} style={{ color: '#ff4d4f', margin: 0 }}>
+                {formatCurrency(totalPrice)}
+              </Title>
+            </Row>
+          </Card>
+        </Col>
+
+        {/* Cột bên phải: Thông tin giao hàng và thanh toán */}
+        <Col xs={24} md={8}>
           <Card
             title={
               <Space>
                 <EnvironmentOutlined
-                  style={{ fontSize: 18, color: 'tomato' }}
+                  style={{ fontSize: 24, color: '#1890ff' }}
                 />
-                <Title level={5} style={{ margin: 0 }}>
-                  Địa Chỉ Nhận Hàng
+                <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                  Thông tin giao hàng
                 </Title>
               </Space>
             }
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              marginBottom: 24,
+            }}
+            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
           >
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 flexWrap: 'wrap',
+                marginBottom: 16,
               }}
             >
               <div
@@ -326,242 +506,297 @@ const CheckoutPage = () => {
                   gap: 8,
                 }}
               >
-                <Text strong>{currentAddress?.receiver_name}</Text>
-                <Text>({currentAddress?.receiver_phone})</Text>
-                <span>{currentAddress?.address}</span>
-
-                {useDefaultAddress && (
-                  <Button
-                    type="default"
-                    size="small"
-                    danger
-                    ghost
-                    style={{ padding: '0 6px' }}
-                  >
-                    Mặc Định
-                  </Button>
+                {currentAddress ? (
+                  <>
+                    <Text strong style={{ fontSize: 16 }}>
+                      {currentAddress.receiver_name}
+                    </Text>
+                    <Text style={{ fontSize: 16 }}>
+                      ({currentAddress.receiver_phone})
+                    </Text>
+                    <Text style={{ fontSize: 16 }}>
+                      {currentAddress.address}
+                    </Text>
+                    {currentAddress.is_default && (
+                      <Tag
+                        color="blue"
+                        style={{ fontSize: 14, padding: '2px 8px' }}
+                      >
+                        Mặc định
+                      </Tag>
+                    )}
+                  </>
+                ) : (
+                  <Text type="danger" style={{ fontSize: 16 }}>
+                    Chưa có địa chỉ giao hàng
+                  </Text>
                 )}
               </div>
 
-              <Button type="link" onClick={handleOpenModal}>
-                Thay Đổi
+              <Button
+                type="link"
+                onClick={handleOpenModal}
+                style={{ fontSize: 16, color: '#1890ff' }}
+              >
+                Thay đổi
               </Button>
             </div>
           </Card>
 
-          <Modal
-            title={isAddingNewAddress ? 'Thêm địa chỉ mới' : 'Địa chỉ của tôi'}
-            open={isModalVisible}
-            onCancel={() => {
-              setIsModalVisible(false)
-              setIsAddingNewAddress(false)
-            }}
-            footer={null}
-          >
-            {isAddingNewAddress ? (
-              <Form
-                layout="vertical"
-                onFinish={isEditing ? handleUpdateAddress : handleAddNewAddress}
-                initialValues={editingAddress || {}}
-              >
-                <Form.Item
-                  label="Tên người nhận"
-                  name="receiver_name"
-                  rules={[{ required: true, message: 'Nhập tên người nhận' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="Số điện thoại"
-                  name="receiver_phone"
-                  rules={[{ required: true, message: 'Nhập số điện thoại' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="Địa chỉ"
-                  name="address"
-                  rules={[{ required: true, message: 'Nhập địa chỉ' }]}
-                >
-                  <Input.TextArea rows={2} />
-                </Form.Item>
-                <Form.Item name="is_default" valuePropName="checked">
-                  <Checkbox>Đặt làm địa chỉ mặc định</Checkbox>
-                </Form.Item>
-                <Form.Item>
-                  <Space
-                    style={{ display: 'flex', justifyContent: 'flex-end' }}
-                  >
-                    <Button onClick={() => setIsAddingNewAddress(false)}>
-                      Hủy
-                    </Button>
-                    <Button type="primary" htmlType="submit" loading={isAdding}>
-                      Lưu
-                    </Button>
-                  </Space>
-                </Form.Item>
-              </Form>
-            ) : (
-              <>
-                <Radio.Group
-                  value={selectedAddressId}
-                  onChange={(e) => setSelectedAddressId(e.target.value)}
-                  style={{ width: '100%' }}
-                >
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    {addressList.map((addr) => (
-                      <div
-                        key={addr.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
-                          padding: '12px 0',
-                          borderBottom: '1px solid #f0f0f0',
-                        }}
-                      >
-                        <Radio value={addr.id} style={{ flex: 1 }}>
-                          <strong>{addr.receiver_name}</strong> (
-                          <span style={{ color: '#888' }}>
-                            {addr.receiver_phone}
-                          </span>
-                          )<br />
-                          {addr.address}
-                          {addr.is_default && (
-                            <Tag color="red" style={{ marginTop: 4 }}>
-                              Mặc định
-                            </Tag>
-                          )}
-                        </Radio>
-                        <Space
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            marginTop: 16,
-                          }}
-                        >
-                          <Button
-                            type="link"
-                            onClick={() => {
-                              setIsModalVisible(true)
-                              setIsAddingNewAddress(true)
-                              setIsEditing(true)
-                              setEditingAddress(addr)
-                            }}
-                          >
-                            Cập nhật
-                          </Button>
-                        </Space>
-                      </div>
-                    ))}
-                  </Space>
-                </Radio.Group>
-
-                <Divider />
-
-                <Button
-                  block
-                  icon={<PlusOutlined />}
-                  onClick={() => setIsAddingNewAddress(true)}
-                >
-                  Thêm địa chỉ mới
-                </Button>
-
-                <Space
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    marginTop: 16,
-                  }}
-                >
-                  <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
-                  <Button
-                    type="primary"
-                    onClick={handleConfirmAddress}
-                    disabled={!selectedAddressId}
-                  >
-                    Xác nhận
-                  </Button>
-                </Space>
-              </>
-            )}
-          </Modal>
-
           <Card
             title={
-              <Space>
-                <ShoppingCartOutlined />
-                <Title level={5} style={{ margin: 0 }}>
-                  Đơn hàng ({cartItems.length} sản phẩm)
-                </Title>
-              </Space>
-            }
-          >
-            <Table
-              dataSource={cartItems}
-              columns={columns}
-              pagination={false}
-              rowKey="sku_id"
-            />
-
-            <Form.Item name="voucher_code" label="Mã giảm giá">
-              <Row gutter={8}>
-                <Col span={16}>
-                  <Input placeholder="Nhập mã voucher" />
-                </Col>
-                <Col span={8}>
-                  <Button type="primary" block>
-                    Áp dụng
-                  </Button>
-                </Col>
-              </Row>
-            </Form.Item>
-
-            <Divider />
-
-            <Row justify="space-between">
-              <Text strong>Tổng cộng</Text>
-              <Title level={4} type="success">
-                {formatCurrency(totalPrice)}
+              <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                Phương thức thanh toán
               </Title>
-            </Row>
-
-            <Form.Item
-              label="Phương thức thanh toán"
-              name="payment_method"
-              rules={[{ required: true }]}
-            >
-              <Radio.Group>
-                <Radio value="cod">Thanh toán khi nhận hàng</Radio>
-                <Radio value="vnpay">VNPay</Radio>
-                <br />
-              </Radio.Group>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                block
-                size="large"
-                loading={isSubmitting}
+            }
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            }}
+            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
+          >
+            <Form layout="vertical" form={form} onFinish={onFinish}>
+              <Form.Item
+                name="payment_method"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Vui lòng chọn phương thức thanh toán',
+                  },
+                ]}
               >
-                ĐẶT HÀNG
-              </Button>
-            </Form.Item>
+                <Radio.Group style={{ width: '100%' }}>
+                  <Radio value="cod" style={{ fontSize: 16, marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ marginRight: 8 }}>
+                        Thanh toán khi nhận hàng
+                      </span>
+                      <img
+                        src="https://vantaithanhphat.vn/wp-content/uploads/2022/04/ship-cod-la-gi.jpg"
+                        alt="COD Icon"
+                        style={{ width: 50, height: 50 }}
+                      />
+                    </div>
+                  </Radio>
+                  <br />
+                  <Radio value="vnpay" style={{ fontSize: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ marginRight: 8 }}>
+                        Thanh toán bằng VNPay
+                      </span>
+                      <img
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTp1v7T287-ikP1m7dEUbs2n1SbbLEqkMd1ZA&s"
+                        alt="VNPay Icon"
+                        style={{ width: 50, height: 50 }}
+                      />
+                    </div>
+                  </Radio>
+                </Radio.Group>
+              </Form.Item>
 
-            <Button
-              type="link"
-              block
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/cart')}
-            >
-              Quay lại giỏ hàng
-            </Button>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  size="large"
+                  loading={isSubmitting}
+                  disabled={selectedItems.length === 0 || fetchError !== null}
+                  style={{
+                    borderRadius: 8,
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff',
+                    fontSize: 16,
+                    height: 48,
+                    transition: 'all 0.3s',
+                  }}
+                  icon={<CheckCircleOutlined />}
+                >
+                  ĐẶT HÀNG
+                </Button>
+              </Form.Item>
+
+              <Button
+                type="link"
+                block
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate('/carts')}
+                style={{ fontSize: 16, color: '#1890ff' }}
+              >
+                Quay lại giỏ hàng
+              </Button>
+            </Form>
           </Card>
         </Col>
       </Row>
-    </Form>
+
+      {/* Modal chọn địa chỉ */}
+      <Modal
+        title={
+          <Title level={4} style={{ margin: 0 }}>
+            {isAddingNewAddress || isEditing
+              ? 'Thêm địa chỉ mới'
+              : 'Địa chỉ của tôi'}
+          </Title>
+        }
+        open={isModalVisible}
+        onCancel={() => {
+          setIsModalVisible(false)
+          setIsAddingNewAddress(false)
+          setIsEditing(false)
+          setEditingAddress(null)
+        }}
+        footer={null}
+        style={{ borderRadius: 12 }}
+      >
+        {isAddingNewAddress || isEditing ? (
+          <Form
+            layout="vertical"
+            onFinish={isEditing ? handleUpdateAddress : handleAddNewAddress}
+            initialValues={editingAddress || {}}
+          >
+            <Form.Item
+              label="Tên người nhận"
+              name="receiver_name"
+              rules={[{ required: true, message: 'Nhập tên người nhận' }]}
+            >
+              <Input size="large" style={{ borderRadius: 8 }} />
+            </Form.Item>
+            <Form.Item
+              label="Số điện thoại"
+              name="receiver_phone"
+              rules={[{ required: true, message: 'Nhập số điện thoại' }]}
+            >
+              <Input size="large" style={{ borderRadius: 8 }} />
+            </Form.Item>
+            <Form.Item
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: 'Nhập địa chỉ' }]}
+            >
+              <Input.TextArea rows={3} style={{ borderRadius: 8 }} />
+            </Form.Item>
+            <Form.Item name="is_default" valuePropName="checked">
+              <Checkbox>Đặt làm địa chỉ mặc định</Checkbox>
+            </Form.Item>
+            <Form.Item>
+              <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  onClick={() => {
+                    setIsAddingNewAddress(false)
+                    setIsEditing(false)
+                    setEditingAddress(null)
+                  }}
+                  style={{ borderRadius: 8 }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isAdding}
+                  style={{ borderRadius: 8 }}
+                >
+                  Lưu
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        ) : (
+          <>
+            <Radio.Group
+              value={selectedAddressId}
+              onChange={(e) => setSelectedAddressId(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              <Space direction="vertical" style={{ width: '100%' }}>
+                {addressList.map((addr) => (
+                  <div
+                    key={addr.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      padding: '12px',
+                      borderBottom: '1px solid #f0f0f0',
+                      borderRadius: 8,
+                      backgroundColor:
+                        selectedAddressId === addr.id
+                          ? '#e6f7ff'
+                          : 'transparent',
+                      transition: 'background-color 0.3s',
+                    }}
+                  >
+                    <Radio value={addr.id} style={{ flex: 1 }}>
+                      <strong style={{ fontSize: 16 }}>
+                        {addr.receiver_name}
+                      </strong>{' '}
+                      (
+                      <span style={{ color: '#888', fontSize: 16 }}>
+                        {addr.receiver_phone}
+                      </span>
+                      )
+                      <br />
+                      <Text style={{ fontSize: 16 }}>{addr.address}</Text>
+                      {addr.is_default && (
+                        <Tag
+                          color="blue"
+                          style={{ marginTop: 4, fontSize: 14 }}
+                        >
+                          Mặc định
+                        </Tag>
+                      )}
+                    </Radio>
+                    <Space>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setIsModalVisible(true)
+                          setIsAddingNewAddress(true)
+                          setIsEditing(true)
+                          setEditingAddress(addr)
+                        }}
+                        style={{ fontSize: 16 }}
+                      >
+                        Cập nhật
+                      </Button>
+                    </Space>
+                  </div>
+                ))}
+              </Space>
+            </Radio.Group>
+
+            <Divider />
+
+            <Button
+              block
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddingNewAddress(true)}
+              style={{ borderRadius: 8, marginBottom: 16 }}
+            >
+              Thêm địa chỉ mới
+            </Button>
+
+            <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                onClick={() => setIsModalVisible(false)}
+                style={{ borderRadius: 8 }}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleConfirmAddress}
+                disabled={!selectedAddressId}
+                style={{ borderRadius: 8 }}
+              >
+                Xác nhận
+              </Button>
+            </Space>
+          </>
+        )}
+      </Modal>
+    </div>
   )
 }
 
