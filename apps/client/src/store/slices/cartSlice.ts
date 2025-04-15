@@ -4,6 +4,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
 import { RootState } from '@store/store'
 
+// Khởi tạo state ban đầu
 const initialState: CartState = {
   data: null,
   selectedItem: null,
@@ -11,6 +12,18 @@ const initialState: CartState = {
   error: null,
 }
 
+// Hàm lưu giỏ hàng vào sessionStorage
+const saveCartToSessionStorage = (items: CartItem[]) => {
+  sessionStorage.setItem('cart', JSON.stringify(items))
+}
+
+// Hàm lấy giỏ hàng từ sessionStorage
+const getCartFromSessionStorage = (): CartItem[] => {
+  const cart = sessionStorage.getItem('cart')
+  return cart ? JSON.parse(cart) : []
+}
+
+// Thunk để lấy giỏ hàng từ API
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
   async (_, { rejectWithValue }) => {
@@ -19,14 +32,15 @@ export const fetchCart = createAsyncThunk(
       const cartData = res.data?.data
 
       if (!cartData || !cartData.items) {
+        const cartFromSession = getCartFromSessionStorage()
         return {
           id: cartData?.id || null,
           user_id: cartData?.user_id || null,
-          items: [],
+          items: cartFromSession.length > 0 ? cartFromSession : [],
         }
       }
 
-      return {
+      const formattedCart = {
         id: cartData.id,
         user_id: cartData.user_id,
         items: cartData.items.map((item: CartItem) => ({
@@ -52,6 +66,10 @@ export const fetchCart = createAsyncThunk(
           },
         })),
       }
+
+      // Lưu giỏ hàng vào sessionStorage sau khi fetch thành công
+      saveCartToSessionStorage(formattedCart.items)
+      return formattedCart
     } catch (error: unknown) {
       return rejectWithValue(
         (error as ApiErrorResponse)?.message || 'Lỗi khi tải giỏ hàng',
@@ -60,6 +78,7 @@ export const fetchCart = createAsyncThunk(
   },
 )
 
+// Thunk để thêm sản phẩm vào giỏ hàng
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async (
@@ -68,7 +87,10 @@ export const addToCart = createAsyncThunk(
   ) => {
     try {
       const res = await apiClient.post('/cart', { sku_id, quantity })
-      return res.data.data
+      const newCart = res.data.data
+      // Lưu giỏ hàng vào sessionStorage
+      saveCartToSessionStorage(newCart.items)
+      return newCart
     } catch (error: unknown) {
       return rejectWithValue(
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định',
@@ -77,6 +99,7 @@ export const addToCart = createAsyncThunk(
   },
 )
 
+// Thunk để xóa sản phẩm khỏi giỏ hàng
 export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
   async (id: number, { rejectWithValue }) => {
@@ -91,6 +114,7 @@ export const removeFromCart = createAsyncThunk(
   },
 )
 
+// Thunk để cập nhật số lượng sản phẩm
 export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
   async ({ id, quantity }: { id: number; quantity: number }) => {
@@ -99,6 +123,7 @@ export const updateCartItem = createAsyncThunk(
   },
 )
 
+// Thunk để tăng số lượng sản phẩm
 export const incrementCartItem = createAsyncThunk(
   'cart/incrementCartItem',
   async (id: number) => {
@@ -107,7 +132,7 @@ export const incrementCartItem = createAsyncThunk(
   },
 )
 
-// Giảm số lượng
+// Thunk để giảm số lượng sản phẩm
 export const decrementCartItem = createAsyncThunk(
   'cart/decrementCartItem',
   async (id: number) => {
@@ -119,7 +144,19 @@ export const decrementCartItem = createAsyncThunk(
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
-  reducers: {},
+  reducers: {
+    // Thêm reducer để khôi phục giỏ hàng từ sessionStorage
+    restoreCartFromSession: (state) => {
+      const cartItems = getCartFromSessionStorage()
+      if (cartItems.length > 0 && (!state.data || !state.data.items)) {
+        state.data = {
+          id: null,
+          user_id: null,
+          items: cartItems,
+        }
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCart.pending, (state) => {
@@ -129,16 +166,33 @@ const cartSlice = createSlice({
       .addCase(fetchCart.fulfilled, (state, action: PayloadAction<Cart>) => {
         state.data = action.payload
         state.loading = false
+        // Lưu lại vào sessionStorage
+        if (action.payload.items) {
+          saveCartToSessionStorage(action.payload.items)
+        }
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.error = action.payload as string
         state.loading = false
+        // Nếu API thất bại, thử khôi phục từ sessionStorage
+        const cartItems = getCartFromSessionStorage()
+        if (cartItems.length > 0) {
+          state.data = {
+            id: null,
+            user_id: null,
+            items: cartItems,
+          }
+        }
       })
       .addCase(addToCart.pending, (state) => {
         state.error = null
       })
       .addCase(addToCart.fulfilled, (state, action: PayloadAction<Cart>) => {
-        state.data = action.payload // Fix: Cập nhật toàn bộ giỏ hàng
+        state.data = action.payload
+        // Lưu vào sessionStorage
+        if (action.payload.items) {
+          saveCartToSessionStorage(action.payload.items)
+        }
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.error = action.payload as string
@@ -153,6 +207,8 @@ const cartSlice = createSlice({
           state.data.items = state.data.items.filter(
             (item) => item.id !== action.payload,
           )
+          // Lưu lại vào sessionStorage sau khi xóa
+          saveCartToSessionStorage(state.data.items)
         }
       })
       .addCase(removeFromCart.rejected, (state, action) => {
@@ -163,23 +219,30 @@ const cartSlice = createSlice({
         if (state.data) {
           const item = state.data.items.find((i) => i.id === action.payload.id)
           if (item) item.quantity = action.payload.quantity
+          // Lưu lại vào sessionStorage
+          saveCartToSessionStorage(state.data.items)
         }
       })
       .addCase(incrementCartItem.fulfilled, (state, action) => {
         if (state.data) {
           const item = state.data.items.find((i) => i.id === action.payload)
           if (item) item.quantity += 1
+          // Lưu lại vào sessionStorage
+          saveCartToSessionStorage(state.data.items)
         }
       })
       .addCase(decrementCartItem.fulfilled, (state, action) => {
         if (state.data) {
           const item = state.data.items.find((i) => i.id === action.payload)
           if (item && item.quantity > 1) item.quantity -= 1
+          // Lưu lại vào sessionStorage
+          saveCartToSessionStorage(state.data.items)
         }
       })
   },
 })
 
+export const { restoreCartFromSession } = cartSlice.actions
 export const selectCartItems = (state: RootState) => state.cart.data?.items
 
 export default cartSlice.reducer
