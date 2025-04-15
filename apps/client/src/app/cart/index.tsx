@@ -23,6 +23,7 @@ import {
   incrementCartItem,
   removeFromCart,
   updateCartItem,
+  restoreCartFromSession,
 } from '@store/slices/cartSlice'
 import { CartItem } from '#types/cart'
 import { useNavigate } from 'react-router'
@@ -81,6 +82,12 @@ const CartPage = () => {
       navigate('/login')
       return
     }
+
+    // Khôi phục giỏ hàng từ sessionStorage nếu Redux rỗng
+    if (!items || items.length === 0) {
+      dispatch(restoreCartFromSession())
+    }
+
     dispatch(fetchCart())
       .unwrap()
       .catch((err) => {
@@ -208,6 +215,8 @@ const CartPage = () => {
     try {
       await dispatch(removeFromCart(id)).unwrap()
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng!')
+      // Cập nhật selectedRowKeys sau khi xóa
+      setSelectedRowKeys((prev) => prev.filter((key) => key !== id))
     } catch (err) {
       toast.error(
         `Lỗi khi xóa sản phẩm: ${err?.message || 'Vui lòng thử lại!'}`,

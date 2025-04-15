@@ -32,7 +32,7 @@ import { useNavigate, useLocation } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchCart } from '@store/slices/cartSlice'
+import { fetchCart, restoreCartFromSession } from '@store/slices/cartSlice'
 import { ApiErrorResponse } from '#types/api'
 import { CartItem } from '#types/cart'
 
@@ -44,7 +44,7 @@ const CheckoutPage = () => {
   const location = useLocation()
   const dispatch = useDispatch<AppDispatch>()
   const { formatCurrency } = useCurrencyFormatter()
-  const { data, loading, error } = useSelector((state: RootState) => state.cart)
+  const { data, loading } = useSelector((state: RootState) => state.cart)
   const cartItemsFromRedux = data?.items || []
 
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([])
@@ -64,12 +64,33 @@ const CheckoutPage = () => {
 
   const token = localStorage.getItem('access_token')
 
+  // useEffect để kiểm tra token và khôi phục giỏ hàng từ sessionStorage
   useEffect(() => {
     if (!token) {
       toast.error('Vui lòng đăng nhập để thanh toán!')
       navigate('/login')
       return
     }
+
+    // Khôi phục giỏ hàng từ sessionStorage
+    dispatch(restoreCartFromSession())
+
+    // Gọi API để lấy giỏ hàng
+    dispatch(fetchCart())
+      .unwrap()
+      .catch((err) => {
+        toast.error(
+          `Lỗi khi tải giỏ hàng từ server: ${err?.message || 'Thử lại sau!'}`,
+        )
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }, [dispatch, navigate, token])
+
+  // useEffect để xử lý logic chọn sản phẩm từ giỏ hàng sau khi Redux store được cập nhật
+  useEffect(() => {
+    if (isLoading) return // Đợi đến khi dữ liệu được tải xong
 
     const params = new URLSearchParams(location.search)
     const skuIds = params.get('skus')?.split(',').map(Number) || []
@@ -80,60 +101,27 @@ const CheckoutPage = () => {
       return
     }
 
-    dispatch(fetchCart())
-      .unwrap()
-      .then(() => {
-        if (!cartItemsFromRedux || cartItemsFromRedux.length === 0) {
-          setFetchError('Giỏ hàng trống, vui lòng thêm sản phẩm!')
-          return
-        }
-
-        const filteredItems = cartItemsFromRedux.filter((item) =>
-          skuIds.includes(item.sku_id),
-        )
-        if (filteredItems.length === 0) {
-          setFetchError('Không tìm thấy sản phẩm được chọn trong giỏ hàng!')
-          return
-        }
-
-        setSelectedItems(filteredItems)
-        const total = filteredItems.reduce((sum, item) => {
-          const price = Number(item.unit_price)
-          return sum + item.quantity * (isNaN(price) ? 0 : price)
-        }, 0)
-        setTotalPrice(total)
-      })
-      .catch((err) => {
-        setFetchError(
-          'Lỗi khi tải dữ liệu giỏ hàng: ' + (err.message || 'Thử lại sau!'),
-        )
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
-  }, [dispatch, navigate, location.search, token])
-
-  useEffect(() => {
-    if (
-      cartItemsFromRedux.length > 0 &&
-      selectedItems.length === 0 &&
-      !fetchError
-    ) {
-      const params = new URLSearchParams(location.search)
-      const skuIds = params.get('skus')?.split(',').map(Number) || []
-      const filteredItems = cartItemsFromRedux.filter((item) =>
-        skuIds.includes(item.sku_id),
-      )
-      if (filteredItems.length > 0) {
-        setSelectedItems(filteredItems)
-        const total = filteredItems.reduce((sum, item) => {
-          const price = Number(item.unit_price)
-          return sum + item.quantity * (isNaN(price) ? 0 : price)
-        }, 0)
-        setTotalPrice(total)
-      }
+    // Kiểm tra cartItemsFromRedux sau khi Redux store được cập nhật
+    if (!cartItemsFromRedux || cartItemsFromRedux.length === 0) {
+      setFetchError('Giỏ hàng trống, vui lòng thêm sản phẩm!')
+      return
     }
-  }, [cartItemsFromRedux, location.search])
+
+    const filteredItems = cartItemsFromRedux.filter((item) =>
+      skuIds.includes(item.sku_id),
+    )
+    if (filteredItems.length === 0) {
+      setFetchError('Không tìm thấy sản phẩm được chọn trong giỏ hàng!')
+      return
+    }
+
+    setSelectedItems(filteredItems)
+    const total = filteredItems.reduce((sum, item) => {
+      const price = Number(item.unit_price)
+      return sum + item.quantity * (isNaN(price) ? 0 : price)
+    }, 0)
+    setTotalPrice(total)
+  }, [cartItemsFromRedux, location.search, navigate, isLoading])
 
   useEffect(() => {
     const fetchUserAndAddresses = async () => {
