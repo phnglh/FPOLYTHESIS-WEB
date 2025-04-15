@@ -14,6 +14,7 @@ import { addCategory, fetchCategories } from '@store/slices/categorySlice'
 import { useNavigate } from 'react-router'
 import { useEffect } from 'react'
 import { Category } from '#types/category'
+import { toast } from 'react-toastify'
 
 const { Title, Text } = Typography
 
@@ -29,7 +30,14 @@ const CreateCategory = () => {
 
   const handleFinish = async (values: Category) => {
     await dispatch(addCategory(values))
-    navigate('/categories')
+      .unwrap()
+      .then(() => {
+        toast.success('Thêm danh mục thành công!')
+        navigate('/categories')
+      })
+      .catch((err) => {
+        toast.error(err)
+      })
   }
 
   return (

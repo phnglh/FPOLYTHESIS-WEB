@@ -1,14 +1,16 @@
 // src/pages/categories/CategoryList.tsx
 
 import { Category, CategoryWithKey } from '#types/category'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { Button, Modal, Space, Table } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Col, Modal, Row, Space, Table, Typography } from 'antd'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { deleteCategory, fetchCategories } from '@store/slices/categorySlice'
 import { useNavigate } from 'react-router'
 import { toast } from 'react-toastify'
+
+const { Title } = Typography
 
 const CategoryManagement = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -76,14 +78,34 @@ const CategoryManagement = () => {
   ]
 
   return (
-    <div>
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={3} style={{ margin: 0 }}>
+            Danh sách danh mục
+          </Title>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/categories/create')}
+          >
+            Thêm danh mục
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={normalizeCategories(data)}
         rowKey="id"
         expandable={{ childrenColumnName: 'children' }}
       />
-    </div>
+    </Space>
   )
 }
 
