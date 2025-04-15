@@ -135,23 +135,22 @@ const CheckoutPage = () => {
     }
   }, [cartItemsFromRedux, location.search])
 
-  useEffect(() => {
-    const fetchUserAndAddresses = async () => {
-      try {
-        const addrRes = await apiClient.get('/user-addresses')
-        const addresses = addrRes.data?.data || []
-        const defaultAddr = addresses.find((addr: any) => addr.is_default === 1)
-        setAddressList(addresses)
-        setCurrentAddress(defaultAddr)
-        setSelectedAddressId(defaultAddr?.id)
-        form.setFieldsValue({
-          payment_method: 'cod',
-        })
-      } catch (error) {
-        console.error(error)
-      }
+  const fetchUserAndAddresses = async () => {
+    try {
+      const addrRes = await apiClient.get('/user-addresses')
+      const addresses = addrRes.data?.data || []
+      const defaultAddr = addresses.find((addr: any) => addr.is_default === 1)
+      setAddressList(addresses)
+      setCurrentAddress(defaultAddr)
+      setSelectedAddressId(defaultAddr?.id)
+      form.setFieldsValue({
+        payment_method: 'cod',
+      })
+    } catch (error) {
+      console.error(error)
     }
-
+  }
+  useEffect(() => {
     if (token) {
       fetchUserAndAddresses()
     }
@@ -188,10 +187,11 @@ const CheckoutPage = () => {
 
   const handleAddNewAddress = async (values: any) => {
     setIsAdding(true)
+    console.log('Submitting address with values:', values)
+
     try {
       const res = await apiClient.post('/user-addresses', {
         ...values,
-        is_default: false,
       })
       const newAddr = res.data?.data
       if (newAddr) {
@@ -202,6 +202,7 @@ const CheckoutPage = () => {
         setCurrentAddress(newAddr)
         setUseDefaultAddress(false)
         setIsAddingNewAddress(false)
+        fetchUserAndAddresses()
       }
     } catch (err) {
       toast.error('Không thể thêm địa chỉ mới!')
@@ -408,7 +409,6 @@ const CheckoutPage = () => {
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               marginBottom: 24,
             }}
-            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
           >
             {fetchError ? (
               <Text type="danger" style={{ fontSize: 16 }}>
@@ -474,10 +474,8 @@ const CheckoutPage = () => {
           <Card
             title={
               <Space>
-                <EnvironmentOutlined
-                  style={{ fontSize: 24, color: '#1890ff' }}
-                />
-                <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                <EnvironmentOutlined style={{ fontSize: 24 }} />
+                <Title level={4} style={{ margin: 0 }}>
                   Thông tin giao hàng
                 </Title>
               </Space>
@@ -487,60 +485,55 @@ const CheckoutPage = () => {
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               marginBottom: 24,
             }}
-            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  flex: 1,
-                  gap: 8,
-                }}
-              >
-                {currentAddress ? (
-                  <>
-                    <Text strong style={{ fontSize: 16 }}>
-                      {currentAddress.receiver_name}
-                    </Text>
-                    <Text style={{ fontSize: 16 }}>
-                      ({currentAddress.receiver_phone})
-                    </Text>
-                    <Text style={{ fontSize: 16 }}>
-                      {currentAddress.address}
-                    </Text>
-                    {currentAddress.is_default && (
-                      <Tag
-                        color="blue"
-                        style={{ fontSize: 14, padding: '2px 8px' }}
-                      >
-                        Mặc định
-                      </Tag>
-                    )}
-                  </>
-                ) : (
-                  <Text type="danger" style={{ fontSize: 16 }}>
-                    Chưa có địa chỉ giao hàng
-                  </Text>
-                )}
-              </div>
+            {currentAddress ? (
+              <Row align="middle" justify="space-between" gutter={[16, 8]}>
+                {/* Cột trái: Thông tin người nhận */}
+                <Col flex="auto">
+                  <Space direction="vertical" size={4}>
+                    {/* Hàng 1: Tên + SĐT */}
+                    <Space>
+                      <Text strong style={{ fontSize: 16 }}>
+                        {currentAddress.receiver_name}
+                      </Text>
+                      <Text style={{ fontSize: 16 }}>
+                        ({currentAddress.receiver_phone})
+                      </Text>
+                    </Space>
 
-              <Button
-                type="link"
-                onClick={handleOpenModal}
-                style={{ fontSize: 16, color: '#1890ff' }}
-              >
-                Thay đổi
-              </Button>
-            </div>
+                    {/* Hàng 2: Địa chỉ + Tag */}
+                    <Space>
+                      <Text style={{ fontSize: 16 }}>
+                        {currentAddress.address}
+                      </Text>
+                      {Boolean(currentAddress.is_default) && (
+                        <Tag
+                          color="blue"
+                          style={{ fontSize: 14, padding: '2px 8px' }}
+                        >
+                          Mặc định
+                        </Tag>
+                      )}
+                    </Space>
+                  </Space>
+                </Col>
+
+                {/* Cột phải: Button Thay đổi */}
+                <Col>
+                  <Button
+                    type="link"
+                    onClick={handleOpenModal}
+                    style={{ fontSize: 16, color: '#1890ff' }}
+                  >
+                    Thay đổi
+                  </Button>
+                </Col>
+              </Row>
+            ) : (
+              <Text type="danger" style={{ fontSize: 16 }}>
+                Chưa có địa chỉ giao hàng
+              </Text>
+            )}
           </Card>
 
           <Card
@@ -711,13 +704,14 @@ const CheckoutPage = () => {
             >
               <Space direction="vertical" style={{ width: '100%' }}>
                 {addressList.map((addr) => (
-                  <div
+                  <Space
                     key={addr.id}
+                    direction="horizontal"
+                    align="start"
                     style={{
-                      display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      padding: '12px',
+                      width: '100%',
+                      padding: 12,
                       borderBottom: '1px solid #f0f0f0',
                       borderRadius: 8,
                       backgroundColor:
@@ -728,40 +722,41 @@ const CheckoutPage = () => {
                     }}
                   >
                     <Radio value={addr.id} style={{ flex: 1 }}>
-                      <strong style={{ fontSize: 16 }}>
-                        {addr.receiver_name}
-                      </strong>{' '}
-                      (
-                      <span style={{ color: '#888', fontSize: 16 }}>
-                        {addr.receiver_phone}
-                      </span>
-                      )
-                      <br />
-                      <Text style={{ fontSize: 16 }}>{addr.address}</Text>
-                      {addr.is_default && (
-                        <Tag
-                          color="blue"
-                          style={{ marginTop: 4, fontSize: 14 }}
+                      <Space direction="vertical" size={4}>
+                        <Text strong style={{ fontSize: 16 }}>
+                          {addr.receiver_name}{' '}
+                          <Text type="secondary" style={{ fontSize: 16 }}>
+                            ({addr.receiver_phone})
+                          </Text>
+                        </Text>
+                        <Space
+                          direction="horizontal"
+                          size="small"
+                          align="center"
                         >
-                          Mặc định
-                        </Tag>
-                      )}
+                          <Text style={{ fontSize: 16 }}>{addr.address}</Text>
+                          {Boolean(addr.is_default) && (
+                            <Tag color="blue" style={{ fontSize: 14 }}>
+                              Mặc định
+                            </Tag>
+                          )}
+                        </Space>
+                      </Space>
                     </Radio>
-                    <Space>
-                      <Button
-                        type="link"
-                        onClick={() => {
-                          setIsModalVisible(true)
-                          setIsAddingNewAddress(true)
-                          setIsEditing(true)
-                          setEditingAddress(addr)
-                        }}
-                        style={{ fontSize: 16 }}
-                      >
-                        Cập nhật
-                      </Button>
-                    </Space>
-                  </div>
+
+                    <Button
+                      type="link"
+                      onClick={() => {
+                        setIsModalVisible(true)
+                        setIsAddingNewAddress(true)
+                        setIsEditing(true)
+                        setEditingAddress(addr)
+                      }}
+                      style={{ fontSize: 16 }}
+                    >
+                      Cập nhật
+                    </Button>
+                  </Space>
                 ))}
               </Space>
             </Radio.Group>
