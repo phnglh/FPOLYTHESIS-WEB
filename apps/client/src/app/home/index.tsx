@@ -53,7 +53,7 @@ export default function Home() {
             gutter={[50, 30]}
             style={{ margin: '0 auto', maxWidth: '1400px' }}
           >
-            {data?.data?.slice(0, 8).map((product, index) => (
+            {data?.slice(0, 8).map((product, index) => (
               <Col key={index} xs={24} sm={12} md={12} lg={6} xl={6}>
                 <ProductCard product={product} onAddToCart={handleAddToCart} />
               </Col>
@@ -80,7 +80,7 @@ export default function Home() {
             <Title style={{ color: '#fff' }}>{t('homepage.categories')}</Title>
           </Col>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 px-40">
-            {data?.data?.slice(0, 2).map((product, index) => (
+            {data?.slice(0, 2).map((product, index) => (
               <div
                 key={index}
                 className={`${index >= 1 ? 'hidden md:block' : ''}`}
