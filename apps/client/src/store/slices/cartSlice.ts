@@ -16,13 +16,13 @@ export const fetchCart = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/cart')
-      const cartData = res.data?.data?.cart // Lấy cart từ { success: true, cart: {...} }
+      const cartData = res.data?.data
 
       if (!cartData || !cartData.items) {
         return {
           id: cartData?.id || null,
           user_id: cartData?.user_id || null,
-          items: [], // Trả về mảng rỗng nếu không có items
+          items: [],
         }
       }
 
