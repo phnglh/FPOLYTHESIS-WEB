@@ -16,10 +16,14 @@ export const fetchCart = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/cart')
-      const cartData = res.data.data
+      const cartData = res.data?.data?.cart // Lấy cart từ { success: true, cart: {...} }
 
-      if (!cartData) {
-        return rejectWithValue('Giỏ hàng trống hoặc không tồn tại')
+      if (!cartData || !cartData.items) {
+        return {
+          id: cartData?.id || null,
+          user_id: cartData?.user_id || null,
+          items: [], // Trả về mảng rỗng nếu không có items
+        }
       }
 
       return {
@@ -33,23 +37,24 @@ export const fetchCart = createAsyncThunk(
           quantity: item.quantity,
           unit_price: item.unit_price,
           sku: {
-            id: item.sku.id,
-            sku: item.sku.sku,
-            product_id: item.sku.product_id,
-            image_url: item.sku.image_url,
-            price: item.sku.price,
-            stock: item.sku.stock,
-            attributes: item.sku.attributes.map((attr) => ({
-              id: attr.id,
-              name: attr.name,
-              value: attr.value,
-            })),
+            id: item.sku?.id,
+            sku: item.sku?.sku,
+            product_id: item.sku?.product_id,
+            image_url: item.sku?.image_url,
+            price: item.sku?.price,
+            stock: item.sku?.stock,
+            attributes:
+              item.sku?.attributes?.map((attr) => ({
+                id: attr.id || null,
+                name: attr.name || 'N/A',
+                value: attr.value || 'N/A',
+              })) || [],
           },
         })),
       }
     } catch (error: unknown) {
       return rejectWithValue(
-        (error as ApiErrorResponse)?.message || 'Lỗi không xác định',
+        (error as ApiErrorResponse)?.message || 'Lỗi khi tải giỏ hàng',
       )
     }
   },
@@ -76,11 +81,11 @@ export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
   async (id: number, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`/cart/${id}`)
-      return res.data
+      await apiClient.delete(`/cart/${id}`)
+      return id // Trả về id để cập nhật state cục bộ
     } catch (error: unknown) {
       return rejectWithValue(
-        (error as ApiErrorResponse)?.message || 'Lỗi không xác định',
+        (error as ApiErrorResponse)?.message || 'Lỗi khi xóa sản phẩm',
       )
     }
   },
@@ -142,20 +147,16 @@ const cartSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(
-        removeFromCart.fulfilled,
-        (state, action: PayloadAction<CartItem>) => {
-          if (state.data) {
-            state.data = {
-              ...state.data,
-              items: state.data.items.filter(
-                (item) => item.id !== action.payload.id,
-              ),
-            }
-          }
-        },
-      )
+      .addCase(removeFromCart.fulfilled, (state, action) => {
+        state.loading = false
+        if (state.data) {
+          state.data.items = state.data.items.filter(
+            (item) => item.id !== action.payload,
+          )
+        }
+      })
       .addCase(removeFromCart.rejected, (state, action) => {
+        state.loading = false
         state.error = action.payload as string
       })
       .addCase(updateCartItem.fulfilled, (state, action) => {
