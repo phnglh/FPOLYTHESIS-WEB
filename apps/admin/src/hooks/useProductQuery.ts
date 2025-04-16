@@ -7,7 +7,7 @@ export const useProductList = () => {
 
   const { data, error, isLoading } = useGetProductsQuery(
     { page: pagination.current, limit: pagination.pageSize },
-    { pollingInterval: 10000 },
+    { pollingInterval: 1000 },
   )
 
   const errorMessage = error ? getErrorMessage(error) : null

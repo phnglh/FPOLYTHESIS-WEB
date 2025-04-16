@@ -85,6 +85,11 @@ const theme: ThemeConfig = {
       footerBg: '#ffffff',
       siderBg: '#ffffff',
     },
+    Switch: {
+      handleSize: 26,
+      innerMaxMargin: 32,
+      trackHeight: 30,
+    },
   },
 }
 
