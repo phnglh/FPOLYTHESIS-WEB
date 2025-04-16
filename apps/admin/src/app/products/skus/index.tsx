@@ -170,64 +170,93 @@ const Skus = () => {
           {(fields) => (
             <>
               {fields.map((field) => (
-                <Card key={field.key} type="inner" style={{ marginBottom: 16 }}>
-                  <Form.Item
-                    {...field}
-                    label="Kết hợp"
-                    name={[field.name, 'combination']}
-                  >
-                    <Input disabled placeholder="Kết hợp" />
-                  </Form.Item>
-
-                  <Form.Item
-                    {...field}
-                    label="Số lượng"
-                    name={[field.name, 'stock']}
-                    rules={[
-                      { required: true, message: 'Vui lòng nhập số lượng' },
-                    ]}
-                  >
-                    <Input type="number" placeholder="Nhập số lượng" />
-                  </Form.Item>
-
-                  <Form.Item
-                    {...field}
-                    label="Giá"
-                    name={[field.name, 'price']}
-                    rules={[{ required: true, message: 'Vui lòng nhập giá' }]}
-                  >
-                    <Input type="number" placeholder="Nhập giá" />
-                  </Form.Item>
-
-                  <Form.Item
-                    {...field}
-                    label="Ảnh biến thể"
-                    name={[field.name, 'image_url']}
-                    valuePropName="fileList"
-                    getValueFromEvent={(e) =>
-                      Array.isArray(e) ? e : e?.fileList
-                    }
-                  >
-                    <Upload {...uploadProps}>
-                      <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
-                    </Upload>
-                  </Form.Item>
-
-                  <Button
-                    danger
-                    onClick={() => {
-                      const variantId =
-                        form.getFieldValue('variants')?.[field.name]?.id
-                      if (variantId) {
-                        deleteSku(variantId)
-                      } else {
-                        toast.error('Không tìm thấy ID của biến thể.')
-                      }
+                <Card
+                  key={field.key}
+                  type="inner"
+                  style={{
+                    marginBottom: 24,
+                    borderRadius: 8,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        'repeat(auto-fit, minmax(280px, 1fr))',
+                      gap: 16,
                     }}
-                    icon={<MinusCircleOutlined />}
                   >
-                    Xoá biến thể
-                  </Button>
+                    <Form.Item
+                      {...field}
+                      label="Kết hợp"
+                      name={[field.name, 'combination']}
+                    >
+                      <Input disabled placeholder="Kết hợp" />
+                    </Form.Item>
+
+                    <Form.Item
+                      {...field}
+                      label="Số lượng"
+                      name={[field.name, 'stock']}
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập số lượng' },
+                      ]}
+                    >
+                      <Input type="number" placeholder="Nhập số lượng" />
+                    </Form.Item>
+
+                    <Form.Item
+                      {...field}
+                      label="Giá"
+                      name={[field.name, 'price']}
+                      rules={[{ required: true, message: 'Vui lòng nhập giá' }]}
+                    >
+                      <Input type="number" placeholder="Nhập giá" />
+                    </Form.Item>
+
+                    <Form.Item
+                      {...field}
+                      label="Ảnh biến thể"
+                      name={[field.name, 'image_url']}
+                      valuePropName="fileList"
+                      getValueFromEvent={(e) =>
+                        Array.isArray(e) ? e : e?.fileList
+                      }
+                    >
+                      <Upload
+                        {...uploadProps}
+                        listType="picture-card"
+                        showUploadList={{
+                          showPreviewIcon: false,
+                          showRemoveIcon: true,
+                        }}
+                      >
+                        <div>
+                          <UploadOutlined />
+                          <div style={{ marginTop: 8 }}>Chọn ảnh</div>
+                        </div>
+                      </Upload>
+                    </Form.Item>
+                  </div>
+
+                  <div style={{ textAlign: 'right', marginTop: 12 }}>
+                    <Button
+                      danger
+                      onClick={() => {
+                        const variantId =
+                          form.getFieldValue('variants')?.[field.name]?.id
+                        if (variantId) {
+                          deleteSku(variantId)
+                        } else {
+                          toast.error('Không tìm thấy ID của biến thể.')
+                        }
+                      }}
+                      icon={<MinusCircleOutlined />}
+                    >
+                      Xoá biến thể
+                    </Button>
+                  </div>
                 </Card>
               ))}
             </>
@@ -235,8 +264,8 @@ const Skus = () => {
         </Form.List>
       </Card>
 
-      <Form.Item style={{ marginTop: 24 }}>
-        <Button type="primary" htmlType="submit">
+      <Form.Item style={{ marginTop: 24, textAlign: 'right' }}>
+        <Button type="primary" htmlType="submit" size="large">
           Lưu thông tin biến thể
         </Button>
       </Form.Item>

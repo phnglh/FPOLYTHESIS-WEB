@@ -22,53 +22,66 @@ const CreateBrand = () => {
 
   const handleFinish = async (values: Brand) => {
     await dispatch(addBrand(values)).unwrap()
-    toast.success('Them thuong hieu thanh cong!')
+    toast.success('Thêm thương hiệu thành công!')
 
     navigate('/brands')
   }
 
   return (
-    <Flex vertical gap="large" style={{ padding: '24px', width: '100%' }}>
-      <Space direction="vertical" size="small">
-        <Title level={3}>Thêm Thương Hiệu Mới</Title>
-        <Text type="secondary">
-          Điền thông tin để thêm thương hiệu vào hệ thống.
-        </Text>
-      </Space>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+      }}
+    >
+      <Flex
+        vertical
+        gap="large"
+        style={{ padding: '24px', width: '100%', maxWidth: 900 }}
+      >
+        <Space direction="vertical" size="small">
+          <Title level={3}>Thêm Thương Hiệu Mới</Title>
+          <Text type="secondary">
+            Điền thông tin để thêm thương hiệu vào hệ thống.
+          </Text>
+        </Space>
 
-      <Card style={{ maxWidth: 800, width: '100%' }}>
-        <Form
-          form={form}
-          onFinish={handleFinish}
-          layout="vertical"
-          size="large"
-        >
-          <Form.Item
-            label="Tên Thương Hiệu"
-            name="name"
-            rules={[
-              { required: true, message: 'Vui lòng nhập tên thương hiệu' },
-            ]}
+        <Card style={{ maxWidth: 800, width: '100%' }}>
+          <Form
+            form={form}
+            onFinish={handleFinish}
+            layout="vertical"
+            size="large"
           >
-            <Input placeholder="Nhập tên thương hiệu" />
-          </Form.Item>
+            <Form.Item
+              label="Tên Thương Hiệu"
+              name="name"
+              rules={[
+                { required: true, message: 'Vui lòng nhập tên thương hiệu' },
+              ]}
+            >
+              <Input placeholder="Nhập tên thương hiệu" />
+            </Form.Item>
 
-          <Form.Item
-            label="Mô tả"
-            name="description"
-            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
-          >
-            <Input.TextArea rows={4} placeholder="Nhập mô tả" />
-          </Form.Item>
+            <Form.Item
+              label="Mô tả"
+              name="description"
+              rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+            >
+              <Input.TextArea rows={4} placeholder="Nhập mô tả" />
+            </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Thêm Danh Mục
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-    </Flex>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block>
+                Thêm Danh Mục
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </Flex>
+    </div>
   )
 }
 

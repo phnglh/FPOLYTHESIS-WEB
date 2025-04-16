@@ -1,7 +1,7 @@
 // src/pages/categories/CategoryList.tsx
 
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Modal, Space, Table } from 'antd'
+import { Button, Col, Modal, Row, Space, Table, Typography } from 'antd'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router'
 import { toast } from 'react-toastify'
 import { Brand } from '#types/brand'
 
+const { Title } = Typography
 const BrandManagement = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
@@ -65,17 +66,29 @@ const BrandManagement = () => {
   ]
 
   return (
-    <div>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => navigate('/brands/create')}
-      >
-        Thêm thương hiệu
-      </Button>
-
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={3} style={{ margin: 0 }}>
+            Danh sách thương hiệu
+          </Title>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/brands/create')}
+          >
+            Thêm thương hiệu
+          </Button>
+        </Col>
+      </Row>
       <Table columns={columns} dataSource={data} rowKey="id" />
-    </div>
+    </Space>
   )
 }
 

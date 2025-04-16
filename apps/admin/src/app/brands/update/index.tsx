@@ -1,66 +1,49 @@
-import {
-  Form,
-  Input,
-  Button,
-  Select,
-  Spin,
-  Card,
-  Space,
-  Typography,
-  Flex,
-} from 'antd'
+import { Form, Input, Button, Spin, Card, Space, Typography, Flex } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
-import {
-  fetchCategories,
-  fetchCategoryById,
-  updateCategory,
-} from '@store/slices/categorySlice'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Category } from '#types/category'
 import { toast } from 'react-toastify'
+import { fetchBrandById, updateBrand } from '@store/slices/brandSlice'
+import { Brand } from '#types/brand'
 
 const { Title, Text } = Typography
-const UpdateCategory = () => {
+
+const UpdateBrand = () => {
   const [form] = Form.useForm()
   const { id } = useParams()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
 
   const {
-    data: categories,
+    data: brands,
     loading,
     selectedItem,
-  } = useSelector((state: RootState) => state.categories)
-
-  useEffect(() => {
-    dispatch(fetchCategories())
-  }, [dispatch])
+  } = useSelector((state: RootState) => state.brands)
 
   useEffect(() => {
     if (id) {
-      dispatch(fetchCategoryById(Number(id)))
+      dispatch(fetchBrandById(Number(id)))
     }
   }, [dispatch, id])
 
+  console.log(brands)
   useEffect(() => {
-    if (selectedItem && categories.length > 0) {
+    if (selectedItem && brands.length > 0) {
       form.setFieldsValue({
         name: selectedItem.name,
         description: selectedItem.description,
-        parent_id: selectedItem.parent_id ?? null,
       })
     }
-  }, [selectedItem, categories, form])
+  }, [selectedItem, brands, form])
 
-  const handleFinish = async (values: Category) => {
-    await dispatch(updateCategory({ ...values, id: Number(id) }))
-    toast.success('Cập nhập danh mục thành công!')
-    navigate('/categories')
+  const handleFinish = async (values: Brand) => {
+    await dispatch(updateBrand({ ...values, id: Number(id) }))
+    toast.success('Cập nhập thương hiệu thành công!')
+    navigate('/brands')
   }
 
-  if (!selectedItem) {
+  if (!brands) {
     return <Spin size="large" />
   }
 
@@ -79,22 +62,22 @@ const UpdateCategory = () => {
         style={{ padding: '24px', width: '100%', maxWidth: 900 }}
       >
         <Space direction="vertical" size="small">
-          <Title level={3}>Thêm Danh Mục Mới</Title>
+          <Title level={3}>Cập nhập Thương hiệu mới</Title>
           <Text type="secondary">
-            Điền thông tin để thêm danh mục vào hệ thống.
+            Điền thông tin để cập nhập thương hiệu vào hệ thống.
           </Text>
         </Space>
 
         <Card style={{ maxWidth: 800, width: '100%' }}>
           <Form form={form} onFinish={handleFinish} layout="vertical">
             <Form.Item
-              label="Tên Danh Mục"
+              label="Tên Thương hiệu"
               name="name"
               rules={[
-                { required: true, message: 'Vui lòng nhập tên danh mục' },
+                { required: true, message: 'Vui lòng nhập tên thương hiệu' },
               ]}
             >
-              <Input placeholder="Nhập tên danh mục" />
+              <Input placeholder="Nhập tên thương hiệu" />
             </Form.Item>
             <Form.Item
               label="Mô tả"
@@ -103,22 +86,6 @@ const UpdateCategory = () => {
             >
               <Input placeholder="Nhập mô tả" />
             </Form.Item>
-
-            {selectedItem.parent_id !== null && (
-              <Form.Item label="Danh Mục Cha" name="parent_id">
-                <Select
-                  allowClear
-                  placeholder="Chọn danh mục cha"
-                  options={categories
-                    .filter((item) => item.id !== Number(id))
-                    .map((item) => ({
-                      label: item.name,
-                      value: item.id,
-                    }))}
-                />
-              </Form.Item>
-            )}
-
             <Button type="primary" htmlType="submit" loading={loading}>
               Lưu Thay Đổi
             </Button>
@@ -129,4 +96,4 @@ const UpdateCategory = () => {
   )
 }
 
-export default UpdateCategory
+export default UpdateBrand

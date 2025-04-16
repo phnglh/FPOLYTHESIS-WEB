@@ -13,5 +13,6 @@
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "files.autoSave": "afterDelay"
+  "files.autoSave": "afterDelay",
+  "editor.formatOnSave": true
 }

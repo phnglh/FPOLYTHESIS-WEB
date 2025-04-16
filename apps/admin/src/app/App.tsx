@@ -24,6 +24,7 @@ import OrderDetails from '@app/orders/detail'
 import OrderInvoice from '@app/orders/invoice'
 import ProductVariants from '@app/products/skus'
 import AddProductVariants from '@app/products/skus/add'
+import UpdateBrand from '@app/brands/update'
 
 function App() {
   const dispatch = useDispatch()
@@ -56,7 +57,7 @@ function App() {
         <Route path="brands">
           <Route index element={<BrandManagement />} />
           <Route path="create" element={<CreateBrand />} />
-          <Route path="update/:id" element={<h1>update</h1>} />
+          <Route path="update/:id" element={<UpdateBrand />} />
         </Route>
         <Route path="products">
           <Route index element={<ProductPage />} />
