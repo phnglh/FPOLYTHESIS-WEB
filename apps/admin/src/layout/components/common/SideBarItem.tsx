@@ -20,7 +20,7 @@ export const items = [
   {
     key: '/store',
     icon: <AppstoreOutlined />,
-    label: 'Store',
+    label: 'Cửa hàng',
     children: [
       {
         key: '/categories',
@@ -55,7 +55,7 @@ export const items = [
       {
         key: '/attributes',
         icon: <TagsOutlined />,
-        label: 'Attribute',
+        label: 'Thuộc tính',
         children: [
           {
             key: '/attributes/list',
@@ -81,7 +81,7 @@ export const items = [
       {
         key: '/orders',
         icon: <ShoppingCartOutlined />,
-        label: 'Orders',
+        label: 'Đơn hàng',
         children: [
           {
             key: '/orders/list',
@@ -98,7 +98,7 @@ export const items = [
   {
     key: '/users',
     icon: <UserOutlined />,
-    label: 'Users',
+    label: 'Người dùng',
     children: [
       {
         key: '/users/list',
@@ -113,6 +113,6 @@ export const items = [
   {
     key: '/settings',
     icon: <SettingOutlined />,
-    label: <Link to="/settings">Settings</Link>,
+    label: <Link to="/settings">Cài đặt</Link>,
   },
 ]

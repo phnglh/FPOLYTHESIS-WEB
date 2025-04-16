@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Card,
-  Form,
-  Button,
-  Upload,
-  Input,
-  message,
-  Checkbox,
-  Typography,
-} from 'antd'
+import { Card, Form, Button, Upload, Input, Checkbox, Typography } from 'antd'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
+import { toast } from 'react-toastify'
 
 const { Title } = Typography
 
@@ -30,12 +22,12 @@ interface Attribute {
 }
 
 interface VariantFormValue {
-  image?: any
+  image_url: string
   quantity: number
   price: number
 }
 
-const AddProductVariants: React.FC = () => {
+const AddSkus: React.FC = () => {
   const [form] = Form.useForm()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -50,8 +42,7 @@ const AddProductVariants: React.FC = () => {
       const res = await apiClient.get(`/attributes`)
       setAttributes(res.data.data || [])
     } catch (error) {
-      console.error(error)
-      message.error('Không thể tải thuộc tính sản phẩm.')
+      toast.error('Không thể tải thuộc tính sản phẩm.')
     }
   }
 
@@ -60,7 +51,7 @@ const AddProductVariants: React.FC = () => {
       const res = await apiClient.get(`/products/${id}`)
       setProductName(res.data.data.name || '')
     } catch (error) {
-      console.error(error)
+      toast.error(error)
     }
   }
 
@@ -81,8 +72,7 @@ const AddProductVariants: React.FC = () => {
   const generateCombinations = () => {
     const selectedAttributes = form.getFieldValue('attributes')
     if (!selectedAttributes) {
-      message.warning('Vui lòng chọn ít nhất một thuộc tính')
-      return
+      toast.warning('Vui lòng chọn ít nhất một thuộc tính')
     }
 
     const valuesList = attributes
@@ -90,8 +80,7 @@ const AddProductVariants: React.FC = () => {
       .filter((vals) => vals.length > 0)
 
     if (valuesList.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một thuộc tính')
-      return
+      toast.warning('Vui lòng chọn ít nhất một thuộc tính')
     }
 
     const combos = cartesian(valuesList)
@@ -145,17 +134,16 @@ const AddProductVariants: React.FC = () => {
         await apiClient.post(`/${id}/skus`, formData)
       }
 
-      message.success('Tất cả biến thể đã được lưu')
+      toast.success('Tất cả biến thể đã được lưu')
       navigate('/products')
     } catch (error) {
-      console.error(error)
-      message.error('Lỗi khi lưu biến thể sản phẩm')
+      toast.error('Lỗi khi lưu biến thể sản phẩm')
     }
   }
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
-      <Card title="Thông tin sản phẩm" style={{ marginBottom: 24 }}>
+      <Card style={{ marginBottom: 24 }}>
         <Title level={4}>Tên sản phẩm: {productName}</Title>
       </Card>
 
@@ -196,7 +184,7 @@ const AddProductVariants: React.FC = () => {
             >
               <Form.Item
                 label="Hình ảnh"
-                name="imageUrl"
+                name="image_url"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e.fileList}
               >
@@ -238,4 +226,4 @@ const AddProductVariants: React.FC = () => {
   )
 }
 
-export default AddProductVariants
+export default AddSkus

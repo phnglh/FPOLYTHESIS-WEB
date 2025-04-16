@@ -66,12 +66,6 @@ const CheckoutPage = () => {
 
   // useEffect để kiểm tra token và khôi phục giỏ hàng từ sessionStorage
   useEffect(() => {
-    if (!token) {
-      toast.error('Vui lòng đăng nhập để thanh toán!')
-      navigate('/login')
-      return
-    }
-
     // Khôi phục giỏ hàng từ sessionStorage
     dispatch(restoreCartFromSession())
 

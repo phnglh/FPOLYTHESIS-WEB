@@ -1,24 +1,13 @@
-import {
-  Avatar,
-  Button,
-  Divider,
-  Drawer,
-  Space,
-  Typography,
-  Badge,
-  List,
-} from 'antd'
+import { Avatar, Button, Divider, Drawer, Space, Typography, List } from 'antd'
 import {
   HomeOutlined,
   UserOutlined,
-  ProjectOutlined,
-  DollarOutlined,
-  SafetyOutlined,
   SettingOutlined,
   LogoutOutlined,
   PlusOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { logout } from '@store/slices/authSlice'
 import { AppDispatch } from '@store/store'
@@ -37,21 +26,16 @@ const ProfileTab = ({ open, onClose, user }: Props) => {
 
   const handleLogout = async () => {
     await dispatch(logout())
-    navigate('/login') // Chuyển về trang login
+    navigate('/login')
   }
   const menuItems = [
-    { icon: <HomeOutlined />, label: 'Home' },
-    { icon: <UserOutlined />, label: 'Profile' },
+    { icon: <HomeOutlined />, label: 'Dashboard', path: '/' },
+    { icon: <UserOutlined />, label: 'Profile', path: '/profile' },
     {
-      icon: (
-        <Badge count={3} offset={[10, 0]}>
-          <ProjectOutlined />
-        </Badge>
-      ),
-      label: 'Projects',
+      icon: <ShoppingOutlined />,
+      label: 'Sản phẩm',
+      path: '/products',
     },
-    { icon: <DollarOutlined />, label: 'Subscription' },
-    { icon: <SafetyOutlined />, label: 'Security' },
     { icon: <SettingOutlined />, label: 'Account settings' },
   ]
 
@@ -113,7 +97,15 @@ const ProfileTab = ({ open, onClose, user }: Props) => {
           >
             <List.Item.Meta
               avatar={item.icon}
-              title={<span style={{ fontWeight: 500 }}>{item.label}</span>}
+              title={
+                <Link
+                  to={item.path || '#'}
+                  onClick={onClose}
+                  style={{ fontWeight: 500, color: 'inherit' }}
+                >
+                  {item.label}
+                </Link>
+              }
             />
           </List.Item>
         )}

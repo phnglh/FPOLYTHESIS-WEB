@@ -114,7 +114,7 @@ const CartPage = () => {
 
   const getMaxQuantity = (item: CartItem) => {
     const stock = item?.sku?.stock ?? 100
-    return Math.min(stock, MAX_QUANTITY_PER_SKU) // Lấy nhỏ hơn giữa stock và 50
+    return Math.min(stock, MAX_QUANTITY_PER_SKU)
   }
 
   const handleUpdateQuantity = (id: number, value: number | null) => {

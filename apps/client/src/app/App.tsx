@@ -44,7 +44,7 @@ function App() {
         </Route>
         <Route path="carts" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="order-success" element={<OrderSuccess />} />
 
         <Route path="account">
           <Route index element={<ProfilePage />} />
@@ -57,7 +57,7 @@ function App() {
         <Route path="contact" element={<ContactPage />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="stores" element={<StoresPage />} />
-        <Route path="yeu-thich" element={<FavoriteProducts />} />
+        <Route path="wishlist" element={<FavoriteProducts />} />
         <Route
           path="login"
           element={

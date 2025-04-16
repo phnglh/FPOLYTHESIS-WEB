@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   Card,
   Form,
@@ -16,7 +16,7 @@ import { AppDispatch, RootState } from '@store/store'
 import { fetchCategories } from '@store/slices/categorySlice'
 import { fetchBrands } from '@store/slices/brandSlice'
 import { fetchProductById } from '@store/slices/productSlice'
-import { useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate, Link } from 'react-router'
 import apiClient from '@store/services/apiClient'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -157,6 +157,7 @@ const EditProduct = () => {
           >
             <Switch />
           </Form.Item>
+          <Link to={`/products/${id}/skus`}>Xem biến thể</Link>
         </Card>
 
         <Card style={{ marginTop: 24 }} title="Mô tả sản phẩm">

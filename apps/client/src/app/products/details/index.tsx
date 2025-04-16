@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Image, InputNumber, Radio, Tabs } from 'antd'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,6 +14,7 @@ const { TabPane } = Tabs
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
   const { data: product, isLoading } = useGetProductQuery(Number(id))
   const attributes = useSelector((state: RootState) => state.attributes.data)
   const [selectedSku, setSelectedSku] = useState<Sku | null>(null)
@@ -22,6 +23,7 @@ const ProductDetailPage = () => {
     Record<string, string>
   >({})
 
+  const token = localStorage.getItem('access_token')
   useEffect(() => {
     dispatch(fetchAttributes())
     if (product && product.skus.length > 0) {
@@ -78,6 +80,11 @@ const ProductDetailPage = () => {
   }
 
   const handleAddToCart = () => {
+    if (!token) {
+      toast.warning('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!')
+      navigate('/login')
+      return
+    }
     if (!selectedSku) {
       toast.warning('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
       return
