@@ -528,7 +528,6 @@ const CheckoutPage = () => {
               borderRadius: 12,
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             }}
-            headStyle={{ borderBottom: '2px solid #e8e8e8' }}
           >
             <Form layout="vertical" form={form} onFinish={onFinish}>
               <Form.Item

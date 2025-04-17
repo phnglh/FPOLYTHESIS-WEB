@@ -96,6 +96,11 @@ export const items = [
     ],
   },
   {
+    key: '/vouchers',
+    icon: <UserOutlined />,
+    label: <Link to="/vouchers">Quản lý mã khuyến mại</Link>,
+  },
+  {
     key: '/users',
     icon: <UserOutlined />,
     label: 'Người dùng',

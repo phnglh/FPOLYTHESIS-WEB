@@ -25,6 +25,7 @@ import OrderInvoice from '@app/orders/invoice'
 import ProductVariants from '@app/products/skus'
 import AddProductVariants from '@app/products/skus/add'
 import UpdateBrand from '@app/brands/update'
+import VoucherManagement from '@app/vouchers/ListVoucher'
 
 function App() {
   const dispatch = useDispatch()
@@ -77,6 +78,9 @@ function App() {
         <Route path="users">
           <Route index element={<UserManagement />} />
           <Route path="create" element={<CreateUser />} />
+        </Route>
+        <Route path="vouchers">
+          <Route index element={<VoucherManagement />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
