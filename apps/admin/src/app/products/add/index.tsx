@@ -14,23 +14,18 @@ const CreateProduct = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const handleSubmit = async (values) => {
-    console.log('🟢 Form values:', values)
-
     const formData = new FormData()
 
-    // Thêm các thông tin sản phẩm vào FormData
     formData.append('name', values.productName)
     formData.append('category_id', values?.category)
     formData.append('brand_id', values?.brand)
     formData.append('description', values.description)
     formData.append('is_published', values.visible ? 1 : 0)
 
-    // Thêm ảnh sản phẩm vào FormData
     values.imageUrl.forEach((file) => {
       formData.append('image_url', file.originFileObj)
     })
 
-    // Thêm các SKU vào FormData
     values?.skus?.forEach((sku, index) => {
       formData.append(`skus[${index}][price]`, sku.price)
       formData.append(`skus[${index}][stock]`, sku.stock)
@@ -66,28 +61,40 @@ const CreateProduct = () => {
   }
 
   return (
-    <Flex vertical gap="large" style={{ padding: '24px', width: '100%' }}>
-      <Space direction="vertical" size="small">
-        <Title level={3}>Thêm Danh Mục Mới</Title>
-        <Text type="secondary">
-          Điền thông tin để thêm danh mục vào hệ thống.
-        </Text>
-      </Space>
-      <Card style={{ maxWidth: 800, width: '100%' }}>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <GeneralInfo form={form} />
-          <SkuForm />
-          <FormFooter
-            onSubmit={form.submit}
-            onSubmitAndNew={() => {
-              form.submit()
-              form.resetFields()
-            }}
-            onCancel={() => form.resetFields()}
-          />
-        </Form>
-      </Card>
-    </Flex>
+    <div className="flex justify-center items-center p-6">
+      <Flex
+        vertical
+        gap="large"
+        style={{ padding: '24px', width: '100%', maxWidth: 900 }}
+      >
+        <Space direction="vertical" size="small">
+          <Title level={3}>Cập nhật sản phẩm</Title>
+          <Text type="secondary">
+            Điền thông tin để thêm danh mục vào hệ thống.
+          </Text>
+        </Space>
+        <Space direction="vertical" size="small">
+          <Title level={3}>Thêm Danh Mục Mới</Title>
+          <Text type="secondary">
+            Điền thông tin để thêm danh mục vào hệ thống.
+          </Text>
+        </Space>
+        <Card style={{ maxWidth: 800, width: '100%' }}>
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+            <GeneralInfo form={form} />
+            <SkuForm />
+            <FormFooter
+              onSubmit={form.submit}
+              onSubmitAndNew={() => {
+                form.submit()
+                form.resetFields()
+              }}
+              onCancel={() => form.resetFields()}
+            />
+          </Form>
+        </Card>
+      </Flex>
+    </div>
   )
 }
 

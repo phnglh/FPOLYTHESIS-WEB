@@ -1,6 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { Card, Form, Button, Upload, Input, Checkbox, Typography } from 'antd'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { useState, useEffect } from 'react'
+import {
+  Card,
+  Form,
+  Button,
+  Upload,
+  Input,
+  message,
+  Radio,
+  Typography,
+  Space,
+} from 'antd'
+import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
@@ -22,27 +32,28 @@ interface Attribute {
 }
 
 interface VariantFormValue {
-  image_url: string
+  image?: any
   quantity: number
   price: number
 }
 
-const AddSkus: React.FC = () => {
+const AddSku = () => {
   const [form] = Form.useForm()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const [attributes, setAttributes] = useState<Attribute[]>([])
-  const [combinations, setCombinations] = useState<string[][]>([])
+  const [combinations, setCombinations] = useState<AttributeValue[][]>([])
   const [productName, setProductName] = useState<string>('')
-  const [fileList, setFileList] = useState([])
+  const [fileLists, setFileLists] = useState<{ [key: number]: any[] }>({})
 
   const fetchAttributes = async () => {
     try {
       const res = await apiClient.get(`/attributes`)
       setAttributes(res.data.data || [])
     } catch (error) {
-      toast.error('Không thể tải thuộc tính sản phẩm.')
+      console.error(error)
+      message.error('Không thể tải thuộc tính sản phẩm.')
     }
   }
 
@@ -51,7 +62,7 @@ const AddSkus: React.FC = () => {
       const res = await apiClient.get(`/products/${id}`)
       setProductName(res.data.data.name || '')
     } catch (error) {
-      toast.error(error)
+      console.error(error)
     }
   }
 
@@ -62,9 +73,12 @@ const AddSkus: React.FC = () => {
     }
   }, [id])
 
-  const cartesian = (arr: any[][]): any[][] => {
+  const cartesian = (arr: AttributeValue[][]): AttributeValue[][] => {
     return arr.reduce(
-      (a, b) => a.flatMap((d: any) => b.map((e: any) => [...d, e])),
+      (a, b) =>
+        a.flatMap((d: AttributeValue[]) =>
+          b.map((e: AttributeValue) => [...d, e]),
+        ),
       [[]],
     )
   }
@@ -72,34 +86,72 @@ const AddSkus: React.FC = () => {
   const generateCombinations = () => {
     const selectedAttributes = form.getFieldValue('attributes')
     if (!selectedAttributes) {
-      toast.warning('Vui lòng chọn ít nhất một thuộc tính')
+      message.warning('Vui lòng chọn ít nhất một thuộc tính')
+      return
     }
 
     const valuesList = attributes
-      .map((attr) => selectedAttributes[attr.id] || [])
+      .map((attr) => {
+        const selectedValue = selectedAttributes[attr.id]
+        return selectedValue ? [selectedValue] : []
+      })
       .filter((vals) => vals.length > 0)
 
     if (valuesList.length === 0) {
-      toast.warning('Vui lòng chọn ít nhất một thuộc tính')
+      message.warning('Vui lòng chọn ít nhất một giá trị cho mỗi thuộc tính')
+      return
     }
 
-    const combos = cartesian(valuesList)
-    setCombinations(combos)
+    const newCombos = cartesian(valuesList)
 
+    // Check for duplicate combinations
+    const existingComboStrings = combinations.map((combo) =>
+      combo.map((v) => v.id).join('-'),
+    )
+    const newUniqueCombos = newCombos.filter((combo) => {
+      const comboString = combo.map((v) => v.id).join('-')
+      return !existingComboStrings.includes(comboString)
+    })
+
+    if (newUniqueCombos.length === 0) {
+      message.warning('Biến thể này đã tồn tại')
+      return
+    }
+
+    // Append new combinations to existing ones
+    setCombinations((prev) => [...prev, ...newUniqueCombos])
+
+    // Get current variants from form
+    const currentVariants = form.getFieldValue('variants') || []
+
+    // Append new variants to existing ones
     form.setFieldsValue({
-      variants: combos.map(() => ({ quantity: 0, price: 0, image: [] })),
+      variants: [
+        ...currentVariants,
+        ...newUniqueCombos.map(() => ({ quantity: 0, price: 0, image: [] })),
+      ],
     })
   }
 
-  const handleImageChange = ({ fileList }) => {
-    setFileList(fileList)
-    form.setFieldsValue({ imageUrl: fileList })
+  const handleImageChange = (
+    index: number,
+    { fileList }: { fileList: any[] },
+  ) => {
+    setFileLists((prev) => ({
+      ...prev,
+      [index]: fileList,
+    }))
+    form.setFieldsValue({
+      variants: form
+        .getFieldValue('variants')
+        .map((variant: any, i: number) =>
+          i === index ? { ...variant, image: fileList } : variant,
+        ),
+    })
   }
 
   const onFinish = async (values: any) => {
     try {
-      const selectedAttributes = values.attributes
-
       for (let i = 0; i < combinations.length; i++) {
         const combo = combinations[i]
         const formData = new FormData()
@@ -113,8 +165,6 @@ const AddSkus: React.FC = () => {
         })
 
         formData.append('combination', combo.map((v) => v.value).join(' - '))
-        // formData.append('stock', values.variants[i].quantity)
-        // formData.append('price', values.variants[i].price)
         formData.append(
           'stock',
           Math.floor(values.variants[i].quantity).toString(),
@@ -125,8 +175,6 @@ const AddSkus: React.FC = () => {
         )
 
         const imageFile = values.variants[i]?.image?.[0]?.originFileObj
-        console.log(imageFile)
-
         if (imageFile) {
           formData.append('image_url', imageFile)
         }
@@ -137,13 +185,40 @@ const AddSkus: React.FC = () => {
       toast.success('Tất cả biến thể đã được lưu')
       navigate('/products')
     } catch (error) {
-      toast.error('Lỗi khi lưu biến thể sản phẩm')
+      toast.error(error.response.data.error)
     }
+  }
+
+  const handleDeleteVariant = (index: number) => {
+    // Remove combination at the specified index
+    setCombinations((prev) => prev.filter((_, i) => i !== index))
+
+    // Remove variant from form
+    const currentVariants = form.getFieldValue('variants') || []
+    form.setFieldsValue({
+      variants: currentVariants.filter((_: any, i: number) => i !== index),
+    })
+
+    // Remove associated fileList
+    setFileLists((prev) => {
+      const newFileLists = { ...prev }
+      delete newFileLists[index]
+      // Reindex remaining fileLists to match new variant indices
+      const reindexedFileLists: { [key: number]: any[] } = {}
+      Object.keys(newFileLists).forEach((key, i) => {
+        const newIndex =
+          parseInt(key) > index ? parseInt(key) - 1 : parseInt(key)
+        reindexedFileLists[newIndex] = newFileLists[key]
+      })
+      return reindexedFileLists
+    })
+
+    message.success('Đã xóa biến thể')
   }
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
-      <Card style={{ marginBottom: 24 }}>
+      <Card title="Thông tin sản phẩm" style={{ marginBottom: 24 }}>
         <Title level={4}>Tên sản phẩm: {productName}</Title>
       </Card>
 
@@ -153,14 +228,17 @@ const AddSkus: React.FC = () => {
             key={attribute.id}
             name={['attributes', attribute.id]}
             label={`Chọn ${attribute.name}`}
+            rules={[
+              { required: true, message: `Vui lòng chọn ${attribute.name}` },
+            ]}
           >
-            <Checkbox.Group>
+            <Radio.Group>
               {attribute.values.map((val) => (
-                <Checkbox key={val.id} value={val}>
+                <Radio key={val.id} value={val}>
                   {val.value}
-                </Checkbox>
+                </Radio>
               ))}
-            </Checkbox.Group>
+            </Radio.Group>
           </Form.Item>
         ))}
 
@@ -169,7 +247,7 @@ const AddSkus: React.FC = () => {
           icon={<PlusOutlined />}
           onClick={generateCombinations}
         >
-          Tạo ra biến thể
+          Thêm biến thể
         </Button>
       </Card>
 
@@ -180,21 +258,32 @@ const AddSkus: React.FC = () => {
               key={combo.map((v) => v.id).join('-')}
               type="inner"
               style={{ marginBottom: 16 }}
-              title={`Kết hợp: ${combo.map((v) => v.value).join(' - ')}`}
+              title={
+                <Space>
+                  <span>Kết hợp: {combo.map((v) => v.value).join(' - ')}</span>
+                  <Button
+                    type="link"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDeleteVariant(index)}
+                  />
+                </Space>
+              }
             >
               <Form.Item
                 label="Hình ảnh"
-                name="image_url"
+                name={['variants', index, 'image']}
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e.fileList}
               >
                 <Upload
-                  listType="picture"
+                  listType="picture-card"
                   beforeUpload={() => false}
-                  fileList={fileList}
-                  onChange={handleImageChange}
+                  fileList={fileLists[index] || []}
+                  onChange={(info) => handleImageChange(index, info)}
+                  maxCount={1}
                 >
-                  <Button icon={<UploadOutlined />}>Upload</Button>
+                  Upload
                 </Upload>
               </Form.Item>
               <Form.Item
@@ -202,7 +291,7 @@ const AddSkus: React.FC = () => {
                 label="Số lượng"
                 rules={[{ required: true, message: 'Nhập số lượng' }]}
               >
-                <Input type="number" placeholder="Số lượng" />
+                <Input type="number" placeholder="Số lượng" min={0} />
               </Form.Item>
 
               <Form.Item
@@ -210,7 +299,7 @@ const AddSkus: React.FC = () => {
                 label="Giá"
                 rules={[{ required: true, message: 'Nhập giá' }]}
               >
-                <Input type="number" placeholder="Giá sản phẩm" />
+                <Input type="number" placeholder="Giá sản phẩm" min={0} />
               </Form.Item>
             </Card>
           ))}
@@ -226,4 +315,4 @@ const AddSkus: React.FC = () => {
   )
 }
 
-export default AddSkus
+export default AddSku

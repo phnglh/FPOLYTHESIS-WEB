@@ -65,14 +65,7 @@ const UpdateCategory = () => {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-      }}
-    >
+    <div className="flex justify-center items-center p-6">
       <Flex
         vertical
         gap="large"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Input, Form, Button, Typography, message, Upload } from 'antd'
+import { Card, Input, Form, Button, Typography, Upload } from 'antd'
 import {
   MinusCircleOutlined,
   PlusOutlined,
@@ -80,11 +80,14 @@ const Skus = () => {
     try {
       const promises = values.variants.map(async (variant: any) => {
         const imageFile = variant.image_url?.[0]?.originFileObj
+        const existingImageUrl = variant.image_url?.[0]?.url
+
         const formData = new FormData()
         formData.append('_method', 'PUT')
         formData.append('combination', variant.combination || '')
         formData.append('stock', variant.stock)
         formData.append('price', variant.price)
+
         if (Array.isArray(variant.attributes)) {
           variant.attributes.forEach((attr: any, index: number) => {
             formData.append(
@@ -94,27 +97,20 @@ const Skus = () => {
             formData.append(`attributes[${index}][value]`, attr.value)
           })
         }
+
         if (imageFile) {
           formData.append('image_url', imageFile)
+        } else if (existingImageUrl) {
+          formData.append('image_url', existingImageUrl)
         }
 
         try {
-          const response = variant.id
-            ? await apiClient.post(`/skus/${variant.id}`, formData)
-            : await apiClient.post(`/products/${id}`, formData)
-
+          const response = await apiClient.post(`/skus/${variant.id}`, formData)
           return response
         } catch (error: any) {
           if (error.response && error.response.status === 404) {
-            console.error('API Error (404): Route not found')
-            toast.error(
-              'Lỗi: Không tìm thấy đường dẫn (Route not found). Vui lòng kiểm tra lại URL hoặc đường dẫn API.',
-            )
+            toast.error('Lỗi: Không tìm thấy đường dẫn (Route not found).')
           } else {
-            console.error(
-              'API Error:',
-              error.response ? error.response.data : error,
-            )
             toast.error(
               `Lỗi khi lưu biến thể: ${error.response?.data?.message || error.message || 'Không xác định'}`,
             )
