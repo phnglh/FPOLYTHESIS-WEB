@@ -1,3 +1,4 @@
+import { PlusOutlined } from '@ant-design/icons'
 import apiClient from '@store/services/apiClient'
 import {
   Button,
@@ -8,6 +9,10 @@ import {
   Select,
   DatePicker,
   Checkbox,
+  Space,
+  Row,
+  Col,
+  Typography,
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -74,10 +79,24 @@ const VoucherManagement = () => {
   }
 
   return (
-    <>
-      <Button type="primary" className="mb-2" onClick={showModal}>
-        Thêm Voucher
-      </Button>
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Typography.Title level={3} style={{ margin: 0 }}>
+            Danh sách mã khuyến mại
+          </Typography.Title>
+        </Col>
+        <Col>
+          <Button type="primary" className="mb-2" onClick={showModal}>
+            Thêm mã khuyến mại
+          </Button>
+        </Col>
+      </Row>
+
       <Modal
         title="Thêm Voucher"
         open={isModalOpen}
@@ -234,7 +253,7 @@ const VoucherManagement = () => {
           ))}
         </tbody>
       </table>
-    </>
+    </Space>
   )
 }
 
