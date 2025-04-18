@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   Form,
   Input,
@@ -17,6 +15,7 @@ import {
   Checkbox,
   Spin,
   Image,
+  Select,
 } from 'antd'
 import {
   ShoppingCartOutlined,
@@ -33,10 +32,35 @@ import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchCart, restoreCartFromSession } from '@store/slices/cartSlice'
-import { ApiErrorResponse } from '#types/api'
 import { CartItem } from '#types/cart'
+import axios from 'axios'
 
 const { Title, Text } = Typography
+const { Option } = Select
+interface Address {
+  id: number
+  receiver_name: string
+  receiver_phone: string
+  address: string
+  is_default: number
+}
+
+interface District {
+  name: string
+  code: number
+  division_type: string
+  codename: string
+  province_code: number
+}
+
+interface Province {
+  name: string
+  code: number
+  division_type: string
+  codename: string
+  phone_code: number
+  districts: District[]
+}
 
 const CheckoutPage = () => {
   const [form] = Form.useForm()
@@ -45,46 +69,66 @@ const CheckoutPage = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { formatCurrency } = useCurrencyFormatter()
   const { data, loading } = useSelector((state: RootState) => state.cart)
-  const cartItemsFromRedux = data?.items || []
+  const cartItems = data?.items || []
 
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([])
   const [totalPrice, setTotalPrice] = useState(0)
-  const [useDefaultAddress, setUseDefaultAddress] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const [addressList, setAddressList] = useState<any[]>([])
-  const [currentAddress, setCurrentAddress] = useState<any>(null)
-  const [selectedAddressId, setSelectedAddressId] = useState<number>()
+  const [addressList, setAddressList] = useState<Address[]>([])
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null)
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false)
-  const [isAdding, setIsAdding] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [editingAddress, setEditingAddress] = useState(null)
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const [selectedProvince, setSelectedProvince] = useState<string | null>(null)
+  const [districts, setDistricts] = useState<District[]>([])
+  const [isLoadingProvinces, setIsLoadingProvinces] = useState(false)
 
   const token = localStorage.getItem('access_token')
 
-  // useEffect để kiểm tra token và khôi phục giỏ hàng từ sessionStorage
-  useEffect(() => {
-    // Khôi phục giỏ hàng từ sessionStorage
-    dispatch(restoreCartFromSession())
+  const fetchProvincesAndDistricts = async () => {
+    setIsLoadingProvinces(true)
+    try {
+      const response = await axios.get<Province[]>(
+        'https://provinces.open-api.vn/api/?depth=2',
+      )
+      setProvinces(response.data)
+    } catch (error) {
+      console.error('Lỗi khi gọi API tỉnh/huyện:', error)
+      toast.error('Không thể tải danh sách tỉnh/thành phố')
+    } finally {
+      setIsLoadingProvinces(false)
+    }
+  }
 
-    // Gọi API để lấy giỏ hàng
+  useEffect(() => {
+    fetchProvincesAndDistricts()
+  }, [])
+
+  const handleProvinceChange = (provinceCode: string) => {
+    setSelectedProvince(provinceCode)
+    const selected = provinces.find(
+      (province) => province.code === Number(provinceCode),
+    )
+    setDistricts(selected ? selected.districts : [])
+    form.setFieldsValue({ district: undefined })
+  }
+
+  useEffect(() => {
+    dispatch(restoreCartFromSession())
     dispatch(fetchCart())
       .unwrap()
-      .catch((err) => {
-        toast.error(
-          `Lỗi khi tải giỏ hàng từ server: ${err?.message || 'Thử lại sau!'}`,
-        )
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
-  }, [dispatch, navigate, token])
+      .catch((err) =>
+        toast.error(`Lỗi khi tải giỏ hàng: ${err?.message || 'Thử lại sau!'}`),
+      )
+      .finally(() => setIsLoading(false))
+  }, [dispatch])
 
-  // useEffect để xử lý logic chọn sản phẩm từ giỏ hàng sau khi Redux store được cập nhật
   useEffect(() => {
-    if (isLoading) return // Đợi đến khi dữ liệu được tải xong
+    if (isLoading || !cartItems) return
 
     const params = new URLSearchParams(location.search)
     const skuIds = params.get('skus')?.split(',').map(Number) || []
@@ -95,13 +139,12 @@ const CheckoutPage = () => {
       return
     }
 
-    // Kiểm tra cartItemsFromRedux sau khi Redux store được cập nhật
-    if (!cartItemsFromRedux || cartItemsFromRedux.length === 0) {
+    if (cartItems.length === 0) {
       setFetchError('Giỏ hàng trống, vui lòng thêm sản phẩm!')
       return
     }
 
-    const filteredItems = cartItemsFromRedux.filter((item) =>
+    const filteredItems = cartItems.filter((item) =>
       skuIds.includes(item.sku_id),
     )
     if (filteredItems.length === 0) {
@@ -110,169 +153,140 @@ const CheckoutPage = () => {
     }
 
     setSelectedItems(filteredItems)
-    const total = filteredItems.reduce((sum, item) => {
-      const price = Number(item.unit_price)
-      return sum + item.quantity * (isNaN(price) ? 0 : price)
-    }, 0)
+    const total = filteredItems.reduce(
+      (sum, item) => sum + item.quantity * (Number(item.unit_price) || 0),
+      0,
+    )
     setTotalPrice(total)
-  }, [cartItemsFromRedux, location.search, navigate, isLoading])
+  }, [cartItems, location.search, navigate, isLoading])
 
-  const fetchUserAndAddresses = async () => {
-    try {
-      const addrRes = await apiClient.get('/user-addresses')
-      const addresses = addrRes.data?.data || []
-      const defaultAddr = addresses.find((addr: any) => addr.is_default === 1)
-      setAddressList(addresses)
-      setCurrentAddress(defaultAddr)
-      setSelectedAddressId(defaultAddr?.id)
-      form.setFieldsValue({
-        payment_method: 'cod',
-      })
-    } catch (error) {
-      console.error(error)
-    }
-  }
   useEffect(() => {
     if (token) {
-      fetchUserAndAddresses()
+      fetchAddresses()
     }
-  }, [form, token])
+  }, [token])
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search)
-    const vnpayStatus = queryParams.get('vnpay_status')
-
-    if (vnpayStatus === 'success') {
+    if (queryParams.get('vnpay_status') === 'success') {
       toast.success('Đặt hàng thành công!')
       navigate('/order-success')
     }
   }, [navigate, location.search])
 
-  const handleOpenModal = async () => {
+  const fetchAddresses = async () => {
     try {
-      const res = await apiClient.get('/user-addresses')
-      setAddressList(res.data?.data || [])
-      setIsModalVisible(true)
-    } catch (err) {
-      toast.error('Không thể lấy danh sách địa chỉ')
-    }
-  }
-
-  const handleConfirmAddress = () => {
-    const addr = addressList.find((a) => a.id === selectedAddressId)
-    if (addr) {
-      setCurrentAddress(addr)
-      setUseDefaultAddress(true)
-      setIsModalVisible(false)
+      const response = await apiClient.get('/user-addresses')
+      const addresses = response.data?.data || []
+      setAddressList(addresses)
+      const defaultAddress = addresses.find(
+        (addr: Address) => addr.is_default === 1,
+      )
+      setSelectedAddress(
+        defaultAddress || (addresses.length > 0 ? addresses[0] : null),
+      )
+      form.setFieldsValue({ payment_method: 'cod' })
+    } catch (error) {
+      toast.error('Không thể tải danh sách địa chỉ')
     }
   }
 
   const handleAddNewAddress = async (values: any) => {
-    setIsAdding(true)
-    console.log('Submitting address with values:', values)
-
     try {
-      const res = await apiClient.post('/user-addresses', {
-        ...values,
+      const selectedProvinceData = provinces.find(
+        (p) => p.code === Number(values.province),
+      )
+      const selectedDistrictData = districts.find(
+        (d) => d.code === Number(values.district),
+      )
+
+      const fullAddress = `${values.address}, ${selectedDistrictData?.name}, ${selectedProvinceData?.name}`
+      const response = await apiClient.post('/user-addresses', {
+        receiver_name: values.receiver_name,
+        receiver_phone: values.receiver_phone,
+        address: fullAddress,
+        province_code: values.province,
+        district_code: values.district,
+        is_default: values.is_default || false,
       })
-      const newAddr = res.data?.data
-      if (newAddr) {
-        toast.success('Thêm địa chỉ thành công!')
-        const updatedList = [...addressList, newAddr]
-        setAddressList(updatedList)
-        setSelectedAddressId(newAddr.id)
-        setCurrentAddress(newAddr)
-        setUseDefaultAddress(false)
-        setIsAddingNewAddress(false)
-        fetchUserAndAddresses()
-      }
-    } catch (err) {
+      const newAddress = response.data?.data
+      setAddressList([...addressList, newAddress])
+      setSelectedAddress(newAddress)
+      setIsAddingNewAddress(false)
+      setIsModalVisible(false)
+      toast.success('Thêm địa chỉ thành công!')
+      fetchAddresses()
+    } catch (error) {
       toast.error('Không thể thêm địa chỉ mới!')
-    } finally {
-      setIsAdding(false)
-    }
-  }
-
-  const updateAddressAPI = async (id: number, values: any) => {
-    try {
-      const res = await apiClient.put(`/user-addresses/${id}`, {
-        ...values,
-      })
-      const updatedAddr = res.data?.data
-      if (updatedAddr) {
-        toast.success('Cập nhật địa chỉ thành công!')
-        const updatedList = addressList.map((addr) =>
-          addr.id === id ? updatedAddr : addr,
-        )
-        setAddressList(updatedList)
-        setSelectedAddressId(updatedAddr.id)
-        setCurrentAddress(updatedAddr)
-        setUseDefaultAddress(false)
-        setIsAddingNewAddress(false)
-        setIsEditing(false)
-        setEditingAddress(null)
-      }
-    } catch (err) {
-      toast.error('Không thể cập nhật địa chỉ!')
-    } finally {
-      setIsAdding(false)
     }
   }
 
   const handleUpdateAddress = async (values: any) => {
+    if (!editingAddress) return
     try {
-      setIsAdding(true)
-      await updateAddressAPI(editingAddress.id, values)
-      toast.success('Cập nhật địa chỉ thành công!')
-      setIsModalVisible(false)
-      setIsAddingNewAddress(false)
+      const selectedProvinceData = provinces.find(
+        (p) => p.code === Number(values.province),
+      )
+      const selectedDistrictData = districts.find(
+        (d) => d.code === Number(values.district),
+      )
+
+      // Gộp địa chỉ
+      const fullAddress = `${values.address}, ${selectedDistrictData?.name}, ${selectedProvinceData?.name}`
+
+      const response = await apiClient.put(`/user-addresses/${id}`, {
+        receiver_name: values.receiver_name,
+        receiver_phone: values.receiver_phone,
+        address: fullAddress,
+        province_code: values.province,
+        district_code: values.district,
+        is_default: values.is_default || false,
+      })
+      const updatedAddress = response.data?.data
+      setAddressList(
+        addressList.map((addr) =>
+          addr.id === updatedAddress.id ? updatedAddress : addr,
+        ),
+      )
+      setSelectedAddress(updatedAddress)
       setIsEditing(false)
       setEditingAddress(null)
-    } catch (err) {
-      toast.error('Có lỗi xảy ra!')
-    } finally {
-      setIsAdding(false)
+      setIsModalVisible(false)
+      toast.success('Cập nhật địa chỉ thành công!')
+    } catch (error) {
+      toast.error('Không thể cập nhật địa chỉ!')
     }
   }
 
   const onFinish = async (values: any) => {
     setIsSubmitting(true)
-    const checkoutData: any = {
-      selected_sku_ids: selectedItems.map((item) => item.sku_id),
-      voucher_code: values.voucher_code || '',
-      payment_method: values.payment_method,
-      note: values.note || '',
-    }
-
     try {
-      if (useDefaultAddress && currentAddress) {
-        checkoutData.address_id = currentAddress.id
-      } else if (currentAddress) {
-        checkoutData.new_address = {
-          receiver_name: currentAddress.receiver_name,
-          receiver_phone: currentAddress.receiver_phone,
-          address: currentAddress.address,
-          is_default: false,
-        }
-      } else {
-        throw new Error('Không có địa chỉ giao hàng!')
+      const checkoutData: any = {
+        selected_sku_ids: selectedItems.map((item) => item.sku_id),
+        voucher_code: values.voucher_code || '',
+        payment_method: values.payment_method,
+        note: values.note || '',
+        address_id: selectedAddress?.id,
       }
 
-      const res = await apiClient.post('/orders/create', checkoutData)
+      if (!selectedAddress) {
+        throw new Error('Vui lòng chọn địa chỉ giao hàng!')
+      }
+
+      const response = await apiClient.post('/orders/create', checkoutData)
       if (values.payment_method === 'vnpay') {
-        const paymentUrl = res.data?.data?.payment_url
+        const paymentUrl = response.data?.data?.payment_url
         if (paymentUrl) {
           window.location.href = paymentUrl
         } else {
-          toast.error('Không lấy được link thanh toán VNPay!')
+          throw new Error('Không lấy được link thanh toán VNPay!')
         }
       } else {
         toast.success('Đặt hàng thành công!')
         navigate('/order-success')
       }
-    } catch (error) {
-      const errMsg = (error as ApiErrorResponse)?.message
-      toast.error(errMsg || 'Lỗi khi đặt hàng, thử lại sau!')
+    } catch (error: any) {
+      toast.error(error.message || 'Lỗi khi đặt hàng, thử lại sau!')
     } finally {
       setIsSubmitting(false)
     }
@@ -282,7 +296,6 @@ const CheckoutPage = () => {
     {
       title: 'Ảnh sản phẩm',
       dataIndex: 'product',
-      key: 'product',
       render: (_: string, record: CartItem) => (
         <Image
           src={record?.sku?.image_url || 'https://via.placeholder.com/60'}
@@ -306,23 +319,17 @@ const CheckoutPage = () => {
           <Text strong style={{ fontSize: 16 }}>
             {record?.product_name || 'Sản phẩm không xác định'}
           </Text>
-          {record?.sku?.attributes && record.sku.attributes.length > 0 ? (
-            <Text type="secondary" style={{ fontSize: 14 }}>
-              Loại:{' '}
-              {record.sku.attributes.map((attr) => attr.value).join(' / ')}
-            </Text>
-          ) : (
-            <Text type="secondary" style={{ fontSize: 14 }}>
-              Không có thuộc tính
-            </Text>
-          )}
+          <Text type="secondary" style={{ fontSize: 14 }}>
+            {record?.sku?.attributes?.length
+              ? `Loại: ${record.sku.attributes.map((attr) => attr.value).join(' / ')}`
+              : 'Không có thuộc tính'}
+          </Text>
         </Space>
       ),
     },
     {
       title: 'Đơn giá',
       dataIndex: 'unit_price',
-      key: 'unit_price',
       render: (price: number) => (
         <Text strong type="danger" style={{ fontSize: 16 }}>
           {formatCurrency(price || 0)}
@@ -332,14 +339,12 @@ const CheckoutPage = () => {
     {
       title: 'Số lượng',
       dataIndex: 'quantity',
-      key: 'quantity',
       render: (quantity: number) => (
         <Text style={{ fontSize: 16 }}>{quantity}</Text>
       ),
     },
     {
       title: 'Thành tiền',
-      key: 'total',
       render: (_: string, record: CartItem) => (
         <Text strong type="danger" style={{ fontSize: 16 }}>
           {formatCurrency((record.unit_price || 0) * (record.quantity || 0))}
@@ -373,7 +378,6 @@ const CheckoutPage = () => {
       }}
     >
       <Row gutter={[24, 24]} style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* Cột bên trái: Thông tin đơn hàng */}
         <Col xs={24} md={16}>
           <Card
             title={
@@ -404,7 +408,6 @@ const CheckoutPage = () => {
                 rowKey="id"
                 loading={loading}
                 style={{ marginBottom: 16 }}
-                rowClassName={() => 'ant-table-row-custom'}
               />
             )}
 
@@ -439,7 +442,6 @@ const CheckoutPage = () => {
             </Form.Item>
 
             <Divider style={{ margin: '16px 0' }} />
-
             <Row justify="space-between" style={{ marginBottom: 16 }}>
               <Text strong style={{ fontSize: 18 }}>
                 Tổng cộng:
@@ -451,7 +453,6 @@ const CheckoutPage = () => {
           </Card>
         </Col>
 
-        {/* Cột bên phải: Thông tin giao hàng và thanh toán */}
         <Col xs={24} md={8}>
           <Card
             title={
@@ -468,53 +469,61 @@ const CheckoutPage = () => {
               marginBottom: 24,
             }}
           >
-            {currentAddress ? (
+            {addressList.length === 0 ? (
+              <Button
+                block
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setIsAddingNewAddress(true)
+                  setIsModalVisible(true)
+                }}
+                style={{ borderRadius: 8 }}
+              >
+                Thêm địa chỉ giao hàng
+              </Button>
+            ) : (
               <Row align="middle" justify="space-between" gutter={[16, 8]}>
-                {/* Cột trái: Thông tin người nhận */}
                 <Col flex="auto">
-                  <Space direction="vertical" size={4}>
-                    {/* Hàng 1: Tên + SĐT */}
-                    <Space>
-                      <Text strong style={{ fontSize: 16 }}>
-                        {currentAddress.receiver_name}
-                      </Text>
-                      <Text style={{ fontSize: 16 }}>
-                        ({currentAddress.receiver_phone})
-                      </Text>
+                  {selectedAddress ? (
+                    <Space direction="vertical" size={4}>
+                      <Space>
+                        <Text strong style={{ fontSize: 16 }}>
+                          {selectedAddress.receiver_name}
+                        </Text>
+                        <Text style={{ fontSize: 16 }}>
+                          ({selectedAddress.receiver_phone})
+                        </Text>
+                      </Space>
+                      <Space>
+                        <Text style={{ fontSize: 16 }}>
+                          {selectedAddress.address}
+                        </Text>
+                        {selectedAddress.is_default === 1 && (
+                          <Tag
+                            color="blue"
+                            style={{ fontSize: 14, padding: '2px 8px' }}
+                          >
+                            Mặc định
+                          </Tag>
+                        )}
+                      </Space>
                     </Space>
-
-                    {/* Hàng 2: Địa chỉ + Tag */}
-                    <Space>
-                      <Text style={{ fontSize: 16 }}>
-                        {currentAddress.address}
-                      </Text>
-                      {Boolean(currentAddress.is_default) && (
-                        <Tag
-                          color="blue"
-                          style={{ fontSize: 14, padding: '2px 8px' }}
-                        >
-                          Mặc định
-                        </Tag>
-                      )}
-                    </Space>
-                  </Space>
+                  ) : (
+                    <Text style={{ fontSize: 16 }}>
+                      Vui lòng chọn địa chỉ giao hàng
+                    </Text>
+                  )}
                 </Col>
-
-                {/* Cột phải: Button Thay đổi */}
                 <Col>
                   <Button
                     type="link"
-                    onClick={handleOpenModal}
+                    onClick={() => setIsModalVisible(true)}
                     style={{ fontSize: 16, color: '#1890ff' }}
                   >
-                    Thay đổi
+                    {selectedAddress ? 'Thay đổi' : 'Chọn địa chỉ'}
                   </Button>
                 </Col>
               </Row>
-            ) : (
-              <Text type="danger" style={{ fontSize: 16 }}>
-                Chưa có địa chỉ giao hàng
-              </Text>
             )}
           </Card>
 
@@ -552,7 +561,6 @@ const CheckoutPage = () => {
                       />
                     </div>
                   </Radio>
-                  <br />
                   <Radio value="vnpay" style={{ fontSize: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span style={{ marginRight: 8 }}>
@@ -575,14 +583,17 @@ const CheckoutPage = () => {
                   block
                   size="large"
                   loading={isSubmitting}
-                  disabled={selectedItems.length === 0 || fetchError !== null}
+                  disabled={
+                    selectedItems.length === 0 ||
+                    fetchError !== null ||
+                    !selectedAddress
+                  }
                   style={{
                     borderRadius: 8,
                     backgroundColor: '#1890ff',
                     borderColor: '#1890ff',
                     fontSize: 16,
                     height: 48,
-                    transition: 'all 0.3s',
                   }}
                   icon={<CheckCircleOutlined />}
                 >
@@ -604,7 +615,6 @@ const CheckoutPage = () => {
         </Col>
       </Row>
 
-      {/* Modal chọn địa chỉ */}
       <Modal
         title={
           <Title level={4} style={{ margin: 0 }}>
@@ -644,9 +654,48 @@ const CheckoutPage = () => {
               <Input size="large" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item
-              label="Địa chỉ"
+              label="Tỉnh/Thành phố"
+              name="province"
+              rules={[
+                { required: true, message: 'Vui lòng chọn tỉnh/thành phố' },
+              ]}
+            >
+              <Select
+                placeholder="Chọn tỉnh/thành phố"
+                size="large"
+                onChange={handleProvinceChange}
+                loading={isLoadingProvinces}
+                style={{ borderRadius: 8 }}
+              >
+                {provinces.map((province) => (
+                  <Option key={province.code} value={province.code}>
+                    {province.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              label="Quận/Huyện"
+              name="district"
+              rules={[{ required: true, message: 'Vui lòng chọn quận/huyện' }]}
+            >
+              <Select
+                placeholder="Chọn quận/huyện"
+                size="large"
+                disabled={!selectedProvince}
+                style={{ borderRadius: 8 }}
+              >
+                {districts.map((district) => (
+                  <Option key={district.code} value={district.code}>
+                    {district.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              label="Địa chỉ chi tiết"
               name="address"
-              rules={[{ required: true, message: 'Nhập địa chỉ' }]}
+              rules={[{ required: true, message: 'Nhập địa chỉ chi tiết' }]}
             >
               <Input.TextArea rows={3} style={{ borderRadius: 8 }} />
             </Form.Item>
@@ -668,7 +717,6 @@ const CheckoutPage = () => {
                 <Button
                   type="primary"
                   htmlType="submit"
-                  loading={isAdding}
                   style={{ borderRadius: 8 }}
                 >
                   Lưu
@@ -678,72 +726,75 @@ const CheckoutPage = () => {
           </Form>
         ) : (
           <>
-            <Radio.Group
-              value={selectedAddressId}
-              onChange={(e) => setSelectedAddressId(e.target.value)}
-              style={{ width: '100%' }}
-            >
-              <Space direction="vertical" style={{ width: '100%' }}>
-                {addressList.map((addr) => (
-                  <Space
-                    key={addr.id}
-                    direction="horizontal"
-                    align="start"
-                    style={{
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: 12,
-                      borderBottom: '1px solid #f0f0f0',
-                      borderRadius: 8,
-                      backgroundColor:
-                        selectedAddressId === addr.id
-                          ? '#e6f7ff'
-                          : 'transparent',
-                      transition: 'background-color 0.3s',
-                    }}
-                  >
-                    <Radio value={addr.id} style={{ flex: 1 }}>
-                      <Space direction="vertical" size={4}>
-                        <Text strong style={{ fontSize: 16 }}>
-                          {addr.receiver_name}{' '}
-                          <Text type="secondary" style={{ fontSize: 16 }}>
-                            ({addr.receiver_phone})
-                          </Text>
-                        </Text>
-                        <Space
-                          direction="horizontal"
-                          size="small"
-                          align="center"
-                        >
-                          <Text style={{ fontSize: 16 }}>{addr.address}</Text>
-                          {Boolean(addr.is_default) && (
-                            <Tag color="blue" style={{ fontSize: 14 }}>
-                              Mặc định
-                            </Tag>
-                          )}
-                        </Space>
-                      </Space>
-                    </Radio>
-
-                    <Button
-                      type="link"
-                      onClick={() => {
-                        setIsModalVisible(true)
-                        setIsAddingNewAddress(true)
-                        setIsEditing(true)
-                        setEditingAddress(addr)
+            {addressList.length === 0 ? (
+              <Text style={{ fontSize: 16 }}>Chưa có địa chỉ nào</Text>
+            ) : (
+              <Radio.Group
+                value={selectedAddress?.id}
+                onChange={(e) => {
+                  const addr = addressList.find((a) => a.id === e.target.value)
+                  setSelectedAddress(addr || null)
+                }}
+                style={{ width: '100%' }}
+              >
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {addressList.map((addr) => (
+                    <Space
+                      key={addr.id}
+                      direction="horizontal"
+                      align="start"
+                      style={{
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        padding: 12,
+                        borderBottom: '1px solid #f0f0f0',
+                        borderRadius: 8,
+                        backgroundColor:
+                          selectedAddress?.id === addr.id
+                            ? '#e6f7ff'
+                            : 'transparent',
                       }}
-                      style={{ fontSize: 16 }}
                     >
-                      Cập nhật
-                    </Button>
-                  </Space>
-                ))}
-              </Space>
-            </Radio.Group>
+                      <Radio value={addr.id} style={{ flex: 1 }}>
+                        <Space direction="vertical" size={4}>
+                          <Text strong style={{ fontSize: 16 }}>
+                            {addr.receiver_name}{' '}
+                            <Text type="secondary">
+                              ({addr.receiver_phone})
+                            </Text>
+                          </Text>
+                          <Space
+                            direction="horizontal"
+                            size="small"
+                            align="center"
+                          >
+                            <Text style={{ fontSize: 16 }}>{addr.address}</Text>
+                            {addr.is_default === 1 && (
+                              <Tag color="blue" style={{ fontSize: 14 }}>
+                                Mặc định
+                              </Tag>
+                            )}
+                          </Space>
+                        </Space>
+                      </Radio>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setIsEditing(true)
+                          setEditingAddress(addr)
+                          setIsAddingNewAddress(true)
+                        }}
+                        style={{ fontSize: 16 }}
+                      >
+                        Cập nhật
+                      </Button>
+                    </Space>
+                  ))}
+                </Space>
+              </Radio.Group>
+            )}
 
             <Divider />
-
             <Button
               block
               icon={<PlusOutlined />}
@@ -752,7 +803,6 @@ const CheckoutPage = () => {
             >
               Thêm địa chỉ mới
             </Button>
-
             <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 onClick={() => setIsModalVisible(false)}
@@ -762,8 +812,8 @@ const CheckoutPage = () => {
               </Button>
               <Button
                 type="primary"
-                onClick={handleConfirmAddress}
-                disabled={!selectedAddressId}
+                onClick={() => setIsModalVisible(false)}
+                disabled={!selectedAddress}
                 style={{ borderRadius: 8 }}
               >
                 Xác nhận
