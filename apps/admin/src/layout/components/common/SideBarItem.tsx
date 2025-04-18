@@ -99,10 +99,10 @@ export const items = [
         key: '/users/list',
         label: <Link to="/users">Quản lý người dùng</Link>,
       },
-      {
-        key: '/users/create',
-        label: <Link to="/users/create">Thêm người dùng</Link>,
-      },
+      //   {
+      //     key: '/users/create',
+      //     label: <Link to="/users/create">Thêm người dùng</Link>,
+      //   },
     ],
   },
   {

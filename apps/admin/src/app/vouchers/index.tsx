@@ -91,7 +91,12 @@ const VoucherManagement = () => {
           </Typography.Title>
         </Col>
         <Col>
-          <Button type="primary" className="mb-2" onClick={showModal}>
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            className="mb-2"
+            onClick={showModal}
+          >
             Thêm mã khuyến mại
           </Button>
         </Col>
@@ -212,7 +217,7 @@ const VoucherManagement = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white">
-          {vouchers?.map((data: any) => (
+          {vouchers?.map((data) => (
             <tr key={data.id}>
               <td className="whitespace-nowrap px-6 py-4">
                 <a href="#" className="font-semibold text-blue-600">

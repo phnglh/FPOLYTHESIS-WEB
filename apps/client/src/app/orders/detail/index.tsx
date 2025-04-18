@@ -115,7 +115,7 @@ const OrderDetailPage = () => {
       if (!order) return
 
       const response = await apiClient.post(`/payment/retry/${order.id}`)
-      const resData = response.data as RetryPaymentResponse
+      const resData = response.data
 
       if (resData.status === 'success') {
         localStorage.setItem('checkout', JSON.stringify(order.items))

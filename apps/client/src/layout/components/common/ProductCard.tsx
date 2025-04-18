@@ -3,6 +3,7 @@ import { ShoppingCartOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Product, Sku } from '#types/products'
 import { useNavigate } from 'react-router'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Meta } = Card
 const { Text } = Typography
@@ -14,6 +15,7 @@ type Props = {
 const ProductCard = ({ product }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
   const navigate = useNavigate()
+  const { formatCurrency } = useCurrencyFormatter()
   return (
     <Card
       hoverable
@@ -62,7 +64,7 @@ const ProductCard = ({ product }: Props) => {
             marginTop: '8px',
           }}
         >
-          {product.skus.map((sku) => {
+          {product.skus.slice(0, 4).map((sku) => {
             return (
               <Image
                 key={sku.id}
@@ -93,7 +95,7 @@ const ProductCard = ({ product }: Props) => {
         }}
       >
         <Text strong style={{ fontSize: '16px', color: '#ff4d4f' }}>
-          ${selectedSku.price}
+          {formatCurrency(selectedSku.price)}
         </Text>
         <Button
           size="large"
