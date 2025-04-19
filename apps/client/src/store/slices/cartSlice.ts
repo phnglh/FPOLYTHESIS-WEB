@@ -12,12 +12,10 @@ const initialState: CartState = {
   error: null,
 }
 
-// Hàm lưu giỏ hàng vào sessionStorage
 const saveCartToSessionStorage = (items: CartItem[]) => {
   sessionStorage.setItem('cart', JSON.stringify(items))
 }
 
-// Hàm lấy giỏ hàng từ sessionStorage
 const getCartFromSessionStorage = (): CartItem[] => {
   const cart = sessionStorage.getItem('cart')
   return cart ? JSON.parse(cart) : []

@@ -37,7 +37,7 @@ const OrderStatus = () => {
         >
           Xem đơn hàng
         </Button>,
-        <Button onClick={() => handleNavigation('/')}>Tiếp tục mua sắm</Button>,
+        <Button onClick={() => navigate('/products')}>Tiếp tục mua sắm</Button>,
       ]}
     />
   ) : (
@@ -46,7 +46,7 @@ const OrderStatus = () => {
       title="Thanh toán thất bại"
       subTitle={message || 'Có lỗi xảy ra trong quá trình thanh toán.'}
       extra={[
-        <Button type="primary" onClick={() => handleNavigation('/')}>
+        <Button type="primary" onClick={() => navigate('/')}>
           Trở về trang chủ
         </Button>,
       ]}

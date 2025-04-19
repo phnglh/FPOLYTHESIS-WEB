@@ -22,7 +22,7 @@ const ProductCard = ({ product }: Props) => {
       cover={
         <Image
           onClick={() => navigate(`/products/${product.id}`)}
-          src={product.image_url}
+          src={selectedSku.image_url || product.image_url}
           preview={false}
           style={{
             width: '100%',

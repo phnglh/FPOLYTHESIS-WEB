@@ -166,13 +166,13 @@ const CheckoutPage = () => {
     }
   }, [token])
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search)
-    if (queryParams.get('vnpay_status') === 'success') {
-      toast.success('Đặt hàng thành công!')
-      navigate('/order-success')
-    }
-  }, [navigate, location.search])
+  //   useEffect(() => {
+  //     const queryParams = new URLSearchParams(location.search)
+  //     if (queryParams.get('vnpay_status') === 'success') {
+  //       toast.success('Đặt hàng thành công!')
+  //       navigate('/order-success')
+  //     }
+  //   }, [navigate, location.search])
 
   const fetchAddresses = async () => {
     try {
@@ -283,7 +283,11 @@ const CheckoutPage = () => {
         }
       } else {
         toast.success('Đặt hàng thành công!')
-        navigate('/order-success')
+        const orderId = response.data?.data?.order_id
+        const orderNumber = response.data?.data?.order_number
+        navigate(
+          `/order-status?success=1&id=${orderId}&order_number=${orderNumber}&message=Đặt hàng thành công`,
+        )
       }
     } catch (error: any) {
       toast.error(error.message || 'Lỗi khi đặt hàng, thử lại sau!')

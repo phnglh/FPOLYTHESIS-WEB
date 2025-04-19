@@ -59,7 +59,7 @@ export default function Dashboard() {
       <Card>
         <Statistic
           title="Doanh thu hôm nay"
-          value={11000}
+          value={1200000}
           suffix="₫"
           prefix={<ArrowUpOutlined />}
         />
