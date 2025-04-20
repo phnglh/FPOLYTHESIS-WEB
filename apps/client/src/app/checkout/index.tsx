@@ -37,6 +37,7 @@ import axios from 'axios'
 
 const { Title, Text } = Typography
 const { Option } = Select
+
 interface Address {
   id: number
   receiver_name: string
@@ -60,6 +61,14 @@ interface Province {
   codename: string
   phone_code: number
   districts: District[]
+}
+
+interface VoucherResult {
+  success: boolean
+  subtotal: number
+  discount: number
+  final_total: number
+  message: string
 }
 
 const CheckoutPage = () => {
@@ -86,6 +95,9 @@ const CheckoutPage = () => {
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null)
   const [districts, setDistricts] = useState<District[]>([])
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false)
+  const [voucherResult, setVoucherResult] = useState<VoucherResult | null>(null)
+  const [voucherError, setVoucherError] = useState<string | null>(null)
+  const [isCheckingVoucher, setIsCheckingVoucher] = useState(false)
 
   const token = localStorage.getItem('access_token')
 
@@ -166,14 +178,6 @@ const CheckoutPage = () => {
     }
   }, [token])
 
-  //   useEffect(() => {
-  //     const queryParams = new URLSearchParams(location.search)
-  //     if (queryParams.get('vnpay_status') === 'success') {
-  //       toast.success('Đặt hàng thành công!')
-  //       navigate('/order-success')
-  //     }
-  //   }, [navigate, location.search])
-
   const fetchAddresses = async () => {
     try {
       const response = await apiClient.get('/user-addresses')
@@ -231,17 +235,19 @@ const CheckoutPage = () => {
         (d) => d.code === Number(values.district),
       )
 
-      // Gộp địa chỉ
       const fullAddress = `${values.address}, ${selectedDistrictData?.name}, ${selectedProvinceData?.name}`
 
-      const response = await apiClient.put(`/user-addresses/${id}`, {
-        receiver_name: values.receiver_name,
-        receiver_phone: values.receiver_phone,
-        address: fullAddress,
-        province_code: values.province,
-        district_code: values.district,
-        is_default: values.is_default || false,
-      })
+      const response = await apiClient.put(
+        `/user-addresses/${editingAddress.id}`,
+        {
+          receiver_name: values.receiver_name,
+          receiver_phone: values.receiver_phone,
+          address: fullAddress,
+          province_code: values.province,
+          district_code: values.district,
+          is_default: values.is_default || false,
+        },
+      )
       const updatedAddress = response.data?.data
       setAddressList(
         addressList.map((addr) =>
@@ -258,12 +264,49 @@ const CheckoutPage = () => {
     }
   }
 
+  const handleCheckVoucher = async () => {
+    setIsCheckingVoucher(true)
+    setVoucherError(null)
+    setVoucherResult(null)
+
+    const voucherCode = form.getFieldValue('voucher_code')?.trim()
+    console.log('voucherCode:', voucherCode) // Debug giá trị voucherCode
+    if (!voucherCode) {
+      setVoucherError('Vui lòng nhập mã giảm giá')
+      setIsCheckingVoucher(false)
+      return
+    }
+
+    try {
+      const response = await apiClient.post('/voucher/check', {
+        selected_sku_ids: selectedItems.map((item) => item.sku_id),
+        voucher_code: voucherCode,
+      })
+      const result = response.data
+      if (result.success) {
+        setVoucherResult(result)
+        setVoucherError(null)
+        toast.success(result.message)
+      } else {
+        setVoucherResult(null)
+        setVoucherError(result.message)
+        toast.error(result.message)
+      }
+    } catch (error) {
+      setVoucherResult(null)
+      setVoucherError('Lỗi khi kiểm tra mã giảm giá, vui lòng thử lại!')
+      toast.error('Lỗi khi kiểm tra mã giảm giá!')
+    } finally {
+      setIsCheckingVoucher(false)
+    }
+  }
+
   const onFinish = async (values: any) => {
     setIsSubmitting(true)
     try {
       const checkoutData: any = {
         selected_sku_ids: selectedItems.map((item) => item.sku_id),
-        voucher_code: values.voucher_code || '',
+        voucher_code: values.voucher_code?.trim() || '',
         payment_method: values.payment_method,
         note: values.note || '',
         address_id: selectedAddress?.id,
@@ -283,8 +326,8 @@ const CheckoutPage = () => {
         }
       } else {
         toast.success('Đặt hàng thành công!')
-        const orderId = response.data?.data?.order_id
-        const orderNumber = response.data?.data?.order_number
+        const orderId = response.data?.data?.order?.id
+        const orderNumber = response.data?.data?.order?.order_number
         navigate(
           `/order-status?success=1&id=${orderId}&order_number=${orderNumber}&message=Đặt hàng thành công`,
         )
@@ -415,43 +458,15 @@ const CheckoutPage = () => {
               />
             )}
 
-            <Form.Item
-              name="voucher_code"
-              label="Mã giảm giá"
-              style={{ marginBottom: 16 }}
-            >
-              <Row gutter={8}>
-                <Col span={18}>
-                  <Input
-                    placeholder="Nhập mã voucher"
-                    size="large"
-                    style={{ borderRadius: 8 }}
-                  />
-                </Col>
-                <Col span={6}>
-                  <Button
-                    type="primary"
-                    block
-                    size="large"
-                    style={{
-                      borderRadius: 8,
-                      backgroundColor: '#52c41a',
-                      borderColor: '#52c41a',
-                    }}
-                  >
-                    Áp dụng
-                  </Button>
-                </Col>
-              </Row>
-            </Form.Item>
-
             <Divider style={{ margin: '16px 0' }} />
             <Row justify="space-between" style={{ marginBottom: 16 }}>
               <Text strong style={{ fontSize: 18 }}>
                 Tổng cộng:
               </Text>
               <Title level={3} style={{ color: '#ff4d4f', margin: 0 }}>
-                {formatCurrency(totalPrice)}
+                {voucherResult && voucherResult.success
+                  ? formatCurrency(voucherResult.final_total)
+                  : formatCurrency(totalPrice)}
               </Title>
             </Row>
           </Card>
@@ -543,6 +558,85 @@ const CheckoutPage = () => {
             }}
           >
             <Form layout="vertical" form={form} onFinish={onFinish}>
+              <Form.Item
+                name="voucher_code"
+                label="Mã giảm giá"
+                style={{ marginBottom: 16 }}
+              >
+                <Row gutter={8}>
+                  <Col span={18}>
+                    <Input
+                      placeholder="Nhập mã voucher"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (!value) {
+                          setVoucherResult(null)
+                          setVoucherError(null)
+                        }
+                      }}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Button
+                      type="primary"
+                      block
+                      size="large"
+                      onClick={handleCheckVoucher}
+                      loading={isCheckingVoucher}
+                      style={{
+                        borderRadius: 8,
+                        backgroundColor: '#52c41a',
+                        borderColor: '#52c41a',
+                      }}
+                    >
+                      Áp dụng
+                    </Button>
+                  </Col>
+                </Row>
+              </Form.Item>
+
+              {voucherError && (
+                <Text type="danger" style={{ fontSize: 14, marginBottom: 16 }}>
+                  {voucherError}
+                </Text>
+              )}
+
+              {voucherResult && voucherResult.success && (
+                <Space
+                  direction="vertical"
+                  style={{
+                    marginBottom: 16,
+                    backgroundColor: '#f6ffed',
+                    padding: '12px 18px',
+                    borderRadius: 8,
+                    border: '1px solid #b7eb8f',
+                  }}
+                >
+                  <Text style={{ fontSize: 14, color: '#333' }}>
+                    Tổng đơn :{' '}
+                    <Text strong>{formatCurrency(voucherResult.subtotal)}</Text>
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#28a745' }}>
+                    Giảm giá :{' '}
+                    <Text strong>{formatCurrency(voucherResult.discount)}</Text>
+                  </Text>
+                  <Text
+                    strong
+                    style={{ fontSize: 16, color: 'rgb(255, 0, 4)' }}
+                  >
+                    Tổng thanh toán :{' '}
+                    <Text
+                      strong
+                      style={{ fontSize: 16, color: 'rgb(255, 0, 4)' }}
+                    >
+                      {formatCurrency(voucherResult.final_total)}
+                    </Text>
+                  </Text>
+                </Space>
+              )}
+
               <Form.Item
                 name="payment_method"
                 rules={[
