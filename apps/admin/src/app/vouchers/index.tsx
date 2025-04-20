@@ -13,35 +13,70 @@ import {
   Row,
   Col,
   Typography,
+  Table,
+  Switch,
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
+import moment from 'moment'
 
 const { Option } = Select
 
 const VoucherManagement = () => {
   const [vouchers, setVouchers] = useState<any[]>([])
-  const [check, setCheck] = useState<any>()
+  const [editingVoucher, setEditingVoucher] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const formRef = useRef<any>(null)
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const fetchVouchers = async () => {
+    const res = await apiClient.get('/vouchers')
+    setVouchers(res.data.data || [])
+  }
 
   useEffect(() => {
-    const fetchVoucher = async () => {
-      const response = await apiClient.get('/vouchers')
-      setVouchers(response.data.data)
-    }
-    fetchVoucher()
-  }, [check])
+    fetchVouchers()
+  }, [])
 
-  const showModal = () => {
+  const openAddModal = () => {
+    setEditingVoucher(null)
     setIsModalOpen(true)
   }
 
-  const handleOk = async () => {
+  const openEditModal = (voucher: any) => {
+    setEditingVoucher(voucher)
+    setIsModalOpen(true)
+    setTimeout(() => {
+      formRef.current.setFieldsValue({
+        ...voucher,
+        start_date: moment(voucher.start_date),
+        end_date: moment(voucher.end_date),
+        is_active: !!voucher.is_active,
+      })
+    }, 0)
+  }
+
+  const handleCancel = () => {
+    setIsModalOpen(false)
+    formRef.current.resetFields()
+    setEditingVoucher(null)
+  }
+
+  const handleToggleActive = async (id: number, checked: boolean) => {
+    try {
+      await apiClient.patch(`/vouchers/${id}`, {
+        is_active: checked ? 1 : 0,
+      })
+      toast.success(`Đã ${checked ? 'kích hoạt' : 'hủy kích hoạt'} voucher`)
+      fetchVouchers()
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái')
+    }
+  }
+
+  const handleSubmit = async () => {
     try {
       const values = await formRef.current.validateFields()
-      const data = {
+      const payload = {
         code: values.code,
         type: values.type,
         discount_value: values.discount_value,
@@ -52,74 +87,122 @@ const VoucherManagement = () => {
         is_active: values.is_active ? 1 : 0,
       }
 
-      const response = await apiClient.post('/vouchers', data)
-      if (response) {
-        setIsModalOpen(false)
-        setCheck(response)
+      if (editingVoucher) {
+        await apiClient.put(`/vouchers/${editingVoucher.id}`, payload)
+        toast.success('Cập nhật voucher thành công')
+      } else {
+        await apiClient.post('/vouchers', payload)
         toast.success('Thêm voucher thành công')
-        formRef.current.resetFields()
-        setTimeout(() => {
-          window.location.reload()
-        }, 300)
       }
+
+      handleCancel()
+      fetchVouchers()
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi thêm voucher')
+      toast.error('Đã có lỗi xảy ra')
     }
   }
 
-  const handleCancel = () => {
-    setIsModalOpen(false)
-    formRef.current.resetFields()
-  }
-
-  const handleDelete = async (id: any) => {
-    const response = await apiClient.delete(`/vouchers/${id}`)
-    toast.success('Xóa voucher thành công')
-    setCheck(response)
-  }
+  const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      render: (id: number) => `#${id}`,
+    },
+    {
+      title: 'Mã',
+      dataIndex: 'code',
+    },
+    {
+      title: 'Loại',
+      dataIndex: 'type',
+      render: (type: string) =>
+        type === 'percentage' ? 'Phần trăm' : 'Cố định',
+    },
+    {
+      title: 'Giảm giá',
+      dataIndex: 'discount_value',
+      render: (_: any, record: any) =>
+        record.type === 'percentage'
+          ? `${record.discount_value}%`
+          : record.discount_value,
+    },
+    {
+      title: 'Tối thiểu',
+      dataIndex: 'min_order_value',
+    },
+    {
+      title: 'Giới hạn',
+      dataIndex: 'usage_limit',
+    },
+    {
+      title: 'Đã dùng',
+      dataIndex: 'used_count',
+    },
+    {
+      title: 'Bắt đầu',
+      dataIndex: 'start_date',
+    },
+    {
+      title: 'Kết thúc',
+      dataIndex: 'end_date',
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'is_active',
+      render: (checked: boolean, record: any) => (
+        <Switch
+          checked={checked}
+          onChange={(newChecked) => handleToggleActive(record.id, newChecked)}
+        />
+      ),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <Space>
+          <Button onClick={() => openEditModal(record)}>Sửa</Button>
+        </Space>
+      ),
+    },
+  ]
 
   return (
     <Space
       direction="vertical"
       size="middle"
-      style={{ display: 'flex', marginTop: '30px' }}
+      style={{ display: 'flex', marginTop: 30 }}
     >
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+      <Row justify="space-between" align="middle">
         <Col>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Danh sách mã khuyến mại
-          </Typography.Title>
+          <Typography.Title level={3}>Danh sách mã khuyến mại</Typography.Title>
         </Col>
         <Col>
-          <Button
-            icon={<PlusOutlined />}
-            type="primary"
-            className="mb-2"
-            onClick={showModal}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
             Thêm mã khuyến mại
           </Button>
         </Col>
       </Row>
 
       <Modal
-        title="Thêm Voucher"
+        title={editingVoucher ? 'Cập nhật Voucher' : 'Thêm Voucher'}
         open={isModalOpen}
-        onOk={handleOk}
+        onOk={handleSubmit}
         onCancel={handleCancel}
+        okText={editingVoucher ? 'Cập nhật' : 'Thêm'}
       >
         <Form ref={formRef} layout="vertical">
           <Form.Item
             name="code"
             label="Mã Voucher"
-            rules={[{ required: true, message: 'Vui lòng nhập mã voucher' }]}
+            rules={[{ required: true }]}
           >
             <Input placeholder="Nhập mã voucher" />
           </Form.Item>
           <Form.Item
             name="type"
             label="Loại Voucher"
-            rules={[{ required: true, message: 'Vui lòng chọn loại voucher' }]}
+            rules={[{ required: true }]}
           >
             <Select placeholder="Chọn loại voucher">
               <Option value="percentage">Phần trăm</Option>
@@ -129,47 +212,35 @@ const VoucherManagement = () => {
           <Form.Item
             name="discount_value"
             label="Giá trị giảm giá"
-            rules={[
-              { required: true, message: 'Vui lòng nhập giá trị giảm giá' },
-            ]}
+            rules={[{ required: true }]}
           >
-            <Input type="number" placeholder="Nhập giá trị giảm giá" />
+            <Input type="number" />
           </Form.Item>
           <Form.Item
             name="min_order_value"
             label="Giá trị đơn hàng tối thiểu"
-            rules={[
-              {
-                required: true,
-                message: 'Vui lòng nhập giá trị đơn hàng tối thiểu',
-              },
-            ]}
+            rules={[{ required: true }]}
           >
-            <Input
-              type="number"
-              placeholder="Nhập giá trị đơn hàng tối thiểu"
-            />
+            <Input type="number" />
           </Form.Item>
           <Form.Item
             name="usage_limit"
             label="Giới hạn sử dụng"
-            rules={[
-              { required: true, message: 'Vui lòng nhập giới hạn sử dụng' },
-            ]}
+            rules={[{ required: true }]}
           >
-            <Input type="number" placeholder="Nhập giới hạn sử dụng" />
+            <Input type="number" />
           </Form.Item>
           <Form.Item
             name="start_date"
             label="Ngày bắt đầu"
-            rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
+            rules={[{ required: true }]}
           >
             <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             name="end_date"
             label="Ngày kết thúc"
-            rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
+            rules={[{ required: true }]}
           >
             <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
           </Form.Item>
@@ -178,86 +249,13 @@ const VoucherManagement = () => {
           </Form.Item>
         </Form>
       </Modal>
-      <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              ID
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Mã
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Loại
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Giá trị giảm
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Đơn hàng tối thiểu
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Giới hạn
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Đã dùng
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Ngày bắt đầu
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Ngày kết thúc
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Trạng thái
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Hành động
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {vouchers?.map((data) => (
-            <tr key={data.id}>
-              <td className="whitespace-nowrap px-6 py-4">
-                <a href="#" className="font-semibold text-blue-600">
-                  #{data.id}
-                </a>
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">{data.code}</td>
-              <td className="whitespace-nowrap px-6 py-4">
-                {data.type === 'percentage' ? 'Phần trăm' : 'Cố định'}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">
-                {data.discount_value}
-                {data.type === 'percentage' ? '%' : ''}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">
-                {data.min_order_value}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">
-                {data.usage_limit}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">{data.used_count}</td>
-              <td className="whitespace-nowrap px-6 py-4">{data.start_date}</td>
-              <td className="whitespace-nowrap px-6 py-4">{data.end_date}</td>
-              <td className="whitespace-nowrap px-6 py-4">
-                {data.is_active ? 'Kích hoạt' : 'Không kích hoạt'}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">
-                <Popconfirm
-                  title="Bạn có chắc chắn muốn xóa?"
-                  onConfirm={() => handleDelete(data.id)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button danger>Xóa</Button>
-                </Popconfirm>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <Table
+        rowKey="id"
+        dataSource={vouchers}
+        columns={columns}
+        pagination={{ pageSize: 10 }}
+      />
     </Space>
   )
 }
