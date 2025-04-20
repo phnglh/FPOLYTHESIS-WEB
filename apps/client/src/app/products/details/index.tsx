@@ -23,6 +23,8 @@ const ProductDetailPage = () => {
     Record<string, string>
   >({})
 
+  console.log('Product:', product)
+
   const token = localStorage.getItem('access_token')
   useEffect(() => {
     dispatch(fetchAttributes())
@@ -122,7 +124,7 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="container mx-auto justify-center p-8 flex flex-col gap-12">
+    <div className="container mx-auto justify-center items-center p-8 flex flex-col gap-12">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Hình ảnh sản phẩm */}
         <div className="flex gap-6">
@@ -147,7 +149,6 @@ const ProductDetailPage = () => {
         {/* Thông tin và tương tác */}
         <div className="w-full max-w-xl">
           <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-gray-500 text-lg">{product.description}</p>
           <p className="mt-2 text-lg">
             <b>Thương hiệu:</b> {product.brand_name}
           </p>
