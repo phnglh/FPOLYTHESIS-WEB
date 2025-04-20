@@ -230,17 +230,18 @@ const ProductPage = () => {
               ) : errorMessage ? (
                 <Col span={24}>{errorMessage}</Col>
               ) : (
-                data?.map((product) => (
-                  <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
-                    <ProductCard
-                      fato
-                      product={product}
-                      onAddToCart={(selectedSku) =>
-                        handleAddToCart(selectedSku)
-                      }
-                    />
-                  </Col>
-                ))
+                data
+                  ?.filter((product) => product.is_published)
+                  .map((product) => (
+                    <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+                      <ProductCard
+                        product={product}
+                        onAddToCart={(selectedSku) =>
+                          handleAddToCart(selectedSku)
+                        }
+                      />
+                    </Col>
+                  ))
               )}
             </Row>
 
