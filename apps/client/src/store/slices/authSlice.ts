@@ -86,12 +86,20 @@ export const register = createAsyncThunk(
 
       return { user, access_token }
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const { data } = error.response
+          if (data.status === 'error' && data.errors) {
+            return rejectWithValue(data.errors)
+          } else if (!data.success && data.message) {
+            return rejectWithValue(data.message)
+          }
+        }
+
+        return rejectWithValue('Đăng ký không thành công!')
       }
-      const errMsg =
-        (error as ApiErrorResponse)?.message || 'Đăng ký không thành công!'
-      return rejectWithValue(errMsg)
+
+      return rejectWithValue('Lỗi không xác định!')
     }
   },
 )

@@ -106,6 +106,20 @@ const ProductDetailPage = () => {
         toast.error('Không thể thêm vào giỏ hàng!')
       })
   }
+  const MAX_QUANTITY = 50 // Giới hạn số lượng tối đa
+
+  const handleQuantityChange = (value: number | null) => {
+    if (value === null) {
+      setQuantity(1)
+      return
+    }
+
+    if (value > MAX_QUANTITY) {
+      toast.warning(`Vui lòng nhập số lượng nhỏ hơn hoặc bằng ${MAX_QUANTITY}.`)
+      return
+    }
+    setQuantity(value)
+  }
 
   return (
     <div className="container mx-auto justify-center p-8 flex flex-col gap-12">
@@ -221,7 +235,7 @@ const ProductDetailPage = () => {
                   min={1}
                   max={selectedSku.stock}
                   value={quantity}
-                  onChange={(value) => setQuantity(value ?? 1)}
+                  onChange={handleQuantityChange}
                 />
                 <Button type="primary" size="large" onClick={handleAddToCart}>
                   Thêm vào giỏ
