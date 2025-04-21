@@ -18,6 +18,7 @@ import { Link } from 'react-router'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Title, Text } = Typography
+
 const statusColors: Record<string, string> = {
   pending: 'gold',
   processing: 'blue',
@@ -33,6 +34,7 @@ const statusLabels: Record<string, string> = {
   delivered: 'Đã giao',
   cancelled: 'Đã hủy',
 }
+
 const paymentStatusColors: Record<string, string> = {
   unpaid: 'red',
   pending: 'gold',
@@ -48,32 +50,57 @@ const paymentStatusLabels: Record<string, string> = {
   failed: 'Thanh toán thất bại',
   refunded: 'Đã hoàn tiền',
 }
+
 export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>()
   const { user, loading } = useSelector((state: RootState) => state.auth)
-  const [orders, setOrders] = useState<any[]>([]) // State for orders
+
+  const [orders, setOrders] = useState<any[]>([])
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  })
+
   const { formatCurrency } = useCurrencyFormatter()
-  // Fetch user data when component mounts
+
+  // Fetch user when component mounts
   useEffect(() => {
     dispatch(getUser())
-    // Call API to fetch orders
-    fetchOrders()
   }, [dispatch])
 
-  console.log(orders)
+  // Fetch orders when pagination changes
+  useEffect(() => {
+    fetchOrders(pagination.current, pagination.pageSize)
+  }, [pagination.current, pagination.pageSize])
 
-  // Fetch orders from API
-  const fetchOrders = async () => {
+  const fetchOrders = async (page: number = 1, pageSize: number = 10) => {
     try {
-      const response = await apiClient.get('/orders') // Replace with actual API endpoint
-      const data = await response.data.data
+      const response = await apiClient.get('/orders', {
+        params: { page, per_page: pageSize },
+      })
+      const { data, meta } = response.data
+
       setOrders(data)
+      setPagination({
+        current: page,
+        pageSize,
+        total: meta.total,
+      })
     } catch (error) {
       console.error('Failed to fetch orders:', error)
     }
   }
 
-  // Loading spinner while user data is being fetched
+  const handleTableChange = (pagination: any) => {
+    const { current, pageSize } = pagination
+    setPagination((prev) => ({
+      ...prev,
+      current,
+      pageSize,
+    }))
+  }
+
   if (loading) {
     return (
       <Spin
@@ -83,7 +110,6 @@ export default function ProfilePage() {
     )
   }
 
-  // Handle case if user data is not yet available
   if (!user) {
     return <Text>No user data available</Text>
   }
@@ -157,7 +183,6 @@ export default function ProfilePage() {
             }}
             hoverable
           >
-            {/* Avatar and user info */}
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <Avatar
                 size={100}
@@ -175,20 +200,19 @@ export default function ProfilePage() {
               </Text>
             </div>
 
-            {/* User Info */}
             <div>
               <Row gutter={16}>
                 <Col span={24}>
                   <Text strong>Email:</Text>
-                  <Text>{user.email || 'Not provided'}</Text>
+                  <Text> {user.email || 'Not provided'}</Text>
                 </Col>
                 <Col span={24}>
                   <Text strong>Phone:</Text>
-                  <Text>{user.phone || 'Not provided'}</Text>
+                  <Text> {user.phone || 'Not provided'}</Text>
                 </Col>
                 <Col span={24}>
                   <Text strong>Created at:</Text>
-                  <Text>{new Date(user.created_at).toLocaleString()}</Text>
+                  <Text> {new Date(user.created_at).toLocaleString()}</Text>
                 </Col>
               </Row>
             </div>
@@ -196,7 +220,7 @@ export default function ProfilePage() {
         </Col>
       </Row>
 
-      {/* Orders Row */}
+      {/* Orders */}
       <Row justify="center" gutter={32} style={{ marginTop: '30px' }}>
         <Col span={24}>
           <Card
@@ -214,10 +238,18 @@ export default function ProfilePage() {
               columns={columns}
               dataSource={orders}
               rowKey="id"
-              pagination={{ pageSize: 5 }}
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                showSizeChanger: true, // Cho phép thay đổi số dòng/trang
+              }}
+              onChange={(pagination) => {
+                fetchOrders(pagination.current, pagination.pageSize)
+              }}
               style={{ borderRadius: '12px', marginTop: '20px' }}
               rowClassName="order-row"
-              scroll={{ x: true }} // Allow horizontal scroll if needed
+              scroll={{ x: true }}
             />
           </Card>
         </Col>

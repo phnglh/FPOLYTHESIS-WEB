@@ -38,7 +38,7 @@ import axios from 'axios'
 const { Title, Text } = Typography
 const { Option } = Select
 
-interface Address {
+export interface Address {
   id: number
   receiver_name: string
   receiver_phone: string

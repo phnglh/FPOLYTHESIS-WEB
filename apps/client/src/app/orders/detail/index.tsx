@@ -83,7 +83,6 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
   useEffect(() => {
     const orderId = window.location.pathname.split('/').pop()
     if (!orderId) return
@@ -117,9 +116,8 @@ const OrderDetailPage = () => {
       const response = await apiClient.post(`/payment/retry/${order.id}`)
       const resData = response.data
 
-      if (resData.status === 'success') {
-        localStorage.setItem('checkout', JSON.stringify(order.items))
-        navigate('/checkout')
+      if (resData.success === true) {
+        window.location.href = resData.data.redirect_url
       } else {
         Modal.warning({
           title: 'Không thể thanh toán lại',
@@ -134,6 +132,8 @@ const OrderDetailPage = () => {
       console.error('Lỗi khi gửi lại thanh toán:', error)
     }
   }
+
+  console.log('order', order)
 
   if (loading) return <Spin size="large" />
   if (!order) return <Text>Không tìm thấy đơn hàng!</Text>

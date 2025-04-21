@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Button, Image, InputNumber, Radio, Tabs } from 'antd'
+import {
+  Button,
+  Form,
+  Image,
+  Input,
+  InputNumber,
+  Radio,
+  Rate,
+  Tabs,
+} from 'antd'
 import { useNavigate, useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
@@ -123,6 +132,22 @@ const ProductDetailPage = () => {
     setQuantity(value)
   }
 
+  const dummyReviews = [
+    {
+      user_id: 1,
+      user_name: 'Nguyễn Văn A',
+      rating: 4,
+      review: 'Sản phẩm rất tốt',
+    },
+    {
+      user_id: 2,
+      user_name: 'Trần Thị B',
+      rating: 5,
+      review: 'Hài lòng tuyệt đối',
+    },
+  ]
+  const currentUserId = 1
+
   return (
     <div className="container mx-auto justify-center items-center p-8 flex flex-col gap-12">
       <div className="flex flex-col lg:flex-row gap-10">
@@ -161,12 +186,6 @@ const ProductDetailPage = () => {
               <p className="text-2xl font-bold text-red-500">
                 {selectedSku.price.toLocaleString()}₫
               </p>
-              {selectedSku.original_price &&
-                selectedSku.original_price > selectedSku.price && (
-                  <p className="text-gray-400 line-through">
-                    {selectedSku.original_price.toLocaleString()}₫
-                  </p>
-                )}
               <p className="text-green-600">Còn {selectedSku.stock} sản phẩm</p>
             </div>
           )}
@@ -258,8 +277,78 @@ const ProductDetailPage = () => {
           </TabPane>
 
           <TabPane tab="Đánh giá" key="2">
-            <p>Hiện chưa có đánh giá nào cho sản phẩm này.</p>
-            {/* Bạn có thể thêm form đánh giá tại đây */}
+            <div className="space-y-6">
+              {/* Danh sách đánh giá */}
+              {dummyReviews.length > 0 ? (
+                dummyReviews.map((review, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">{review.user_name}</p>
+                      <Rate
+                        disabled
+                        defaultValue={review.rating}
+                        className="text-base"
+                      />
+                    </div>
+                    <p className="text-gray-700 mt-1">{review.review}</p>
+                  </div>
+                ))
+              ) : (
+                <p>Hiện chưa có đánh giá nào cho sản phẩm này.</p>
+              )}
+
+              {/* Nếu user chưa đánh giá */}
+              {!dummyReviews.find((r) => r.user_id === currentUserId) && (
+                <div className="mt-6 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Đánh giá sản phẩm
+                  </h3>
+                  <Form
+                    layout="vertical"
+                    onFinish={(values) => {
+                      console.log('Gửi đánh giá:', values)
+                      // Gọi API gửi đánh giá ở đây
+                    }}
+                  >
+                    <Form.Item
+                      name="rating"
+                      label="Chọn số sao"
+                      rules={[
+                        { required: true, message: 'Vui lòng chọn số sao!' },
+                      ]}
+                    >
+                      <Rate />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="review"
+                      label="Nhận xét"
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập nhận xét!' },
+                      ]}
+                    >
+                      <Input.TextArea
+                        rows={4}
+                        placeholder="Nhập đánh giá của bạn..."
+                      />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Button type="primary" htmlType="submit">
+                        Gửi đánh giá
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </div>
+              )}
+
+              {/* Nếu user đã đánh giá */}
+              {dummyReviews.find((r) => r.user_id === currentUserId) && (
+                <p className="text-green-600 italic">
+                  Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
+                </p>
+              )}
+            </div>
           </TabPane>
 
           <TabPane tab="Chính sách giao hàng" key="3">
