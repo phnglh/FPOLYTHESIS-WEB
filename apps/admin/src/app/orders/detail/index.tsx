@@ -36,6 +36,22 @@ const orderStatusMap: Record<OrderStatus, string> = {
   cancelled: 'Đã hủy',
 }
 
+const paymentStatusColors: Record<string, string> = {
+  unpaid: 'red',
+  pending: 'gold',
+  paid: 'green',
+  failed: 'gray',
+  refunded: 'blue',
+}
+
+const paymentStatusLabels: Record<string, string> = {
+  unpaid: 'Chưa thanh toán',
+  pending: 'Đang chờ',
+  paid: 'Đã thanh toán',
+  failed: 'Thanh toán thất bại',
+  refunded: 'Đã hoàn tiền',
+}
+
 const OrderDetails = () => {
   const { id } = useParams<{ id: string }>()
   const { selectedItem: order, loading } = useSelector(
@@ -109,7 +125,6 @@ const OrderDetails = () => {
     return <div>Không tìm thấy đơn hàng</div>
   }
 
-  console.log(order)
   return (
     <Card
       title={`Chi tiết đơn hàng: ${order?.order_number || ''}`}
@@ -135,10 +150,16 @@ const OrderDetails = () => {
         </Descriptions.Item>
         <Descriptions.Item label="Thanh toán">
           {order?.payment_status && (
-            <Tag color={order.payment_status === 'paid' ? 'green' : 'orange'}>
-              {order.payment_status === 'paid'
-                ? 'Đã thanh toán'
-                : 'Chưa thanh toán'}
+            // <Tag color={order.payment_status === 'paid' ? 'green' : 'orange'}>
+            //     {order.payment_status === 'paid'
+            //         ? 'Đã thanh toán'
+            //         : 'Chưa thanh toán'}
+            // </Tag>
+            <Tag
+              color={paymentStatusColors[order.payment_status]}
+              style={{ textTransform: 'capitalize' }}
+            >
+              {paymentStatusLabels[order.payment_status]}
             </Tag>
           )}
         </Descriptions.Item>

@@ -92,15 +92,6 @@ export default function ProfilePage() {
     }
   }
 
-  const handleTableChange = (pagination: any) => {
-    const { current, pageSize } = pagination
-    setPagination((prev) => ({
-      ...prev,
-      current,
-      pageSize,
-    }))
-  }
-
   if (loading) {
     return (
       <Spin

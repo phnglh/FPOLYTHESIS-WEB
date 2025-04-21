@@ -17,9 +17,16 @@ import { AppDispatch, RootState } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { fetchAttributes } from '@store/slices/attributeSlice'
 import { toast } from 'react-toastify'
+import apiClient from '@store/services/apiClient'
 
 const { TabPane } = Tabs
 
+export interface Review {
+  user_id: number
+  user_name: string
+  rating: number
+  review: string
+}
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
@@ -28,13 +35,25 @@ const ProductDetailPage = () => {
   const attributes = useSelector((state: RootState) => state.attributes.data)
   const [selectedSku, setSelectedSku] = useState<Sku | null>(null)
   const [quantity, setQuantity] = useState<number>(1)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [selectedAttributes, setSelectedAttributes] = useState<
     Record<string, string>
   >({})
-
-  console.log('Product:', product)
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id)
 
   const token = localStorage.getItem('access_token')
+
+  const fetchReviews = async (id: number) => {
+    try {
+      const response = await apiClient.get(`/products/${id}/reviews`)
+      const data = await response.data.data
+      setReviews(data)
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+      return []
+    }
+  }
+
   useEffect(() => {
     dispatch(fetchAttributes())
     if (product && product.skus.length > 0) {
@@ -45,7 +64,11 @@ const ProductDetailPage = () => {
       })
       setSelectedAttributes(defaultAttrs)
     }
-  }, [product, dispatch])
+  }, [product, dispatch, id])
+
+  useEffect(() => {
+    fetchReviews(Number(id))
+  }, [])
 
   if (isLoading || !product) return <p>Đang tải sản phẩm...</p>
 
@@ -132,21 +155,20 @@ const ProductDetailPage = () => {
     setQuantity(value)
   }
 
-  const dummyReviews = [
-    {
-      user_id: 1,
-      user_name: 'Nguyễn Văn A',
-      rating: 4,
-      review: 'Sản phẩm rất tốt',
-    },
-    {
-      user_id: 2,
-      user_name: 'Trần Thị B',
-      rating: 5,
-      review: 'Hài lòng tuyệt đối',
-    },
-  ]
-  const currentUserId = 1
+  const handleReviewSubmit = async (values: any) => {
+    try {
+      const response = await apiClient.post(`/reviews`, {
+        product_id: Number(id),
+        rating: values.rating,
+        review: values.review,
+      })
+      fetchReviews(Number(id))
+      toast.success('Đánh giá của bạn đã được gửi thành công!')
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      toast.error('Đã xảy ra lỗi khi gửi đánh giá.')
+    }
+  }
 
   return (
     <div className="container mx-auto justify-center items-center p-8 flex flex-col gap-12">
@@ -279,11 +301,11 @@ const ProductDetailPage = () => {
           <TabPane tab="Đánh giá" key="2">
             <div className="space-y-6">
               {/* Danh sách đánh giá */}
-              {dummyReviews.length > 0 ? (
-                dummyReviews.map((review, index) => (
+              {reviews?.length > 0 ? (
+                reviews.map((review, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between">
-                      <p className="font-medium">{review.user_name}</p>
+                      <p className="font-medium">{review.user.name}</p>
                       <Rate
                         disabled
                         defaultValue={review.rating}
@@ -298,7 +320,7 @@ const ProductDetailPage = () => {
               )}
 
               {/* Nếu user chưa đánh giá */}
-              {!dummyReviews.find((r) => r.user_id === currentUserId) && (
+              {!reviews?.find((r) => r.user_id === currentUserId) && (
                 <div className="mt-6 border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">
                     Đánh giá sản phẩm
@@ -306,8 +328,7 @@ const ProductDetailPage = () => {
                   <Form
                     layout="vertical"
                     onFinish={(values) => {
-                      console.log('Gửi đánh giá:', values)
-                      // Gọi API gửi đánh giá ở đây
+                      handleReviewSubmit(values)
                     }}
                   >
                     <Form.Item
@@ -343,7 +364,7 @@ const ProductDetailPage = () => {
               )}
 
               {/* Nếu user đã đánh giá */}
-              {dummyReviews.find((r) => r.user_id === currentUserId) && (
+              {reviews?.find((r) => r.user_id === currentUserId) && (
                 <p className="text-green-600 italic">
                   Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
                 </p>
