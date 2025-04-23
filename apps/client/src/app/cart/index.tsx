@@ -16,7 +16,7 @@ import {
 import { DeleteOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons'
 import { AppDispatch, RootState } from '@store/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   decrementCartItem,
   fetchCart,
@@ -33,7 +33,7 @@ import _ from 'lodash'
 
 const { Title, Text } = Typography
 
-const MAX_QUANTITY_PER_SKU = 50 // Giới hạn tối đa 50 mỗi SKU
+const MAX_QUANTITY_PER_SKU = 50
 
 const CartPage = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -48,7 +48,9 @@ const CartPage = () => {
     [key: number]: boolean
   }>({})
   const navigate = useNavigate()
+  const checkedItems = useRef<Set<number>>(new Set())
 
+  console.log('items', items)
   // Debounce chỉ cho API call
   const debouncedUpdateQuantity = useCallback(
     _.debounce((id: number, quantity: number) => {
@@ -296,6 +298,21 @@ const CartPage = () => {
     navigate(`/checkout?skus=${selectedSkuIds.join(',')}`)
   }
 
+  const handleStockCheck = (item: CartItem) => {
+    if (item?.sku?.stock === 0 && !checkedItems.current.has(item.id)) {
+      toast.warning(`"${item.product_name}" đã hết hàng và được xóa khỏi giỏ.`)
+      checkedItems.current.add(item.id)
+      dispatch(removeFromCart(item.id))
+    }
+  }
+
+  useEffect(() => {
+    items.forEach((item) => {
+      handleStockCheck(item)
+      fetchCart()
+    })
+  }, [items])
+
   return (
     <div style={{ background: '#F7F7F7', minHeight: '50vh', padding: '24px' }}>
       <Row justify="center">
@@ -363,7 +380,6 @@ const CartPage = () => {
                       Giỏ hàng trống
                     </Text>
                   }
-                  imageStyle={{ height: 100 }}
                 />
                 <Button
                   type="primary"
@@ -435,166 +451,172 @@ const CartPage = () => {
                   size={8}
                   style={{ width: '100%', padding: '12px' }}
                 >
-                  {items.map((item: CartItem) => (
-                    <Card
-                      key={item.id}
-                      style={{
-                        borderRadius: '10px',
-                        border: '1px solid #E8ECEF',
-                        transition: 'all 0.2s',
-                        background: '#FFFFFF',
-                      }}
-                      hoverable
-                      bodyStyle={{ padding: '12px' }}
-                    >
-                      <Row align="middle" gutter={[8, 8]}>
-                        <Col span={1}>
-                          <Checkbox
-                            checked={selectedRowKeys.includes(item.id)}
-                            onChange={(e) =>
-                              handleSelectChange(item.id, e.target.checked)
-                            }
-                          />
-                        </Col>
-                        <Col span={5}>
-                          <Image
-                            src={
-                              item?.sku?.image_url ||
-                              'https://via.placeholder.com/80?text=Sản+phẩm'
-                            }
-                            alt={item?.sku?.sku || 'Sản phẩm'}
-                            width={80}
-                            height={80}
-                            preview={false}
-                            style={{
-                              borderRadius: '8px',
-                              objectFit: 'cover',
-                              border: '1px solid #F0F0F0',
-                              transition: 'transform 0.3s',
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1.05)')
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.transform = 'scale(1)')
-                            }
-                          />
-                        </Col>
-                        <Col span={8}>
-                          <Space direction="vertical" size={4}>
-                            <Text
-                              strong
-                              style={{ fontSize: '14px', color: '#1A1A1A' }}
-                            >
-                              {item?.product_name || 'Sản phẩm không xác định'}
-                            </Text>
-                            {item?.sku?.attributes &&
-                            item.sku.attributes.length > 0 ? (
+                  {items.map((item: CartItem) => {
+                    return (
+                      <Card
+                        key={item.id}
+                        style={{
+                          borderRadius: '10px',
+                          border: '1px solid #E8ECEF',
+                          transition: 'all 0.2s',
+                          background: '#FFFFFF',
+                        }}
+                        hoverable
+                      >
+                        <Row align="middle" gutter={[8, 8]}>
+                          <Col span={1}>
+                            <Checkbox
+                              checked={selectedRowKeys.includes(item.id)}
+                              onChange={(e) =>
+                                handleSelectChange(item.id, e.target.checked)
+                              }
+                            />
+                          </Col>
+                          <Col span={5}>
+                            <Image
+                              src={
+                                item?.sku?.image_url ||
+                                'https://via.placeholder.com/80?text=Sản+phẩm'
+                              }
+                              alt={item?.sku?.sku || 'Sản phẩm'}
+                              width={80}
+                              height={80}
+                              preview={false}
+                              style={{
+                                borderRadius: '8px',
+                                objectFit: 'cover',
+                                border: '1px solid #F0F0F0',
+                                transition: 'transform 0.3s',
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.transform =
+                                  'scale(1.05)')
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.transform = 'scale(1)')
+                              }
+                            />
+                          </Col>
+                          <Col span={8}>
+                            <Space direction="vertical" size={4}>
                               <Text
-                                style={{ fontSize: '12px', color: '#595959' }}
+                                strong
+                                style={{ fontSize: '14px', color: '#1A1A1A' }}
                               >
-                                {item.sku.attributes
-                                  .map((attr) => attr.value)
-                                  .join(' / ')}
+                                {item?.product_name ||
+                                  'Sản phẩm không xác định'}
                               </Text>
-                            ) : (
+                              {item?.sku?.attributes &&
+                              item.sku.attributes.length > 0 ? (
+                                <Text
+                                  style={{ fontSize: '12px', color: '#595959' }}
+                                >
+                                  {item.sku.attributes
+                                    .map((attr) => attr.value)
+                                    .join(' / ')}
+                                </Text>
+                              ) : (
+                                <Text
+                                  style={{ fontSize: '12px', color: '#595959' }}
+                                >
+                                  Không có thuộc tính
+                                </Text>
+                              )}
                               <Text
-                                style={{ fontSize: '12px', color: '#595959' }}
+                                strong
+                                style={{
+                                  fontSize: '14px',
+                                  color: 'rgb(255, 0, 0)',
+                                }}
                               >
-                                Không có thuộc tính
+                                {formatCurrency(item.unit_price || 0)}
                               </Text>
-                            )}
+                            </Space>
+                          </Col>
+                          <Col span={6}>
+                            <Space size={6} align="center">
+                              <Button
+                                icon={<MinusOutlined />}
+                                size="small"
+                                onClick={() => handleDecrement(item.id)}
+                                disabled={
+                                  loadingActions[item.id] ||
+                                  (localQuantities[item.id] || item.quantity) <=
+                                    1
+                                }
+                                style={{
+                                  borderRadius: '50%',
+                                  width: 30,
+                                  height: 30,
+                                  borderColor: '#E8ECEF',
+                                }}
+                                loading={loadingActions[item.id]}
+                              />
+                              <InputNumber
+                                min={1}
+                                value={
+                                  localQuantities[item.id] || item.quantity
+                                }
+                                onChange={(value) =>
+                                  handleUpdateQuantity(item.id, value)
+                                }
+                                style={{
+                                  width: 50,
+                                  borderRadius: '6px',
+                                  textAlign: 'center',
+                                  borderColor: '#E8ECEF',
+                                }}
+                                disabled={loadingActions[item.id]}
+                              />
+                              <Button
+                                icon={<PlusOutlined />}
+                                size="small"
+                                onClick={() => handleIncrement(item.id)}
+                                disabled={
+                                  loadingActions[item.id] ||
+                                  (localQuantities[item.id] || item.quantity) >=
+                                    getMaxQuantity(item)
+                                }
+                                style={{
+                                  borderRadius: '50%',
+                                  width: 30,
+                                  height: 30,
+                                  borderColor: '#E8ECEF',
+                                }}
+                                loading={loadingActions[item.id]}
+                              />
+                            </Space>
+                          </Col>
+                          <Col span={3}>
                             <Text
                               strong
                               style={{
-                                fontSize: '14px',
+                                fontSize: '15px',
                                 color: 'rgb(255, 0, 0)',
                               }}
                             >
-                              {formatCurrency(item.unit_price || 0)}
+                              {formatCurrency(
+                                (item.unit_price || 0) *
+                                  (localQuantities[item.id] ||
+                                    item.quantity ||
+                                    0),
+                              )}
                             </Text>
-                          </Space>
-                        </Col>
-                        <Col span={6}>
-                          <Space size={6} align="center">
+                          </Col>
+                          <Col span={1} style={{ textAlign: 'center' }}>
                             <Button
-                              icon={<MinusOutlined />}
-                              size="small"
-                              onClick={() => handleDecrement(item.id)}
-                              disabled={
-                                loadingActions[item.id] ||
-                                (localQuantities[item.id] || item.quantity) <= 1
-                              }
-                              style={{
-                                borderRadius: '50%',
-                                width: 30,
-                                height: 30,
-                                borderColor: '#E8ECEF',
-                              }}
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleRemoveItem(item.id)}
+                              style={{ fontSize: '14px', color: '#FF4D4F' }}
                               loading={loadingActions[item.id]}
                             />
-                            <InputNumber
-                              min={1}
-                              value={localQuantities[item.id] || item.quantity}
-                              onChange={(value) =>
-                                handleUpdateQuantity(item.id, value)
-                              }
-                              style={{
-                                width: 50,
-                                borderRadius: '6px',
-                                textAlign: 'center',
-                                borderColor: '#E8ECEF',
-                              }}
-                              disabled={loadingActions[item.id]}
-                            />
-                            <Button
-                              icon={<PlusOutlined />}
-                              size="small"
-                              onClick={() => handleIncrement(item.id)}
-                              disabled={
-                                loadingActions[item.id] ||
-                                (localQuantities[item.id] || item.quantity) >=
-                                  getMaxQuantity(item)
-                              }
-                              style={{
-                                borderRadius: '50%',
-                                width: 30,
-                                height: 30,
-                                borderColor: '#E8ECEF',
-                              }}
-                              loading={loadingActions[item.id]}
-                            />
-                          </Space>
-                        </Col>
-                        <Col span={3}>
-                          <Text
-                            strong
-                            style={{
-                              fontSize: '15px',
-                              color: 'rgb(255, 0, 0)',
-                            }}
-                          >
-                            {formatCurrency(
-                              (item.unit_price || 0) *
-                                (localQuantities[item.id] ||
-                                  item.quantity ||
-                                  0),
-                            )}
-                          </Text>
-                        </Col>
-                        <Col span={1} style={{ textAlign: 'center' }}>
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleRemoveItem(item.id)}
-                            style={{ fontSize: '14px', color: '#FF4D4F' }}
-                            loading={loadingActions[item.id]}
-                          />
-                        </Col>
-                      </Row>
-                    </Card>
-                  ))}
+                          </Col>
+                        </Row>
+                      </Card>
+                    )
+                  })}
                 </Space>
                 <Divider style={{ margin: '12px 0' }} />
                 <Card

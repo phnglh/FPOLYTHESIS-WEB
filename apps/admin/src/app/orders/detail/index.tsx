@@ -18,6 +18,7 @@ import { fetchOrderById } from '@store/slices/orderSlice'
 import { ColumnsType } from 'antd/es/table'
 import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
+import { OrderItem, OrderStatus } from '#types/order'
 
 const statusColors: Record<string, string> = {
   pending: 'gold',
@@ -27,9 +28,33 @@ const statusColors: Record<string, string> = {
   cancelled: 'red',
 }
 
+const orderStatusMap: Record<OrderStatus, string> = {
+  pending: 'Đang chờ',
+  processing: 'Đang xử lý',
+  shipped: 'Đã gửi',
+  delivered: 'Đã giao',
+  cancelled: 'Đã hủy',
+}
+
+const paymentStatusColors: Record<string, string> = {
+  unpaid: 'red',
+  pending: 'gold',
+  paid: 'green',
+  failed: 'gray',
+  refunded: 'blue',
+}
+
+const paymentStatusLabels: Record<string, string> = {
+  unpaid: 'Chưa thanh toán',
+  pending: 'Đang chờ',
+  paid: 'Đã thanh toán',
+  failed: 'Thanh toán thất bại',
+  refunded: 'Đã hoàn tiền',
+}
+
 const OrderDetails = () => {
   const { id } = useParams<{ id: string }>()
-  const { data: order, loading } = useSelector(
+  const { selectedItem: order, loading } = useSelector(
     (state: RootState) => state.orders,
   )
   const dispatch = useDispatch<AppDispatch>()
@@ -46,6 +71,7 @@ const OrderDetails = () => {
   }, [dispatch, id])
 
   const handleCancelOrder = async () => {
+    if (!order) return
     Modal.confirm({
       title: 'Xác nhận hủy đơn hàng',
       content: 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
@@ -65,11 +91,11 @@ const OrderDetails = () => {
     })
   }
 
-  const productColumns: ColumnsType<any> = [
+  const productColumns: ColumnsType<OrderItem> = [
     {
       title: 'Ảnh',
       dataIndex: ['sku', 'image_url'],
-      render: (url) => (
+      render: (url: string) => (
         <img src={url} alt="product" style={{ width: 60, borderRadius: 8 }} />
       ),
     },
@@ -80,7 +106,7 @@ const OrderDetails = () => {
     {
       title: 'Đơn giá',
       dataIndex: 'unit_price',
-      render: (price) => `${Number(price).toLocaleString()} đ`,
+      render: (price: number) => `${Number(price).toLocaleString()} đ`,
     },
     {
       title: 'Số lượng',
@@ -89,56 +115,76 @@ const OrderDetails = () => {
     {
       title: 'Tổng',
       dataIndex: 'total_price',
-      render: (price) => `${Number(price).toLocaleString()} đ`,
+      render: (price: number) => `${Number(price).toLocaleString()} đ`,
     },
   ]
 
-  const canCancel = ['pending', 'processing'].includes(order?.status)
+  const canCancel = order && ['pending', 'processing'].includes(order.status)
+
+  if (!order && !loading) {
+    return <div>Không tìm thấy đơn hàng</div>
+  }
 
   return (
-    <Card title={`Chi tiết đơn hàng: ${order.order_number}`} loading={loading}>
+    <Card
+      title={`Chi tiết đơn hàng: ${order?.order_number || ''}`}
+      loading={loading}
+    >
       <Descriptions title="Thông tin đơn hàng" bordered column={2}>
         <Descriptions.Item label="Mã đơn hàng">
-          {order.order_number}
+          {order?.order_number}
         </Descriptions.Item>
         <Descriptions.Item label="Trạng thái">
-          <Tag
-            color={statusColors[order.status]}
-            style={{ textTransform: 'capitalize' }}
-          >
-            {order.status}
-          </Tag>
+          {order?.status && (
+            <Tag
+              color={statusColors[order.status]}
+              style={{ textTransform: 'capitalize' }}
+            >
+              {orderStatusMap[order.status as OrderStatus]}
+            </Tag>
+          )}
         </Descriptions.Item>
+
         <Descriptions.Item label="Ngày đặt">
-          {order.ordered_at}
+          {order?.ordered_at}
         </Descriptions.Item>
         <Descriptions.Item label="Thanh toán">
-          <Tag color={order.payment_status === 'paid' ? 'green' : 'orange'}>
-            {order.payment_status === 'paid'
-              ? 'Đã thanh toán'
-              : 'Chưa thanh toán'}
-          </Tag>
+          {order?.payment_status && (
+            // <Tag color={order.payment_status === 'paid' ? 'green' : 'orange'}>
+            //     {order.payment_status === 'paid'
+            //         ? 'Đã thanh toán'
+            //         : 'Chưa thanh toán'}
+            // </Tag>
+            <Tag
+              color={paymentStatusColors[order.payment_status]}
+              style={{ textTransform: 'capitalize' }}
+            >
+              {paymentStatusLabels[order.payment_status]}
+            </Tag>
+          )}
         </Descriptions.Item>
       </Descriptions>
 
       <Divider />
 
       <Descriptions title="Khách hàng" bordered column={2}>
-        <Descriptions.Item label="Tên">{order.user?.name}</Descriptions.Item>
-        <Descriptions.Item label="Email">{order.user?.email}</Descriptions.Item>
+        <Descriptions.Item label="Tên">{order?.user?.name}</Descriptions.Item>
+        <Descriptions.Item label="Email">
+          {order?.user?.email}
+        </Descriptions.Item>
       </Descriptions>
 
       <Divider />
 
       <Descriptions title="Địa chỉ giao hàng" bordered column={1}>
         <Descriptions.Item label="Tên người nhận">
-          {order.address?.receiver_name}
+          {order?.address?.receiver_name}
         </Descriptions.Item>
         <Descriptions.Item label="SĐT">
-          {order.address?.receiver_phone}
+          {order?.address?.receiver_phone}
         </Descriptions.Item>
         <Descriptions.Item label="Địa chỉ">
-          {order.address?.address}
+          {order?.address?.address}
         </Descriptions.Item>
       </Descriptions>
 
@@ -147,7 +193,7 @@ const OrderDetails = () => {
       <Typography.Title level={4}>Sản phẩm</Typography.Title>
       <Table
         columns={productColumns}
-        dataSource={order.items}
+        dataSource={order?.items || []}
         rowKey="id"
         pagination={false}
       />
@@ -156,17 +202,17 @@ const OrderDetails = () => {
 
       <Descriptions title="Tổng kết đơn hàng" bordered column={1}>
         <Descriptions.Item label="Tạm tính">
-          {Number(order.subtotal).toLocaleString()} đ
+          {order?.subtotal && Number(order.subtotal).toLocaleString()} đ
         </Descriptions.Item>
         <Descriptions.Item label="Phí giao hàng">
-          {Number(order.shipping_fee).toLocaleString()} đ
+          {order?.shipping_fee && Number(order.shipping_fee).toLocaleString()} đ
         </Descriptions.Item>
         <Descriptions.Item label="Giảm giá">
-          {Number(order.discount).toLocaleString()} đ
+          {order?.discount && Number(order.discount).toLocaleString()} đ
         </Descriptions.Item>
         <Descriptions.Item label="Tổng thanh toán">
           <Typography.Text strong>
-            {Number(order.final_total).toLocaleString()} đ
+            {order?.final_total && Number(order.final_total).toLocaleString()} đ
           </Typography.Text>
         </Descriptions.Item>
       </Descriptions>

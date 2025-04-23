@@ -183,7 +183,7 @@ const ProductPage = () => {
         <Col span={24}>
           <Table<Product>
             rowSelection={{
-              type: 'checkbox', // có thể đổi thành 'radio' nếu chỉ muốn chọn 1
+              type: 'checkbox',
               onChange: (selectedRowKeys, selectedRows) => {
                 console.log('Selected Row Keys:', selectedRowKeys)
                 console.log('Selected Rows:', selectedRows)

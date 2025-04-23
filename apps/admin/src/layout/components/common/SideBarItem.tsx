@@ -81,17 +81,7 @@ export const items = [
       {
         key: '/orders',
         icon: <ShoppingCartOutlined />,
-        label: 'Đơn hàng',
-        children: [
-          {
-            key: '/orders/list',
-            label: <Link to="/orders">List</Link>,
-          },
-          {
-            key: '/orders/create',
-            label: <Link to="/orders/create">Create</Link>,
-          },
-        ],
+        label: <Link to="/orders">Danh sách đơn hàng</Link>,
       },
     ],
   },
@@ -109,10 +99,10 @@ export const items = [
         key: '/users/list',
         label: <Link to="/users">Quản lý người dùng</Link>,
       },
-      {
-        key: '/users/create',
-        label: <Link to="/users/create">Thêm người dùng</Link>,
-      },
+      //   {
+      //     key: '/users/create',
+      //     label: <Link to="/users/create">Thêm người dùng</Link>,
+      //   },
     ],
   },
   {

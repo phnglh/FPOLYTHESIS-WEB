@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Button, Image, InputNumber, Radio, Tabs } from 'antd'
+import {
+  Button,
+  Form,
+  Image,
+  Input,
+  InputNumber,
+  Radio,
+  Rate,
+  Tabs,
+} from 'antd'
 import { useNavigate, useParams } from 'react-router'
 import { useGetProductQuery } from '@store/api/productApi'
 import { Sku } from '#types/products'
@@ -8,9 +17,16 @@ import { AppDispatch, RootState } from '@store/store'
 import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { fetchAttributes } from '@store/slices/attributeSlice'
 import { toast } from 'react-toastify'
+import apiClient from '@store/services/apiClient'
 
 const { TabPane } = Tabs
 
+export interface Review {
+  user_id: number
+  user_name: string
+  rating: number
+  review: string
+}
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useDispatch<AppDispatch>()
@@ -19,11 +35,25 @@ const ProductDetailPage = () => {
   const attributes = useSelector((state: RootState) => state.attributes.data)
   const [selectedSku, setSelectedSku] = useState<Sku | null>(null)
   const [quantity, setQuantity] = useState<number>(1)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [selectedAttributes, setSelectedAttributes] = useState<
     Record<string, string>
   >({})
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id)
 
   const token = localStorage.getItem('access_token')
+
+  const fetchReviews = async (id: number) => {
+    try {
+      const response = await apiClient.get(`/products/${id}/reviews`)
+      const data = await response.data.data
+      setReviews(data)
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+      return []
+    }
+  }
+
   useEffect(() => {
     dispatch(fetchAttributes())
     if (product && product.skus.length > 0) {
@@ -34,7 +64,11 @@ const ProductDetailPage = () => {
       })
       setSelectedAttributes(defaultAttrs)
     }
-  }, [product, dispatch])
+  }, [product, dispatch, id])
+
+  useEffect(() => {
+    fetchReviews(Number(id))
+  }, [])
 
   if (isLoading || !product) return <p>Đang tải sản phẩm...</p>
 
@@ -106,9 +140,38 @@ const ProductDetailPage = () => {
         toast.error('Không thể thêm vào giỏ hàng!')
       })
   }
+  const MAX_QUANTITY = 50 // Giới hạn số lượng tối đa
+
+  const handleQuantityChange = (value: number | null) => {
+    if (value === null) {
+      setQuantity(1)
+      return
+    }
+
+    if (value > MAX_QUANTITY) {
+      toast.warning(`Vui lòng nhập số lượng nhỏ hơn hoặc bằng ${MAX_QUANTITY}.`)
+      return
+    }
+    setQuantity(value)
+  }
+
+  const handleReviewSubmit = async (values: any) => {
+    try {
+      const response = await apiClient.post(`/reviews`, {
+        product_id: Number(id),
+        rating: values.rating,
+        review: values.review,
+      })
+      fetchReviews(Number(id))
+      toast.success('Đánh giá của bạn đã được gửi thành công!')
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      toast.error('Đã xảy ra lỗi khi gửi đánh giá.')
+    }
+  }
 
   return (
-    <div className="container mx-auto justify-center p-8 flex flex-col gap-12">
+    <div className="container mx-auto justify-center items-center p-8 flex flex-col gap-12">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* Hình ảnh sản phẩm */}
         <div className="flex gap-6">
@@ -133,7 +196,6 @@ const ProductDetailPage = () => {
         {/* Thông tin và tương tác */}
         <div className="w-full max-w-xl">
           <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-gray-500 text-lg">{product.description}</p>
           <p className="mt-2 text-lg">
             <b>Thương hiệu:</b> {product.brand_name}
           </p>
@@ -146,12 +208,6 @@ const ProductDetailPage = () => {
               <p className="text-2xl font-bold text-red-500">
                 {selectedSku.price.toLocaleString()}₫
               </p>
-              {selectedSku.original_price &&
-                selectedSku.original_price > selectedSku.price && (
-                  <p className="text-gray-400 line-through">
-                    {selectedSku.original_price.toLocaleString()}₫
-                  </p>
-                )}
               <p className="text-green-600">Còn {selectedSku.stock} sản phẩm</p>
             </div>
           )}
@@ -221,7 +277,7 @@ const ProductDetailPage = () => {
                   min={1}
                   max={selectedSku.stock}
                   value={quantity}
-                  onChange={(value) => setQuantity(value ?? 1)}
+                  onChange={handleQuantityChange}
                 />
                 <Button type="primary" size="large" onClick={handleAddToCart}>
                   Thêm vào giỏ
@@ -243,8 +299,77 @@ const ProductDetailPage = () => {
           </TabPane>
 
           <TabPane tab="Đánh giá" key="2">
-            <p>Hiện chưa có đánh giá nào cho sản phẩm này.</p>
-            {/* Bạn có thể thêm form đánh giá tại đây */}
+            <div className="space-y-6">
+              {/* Danh sách đánh giá */}
+              {reviews?.length > 0 ? (
+                reviews.map((review, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">{review.user.name}</p>
+                      <Rate
+                        disabled
+                        defaultValue={review.rating}
+                        className="text-base"
+                      />
+                    </div>
+                    <p className="text-gray-700 mt-1">{review.review}</p>
+                  </div>
+                ))
+              ) : (
+                <p>Hiện chưa có đánh giá nào cho sản phẩm này.</p>
+              )}
+
+              {/* Nếu user chưa đánh giá */}
+              {!reviews?.find((r) => r.user_id === currentUserId) && (
+                <div className="mt-6 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Đánh giá sản phẩm
+                  </h3>
+                  <Form
+                    layout="vertical"
+                    onFinish={(values) => {
+                      handleReviewSubmit(values)
+                    }}
+                  >
+                    <Form.Item
+                      name="rating"
+                      label="Chọn số sao"
+                      rules={[
+                        { required: true, message: 'Vui lòng chọn số sao!' },
+                      ]}
+                    >
+                      <Rate />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="review"
+                      label="Nhận xét"
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập nhận xét!' },
+                      ]}
+                    >
+                      <Input.TextArea
+                        rows={4}
+                        placeholder="Nhập đánh giá của bạn..."
+                      />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Button type="primary" htmlType="submit">
+                        Gửi đánh giá
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </div>
+              )}
+
+              {/* Nếu user đã đánh giá */}
+              {reviews?.find((r) => r.user_id === currentUserId) && (
+                <p className="text-green-600 italic">
+                  Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
+                </p>
+              )}
+            </div>
           </TabPane>
 
           <TabPane tab="Chính sách giao hàng" key="3">

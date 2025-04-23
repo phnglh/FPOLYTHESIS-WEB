@@ -2,6 +2,7 @@ import { Card, Button, Typography, Image } from 'antd'
 import { ShoppingCartOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Product, Sku } from '#types/products'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Text } = Typography
 
@@ -11,6 +12,7 @@ type Props = {
 }
 const ProductCardHorizontal = ({ product, onAddToCart }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
+  const { formatCurrency } = useCurrencyFormatter()
 
   return (
     <Card
@@ -87,7 +89,7 @@ const ProductCardHorizontal = ({ product, onAddToCart }: Props) => {
             }}
           >
             <Text strong style={{ fontSize: '16px', color: '#ff4d4f' }}>
-              ${selectedSku.price}
+              {formatCurrency(selectedSku.price)}
             </Text>
             <Button
               size="small"

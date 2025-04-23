@@ -25,7 +25,7 @@ import OrderInvoice from '@app/orders/invoice'
 import ProductVariants from '@app/products/skus'
 import AddProductVariants from '@app/products/skus/add'
 import UpdateBrand from '@app/brands/update'
-import VoucherManagement from '@app/vouchers/ListVoucher'
+import VoucherManagement from '@app/vouchers'
 
 function App() {
   const dispatch = useDispatch()

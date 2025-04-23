@@ -22,7 +22,7 @@ const Orders = () => {
       .get('/orders')
       .then((response) => {
         if (response.data.status === 'success') {
-          setOrders(response.data.data.data)
+          setOrders(response.data.data)
         }
       })
       .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))

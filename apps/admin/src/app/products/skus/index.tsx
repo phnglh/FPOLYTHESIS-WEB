@@ -80,7 +80,6 @@ const Skus = () => {
     try {
       const promises = values.variants.map(async (variant: any) => {
         const imageFile = variant.image_url?.[0]?.originFileObj
-        const existingImageUrl = variant.image_url?.[0]?.url
 
         const formData = new FormData()
         formData.append('_method', 'PUT')
@@ -100,8 +99,6 @@ const Skus = () => {
 
         if (imageFile) {
           formData.append('image_url', imageFile)
-        } else if (existingImageUrl) {
-          formData.append('image_url', existingImageUrl)
         }
 
         try {
