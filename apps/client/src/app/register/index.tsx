@@ -6,19 +6,26 @@ import { register as registerAction } from '@store/slices/authSlice'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { toast } from 'react-toastify'
 
 const { Title, Text } = Typography
 
 const schema = yup.object().shape({
   name: yup.string().required('Vui lòng nhập tên'),
+
   email: yup
     .string()
     .email('Vui lòng nhập email hợp lệ')
     .required('Vui lòng nhập email'),
   password: yup
     .string()
-    .min(6, 'Mật khẩu ít nhất 6 ký tự')
+    .min(8, 'Mật khẩu ít nhất 8 ký tự')
+    .matches(/[A-Z]/, 'Mật khẩu cần có ít nhất một chữ cái in hoa')
+    .matches(/[a-z]/, 'Mật khẩu cần có ít nhất một chữ cái thường')
+    .matches(/[0-9]/, 'Mật khẩu cần có ít nhất một chữ số')
+    .matches(/[\W_]/, 'Mật khẩu cần có ít nhất một ký tự đặc biệt')
     .required('Vui lòng nhập mật khẩu'),
+
   password_confirmation: yup
     .string()
     .oneOf([yup.ref('password')], 'Mật khẩu nhập lại không khớp')
@@ -37,6 +44,13 @@ const Register = () => {
 
   const onSubmit = (values: any) => {
     dispatch(registerAction(values))
+      .unwrap()
+      .then(() => {
+        toast.success('Đăng ký thành công!')
+      })
+      .catch((err) => {
+        toast.error(err)
+      })
   }
 
   return (

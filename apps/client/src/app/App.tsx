@@ -17,11 +17,15 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { initializeAuth } from '@store/slices/authSlice'
 import { AppDispatch, RootState } from '@store/store'
-import ProtectedRoute from '../routes/ProtectedRoute'
+import ProtectedRoute from '../routes/PublicRoute'
 import ProfilePage from '@app/profile'
-import OrdersPage from '@app/orders'
+// import OrdersPage from '@app/orders'
 import OrderDetailPage from '@app/orders/detail'
 import OrderSuccess from '@app/orders/detail/order-success.tsx'
+import { AccountLayout } from '@layout/AccountLayout'
+import PrivateRoute from '@routes/PrivateRoute'
+import PublicRoute from '../routes/PublicRoute'
+import AddressPage from '@app/profile/address'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -44,26 +48,33 @@ function App() {
         </Route>
         <Route path="carts" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="order-status" element={<OrderSuccess />} />
 
-        <Route path="account">
+        <Route
+          path="account"
+          element={
+            <PrivateRoute>
+              <AccountLayout />
+            </PrivateRoute>
+          }
+        >
           <Route index element={<ProfilePage />} />
-          <Route path="" element={<ProductDetailPage />} />
-          <Route path="orders" element={<OrdersPage />} />
+          {/* <Route path="orders" element={<OrdersPage />} /> */}
           <Route path="orders/:id" element={<OrderDetailPage />} />
+          <Route path="address" element={<AddressPage />} />
         </Route>
 
         <Route path="about" element={<AboutUsPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="stores" element={<StoresPage />} />
-        <Route path="yeu-thich" element={<FavoriteProducts />} />
+        <Route path="wishlist" element={<FavoriteProducts />} />
         <Route
           path="login"
           element={
-            <ProtectedRoute>
+            <PublicRoute>
               <Login />
-            </ProtectedRoute>
+            </PublicRoute>
           }
         />
         <Route

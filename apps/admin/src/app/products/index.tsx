@@ -14,6 +14,7 @@ import {
   Row,
   Select,
   Space,
+  Switch,
   Table,
   Tag,
   Typography,
@@ -22,12 +23,11 @@ import {
 import { ColumnGroupType, ColumnType } from 'antd/es/table'
 import { useNavigate } from 'react-router'
 import { useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from '@store/store'
-import { deleteProduct } from '@store/slices/productSlice'
 import { useProductList } from '@hooks/useProductQuery'
 import type { Product, Attribute, Sku } from '#types/product'
 import NotFound from '@layout/components/NotFound'
+import apiClient from '@store/services/apiClient'
+import { toast } from 'react-toastify'
 
 const { Title } = Typography
 
@@ -35,7 +35,6 @@ const ProductPage = () => {
   const navigate = useNavigate()
   const [selectedProduct, setSelectedProduct] = useState<Product>()
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const dispatch = useDispatch<AppDispatch>()
   const { data, isLoading, errorMessage, pagination, handleTableChange } =
     useProductList()
 
@@ -43,11 +42,15 @@ const ProductPage = () => {
 
   if (errorMessage || !data) return <div>{errorMessage}</div>
 
-  const handleDelete = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xoá không?')) {
-      dispatch(deleteProduct(id))
+  const handleTogglePublish = async (id: number) => {
+    try {
+      await apiClient.patch(`/products/${id}/publish`)
+      toast.success('Cập nhập thành công!')
+    } catch (error) {
+      toast.error(error)
     }
   }
+
   const handleUpdateProduct = (id: number) => {
     navigate(`/products/update/${id}`)
   }
@@ -65,7 +68,7 @@ const ProductPage = () => {
       render: (text: string) => <p>{text}</p>,
     },
     {
-      title: 'Image',
+      title: 'Ảnh',
       dataIndex: 'image',
       key: 'image',
       render: (text, record) => (
@@ -77,14 +80,14 @@ const ProductPage = () => {
       ),
     },
     {
-      title: 'Publish',
-      dataIndex: ['is_published'],
+      title: 'Trạng thái hiển thị',
+      dataIndex: 'is_published',
       key: 'publish',
       render: (value: number) =>
         value === 1 ? (
-          <Tag color="green">Đã xuất bản</Tag>
+          <Tag color="green">Đã hiển thị</Tag>
         ) : (
-          <Tag color="red">Chưa xuất bản</Tag>
+          <Tag color="red">Ẩn</Tag>
         ),
     },
     {
@@ -98,9 +101,18 @@ const ProductPage = () => {
       align: 'center',
       render: (_text: string, record: Product) => (
         <Space size="middle">
-          <Button type="primary" danger onClick={() => handleDelete(record.id)}>
-            Xóa
-          </Button>
+          <Switch
+            checked={!!record.is_published}
+            checkedChildren="Hiển thị"
+            unCheckedChildren="Ẩn"
+            onChange={() => handleTogglePublish(record.id)}
+            style={{
+              backgroundColor: record.is_published ? '#52c41a' : '#f5222d',
+              color: 'white',
+              fontWeight: 'bold',
+            }}
+          />
+
           <Button
             type="primary"
             onClick={() => handleUpdateProduct(record.id)}
@@ -171,7 +183,7 @@ const ProductPage = () => {
         <Col span={24}>
           <Table<Product>
             rowSelection={{
-              type: 'checkbox', // có thể đổi thành 'radio' nếu chỉ muốn chọn 1
+              type: 'checkbox',
               onChange: (selectedRowKeys, selectedRows) => {
                 console.log('Selected Row Keys:', selectedRowKeys)
                 console.log('Selected Rows:', selectedRows)

@@ -20,7 +20,7 @@ export const items = [
   {
     key: '/store',
     icon: <AppstoreOutlined />,
-    label: 'Store',
+    label: 'Cửa hàng',
     children: [
       {
         key: '/categories',
@@ -55,7 +55,7 @@ export const items = [
       {
         key: '/attributes',
         icon: <TagsOutlined />,
-        label: 'Attribute',
+        label: 'Thuộc tính',
         children: [
           {
             key: '/attributes/list',
@@ -81,38 +81,33 @@ export const items = [
       {
         key: '/orders',
         icon: <ShoppingCartOutlined />,
-        label: 'Orders',
-        children: [
-          {
-            key: '/orders/list',
-            label: <Link to="/orders">List</Link>,
-          },
-          {
-            key: '/orders/create',
-            label: <Link to="/orders/create">Create</Link>,
-          },
-        ],
+        label: <Link to="/orders">Danh sách đơn hàng</Link>,
       },
     ],
   },
   {
+    key: '/vouchers',
+    icon: <UserOutlined />,
+    label: <Link to="/vouchers">Quản lý mã khuyến mại</Link>,
+  },
+  {
     key: '/users',
     icon: <UserOutlined />,
-    label: 'Users',
+    label: 'Người dùng',
     children: [
       {
         key: '/users/list',
         label: <Link to="/users">Quản lý người dùng</Link>,
       },
-      {
-        key: '/users/create',
-        label: <Link to="/users/create">Thêm người dùng</Link>,
-      },
+      //   {
+      //     key: '/users/create',
+      //     label: <Link to="/users/create">Thêm người dùng</Link>,
+      //   },
     ],
   },
   {
     key: '/settings',
     icon: <SettingOutlined />,
-    label: <Link to="/settings">Settings</Link>,
+    label: <Link to="/settings">Cài đặt</Link>,
   },
 ]

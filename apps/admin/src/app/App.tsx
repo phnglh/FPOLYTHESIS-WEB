@@ -22,8 +22,10 @@ import PrivateRoute from '@routes/PrivateRoute.tsx'
 import OrderManagement from '@app/orders'
 import OrderDetails from '@app/orders/detail'
 import OrderInvoice from '@app/orders/invoice'
-import ProductVariants from '@app/products/product-variants'
-import AddProductVariants from '@app/products/product-variants/add-product-variants'
+import ProductVariants from '@app/products/skus'
+import AddProductVariants from '@app/products/skus/add'
+import UpdateBrand from '@app/brands/update'
+import VoucherManagement from '@app/vouchers'
 
 function App() {
   const dispatch = useDispatch()
@@ -56,20 +58,14 @@ function App() {
         <Route path="brands">
           <Route index element={<BrandManagement />} />
           <Route path="create" element={<CreateBrand />} />
-          <Route path="update/:id" element={<h1>update</h1>} />
+          <Route path="update/:id" element={<UpdateBrand />} />
         </Route>
         <Route path="products">
           <Route index element={<ProductPage />} />
           <Route path="create" element={<CreateProduct />} />
-          <Route
-            path="product-variants/:id"
-            element={<ProductVariants />}
-          ></Route>
           <Route path="update/:id" element={<UpdateProduct />} />
-          <Route
-            path="add-product-variants/:id"
-            element={<AddProductVariants />}
-          />
+          <Route path=":id/skus" element={<ProductVariants />} />
+          <Route path=":id/skus/add" element={<AddProductVariants />} />
         </Route>
         <Route path="attributes">
           <Route index element={<AttributeManagement />} />
@@ -82,6 +78,9 @@ function App() {
         <Route path="users">
           <Route index element={<UserManagement />} />
           <Route path="create" element={<CreateUser />} />
+        </Route>
+        <Route path="vouchers">
+          <Route index element={<VoucherManagement />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   Card,
   Form,
@@ -8,6 +8,8 @@ import {
   Upload,
   Button,
   Typography,
+  Flex,
+  Space,
 } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import { RcFile, UploadFile } from 'antd/es/upload'
@@ -16,12 +18,12 @@ import { AppDispatch, RootState } from '@store/store'
 import { fetchCategories } from '@store/slices/categorySlice'
 import { fetchBrands } from '@store/slices/brandSlice'
 import { fetchProductById } from '@store/slices/productSlice'
-import { useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate, Link } from 'react-router'
 import apiClient from '@store/services/apiClient'
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 const { TextArea } = Input
 const { Option } = Select
 
@@ -110,91 +112,109 @@ const EditProduct = () => {
   }
 
   return (
-    <>
-      <Title level={3}>Cập nhật sản phẩm</Title>
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Card title="Thông tin sản phẩm">
-          <Form.Item
-            label="Tên sản phẩm"
-            name="name"
-            rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
-          >
-            <Input />
-          </Form.Item>
+    <div className="flex justify-center items-center p-6">
+      <Flex
+        vertical
+        gap="large"
+        style={{ padding: '24px', width: '100%', maxWidth: 900 }}
+      >
+        <Space direction="vertical" size="small">
+          <Title level={3}>Cập nhật sản phẩm</Title>
+          <Text type="secondary">
+            Điền thông tin để thêm danh mục vào hệ thống.
+          </Text>
+        </Space>
 
-          <Form.Item
-            label="Danh mục"
-            name="category_id"
-            rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
-          >
-            <Select placeholder="Chọn danh mục">
-              {categories.map((cat) => (
-                <Option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+        <Card style={{ maxWidth: 800, width: '100%' }}>
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+            <Card title="Thông tin sản phẩm">
+              <Form.Item
+                label="Tên sản phẩm"
+                name="name"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập tên sản phẩm' },
+                ]}
+              >
+                <Input />
+              </Form.Item>
 
-          <Form.Item
-            label="Thương hiệu"
-            name="brand_id"
-            rules={[{ required: true, message: 'Vui lòng chọn thương hiệu' }]}
-          >
-            <Select placeholder="Chọn thương hiệu">
-              {brands.map((brand) => (
-                <Option key={brand.id} value={brand.id}>
-                  {brand.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Form.Item
+                label="Danh mục"
+                name="category_id"
+                rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
+              >
+                <Select placeholder="Chọn danh mục">
+                  {categories.map((cat) => (
+                    <Option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-          <Form.Item
-            label="Hiển thị"
-            name="is_published"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
+              <Form.Item
+                label="Thương hiệu"
+                name="brand_id"
+                rules={[
+                  { required: true, message: 'Vui lòng chọn thương hiệu' },
+                ]}
+              >
+                <Select placeholder="Chọn thương hiệu">
+                  {brands.map((brand) => (
+                    <Option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                label="Hiển thị"
+                name="is_published"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Link to={`/products/${id}/skus`}>Xem biến thể</Link>
+            </Card>
+
+            <Card style={{ marginTop: 24 }} title="Mô tả sản phẩm">
+              <Form.Item name="description">
+                <TextArea rows={4} />
+              </Form.Item>
+            </Card>
+
+            <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm">
+              <Form.Item
+                name="image_url"
+                valuePropName="fileList"
+                getValueFromEvent={normFile}
+              >
+                <Upload
+                  listType="picture-card"
+                  beforeUpload={beforeUpload}
+                  customRequest={({ file, onSuccess }) =>
+                    setTimeout(() => onSuccess?.('ok'), 0)
+                  }
+                  maxCount={1}
+                >
+                  <div>
+                    <UploadOutlined style={{ fontSize: 24 }} />
+                    <div style={{ marginTop: 8 }}>Tải ảnh</div>
+                  </div>
+                </Upload>
+              </Form.Item>
+            </Card>
+
+            <Form.Item style={{ marginTop: 24 }}>
+              <Button type="primary" htmlType="submit">
+                Lưu sản phẩm
+              </Button>
+            </Form.Item>
+          </Form>
         </Card>
-
-        <Card style={{ marginTop: 24 }} title="Mô tả sản phẩm">
-          <Form.Item name="description">
-            <TextArea rows={4} />
-          </Form.Item>
-        </Card>
-
-        <Card style={{ marginTop: 24 }} title="Ảnh sản phẩm">
-          <Form.Item
-            name="image_url"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-          >
-            <Upload
-              listType="picture-card"
-              beforeUpload={beforeUpload}
-              customRequest={({ file, onSuccess }) =>
-                setTimeout(() => onSuccess?.('ok'), 0)
-              }
-              maxCount={1}
-            >
-              <div>
-                <UploadOutlined style={{ fontSize: 24 }} />
-                <div style={{ marginTop: 8 }}>Tải ảnh</div>
-              </div>
-            </Upload>
-          </Form.Item>
-        </Card>
-
-        <Form.Item style={{ marginTop: 24 }}>
-          <Button type="primary" htmlType="submit">
-            Lưu sản phẩm
-          </Button>
-        </Form.Item>
-      </Form>
-      <ToastContainer />
-    </>
+      </Flex>
+    </div>
   )
 }
 

@@ -1,4 +1,14 @@
-import { Form, Input, Button, Select, Spin } from 'antd'
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Spin,
+  Card,
+  Space,
+  Typography,
+  Flex,
+} from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import {
@@ -9,7 +19,9 @@ import {
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Category } from '#types/category'
+import { toast } from 'react-toastify'
 
+const { Title, Text } = Typography
 const UpdateCategory = () => {
   const [form] = Form.useForm()
   const { id } = useParams()
@@ -33,18 +45,18 @@ const UpdateCategory = () => {
   }, [dispatch, id])
 
   useEffect(() => {
-    if (selectedItem) {
+    if (selectedItem && categories.length > 0) {
       form.setFieldsValue({
         name: selectedItem.name,
         description: selectedItem.description,
-        parent_id: selectedItem.parent_id || null,
+        parent_id: selectedItem.parent_id ?? null,
       })
     }
-  }, [selectedItem, form])
+  }, [selectedItem, categories, form])
 
   const handleFinish = async (values: Category) => {
-    console.log('Update category', values)
     await dispatch(updateCategory({ ...values, id: Number(id) }))
+    toast.success('Cập nhập danh mục thành công!')
     navigate('/categories')
   }
 
@@ -53,40 +65,60 @@ const UpdateCategory = () => {
   }
 
   return (
-    <Form form={form} onFinish={handleFinish} layout="vertical">
-      <Form.Item
-        label="Tên Danh Mục"
-        name="name"
-        rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
+    <div className="flex justify-center items-center p-6">
+      <Flex
+        vertical
+        gap="large"
+        style={{ padding: '24px', width: '100%', maxWidth: 900 }}
       >
-        <Input placeholder="Nhập tên danh mục" />
-      </Form.Item>
-      <Form.Item
-        label="Mô tả"
-        name="description"
-        rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
-      >
-        <Input placeholder="Nhập mô tả" />
-      </Form.Item>
+        <Space direction="vertical" size="small">
+          <Title level={3}>Thêm Danh Mục Mới</Title>
+          <Text type="secondary">
+            Điền thông tin để thêm danh mục vào hệ thống.
+          </Text>
+        </Space>
 
-      {selectedItem.parent_id !== null && (
-        <Form.Item label="Danh Mục Cha" name="parent_id">
-          <Select allowClear placeholder="Chọn danh mục cha">
-            {categories
-              .filter((item) => item.id !== Number(id))
-              .map((item) => (
-                <Select.Option key={item.id} value={item.id}>
-                  {item.name}
-                </Select.Option>
-              ))}
-          </Select>
-        </Form.Item>
-      )}
+        <Card style={{ maxWidth: 800, width: '100%' }}>
+          <Form form={form} onFinish={handleFinish} layout="vertical">
+            <Form.Item
+              label="Tên Danh Mục"
+              name="name"
+              rules={[
+                { required: true, message: 'Vui lòng nhập tên danh mục' },
+              ]}
+            >
+              <Input placeholder="Nhập tên danh mục" />
+            </Form.Item>
+            <Form.Item
+              label="Mô tả"
+              name="description"
+              rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+            >
+              <Input placeholder="Nhập mô tả" />
+            </Form.Item>
 
-      <Button type="primary" htmlType="submit" loading={loading}>
-        Lưu Thay Đổi
-      </Button>
-    </Form>
+            {selectedItem.parent_id !== null && (
+              <Form.Item label="Danh Mục Cha" name="parent_id">
+                <Select
+                  allowClear
+                  placeholder="Chọn danh mục cha"
+                  options={categories
+                    .filter((item) => item.id !== Number(id))
+                    .map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    }))}
+                />
+              </Form.Item>
+            )}
+
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Lưu Thay Đổi
+            </Button>
+          </Form>
+        </Card>
+      </Flex>
+    </div>
   )
 }
 

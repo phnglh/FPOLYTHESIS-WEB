@@ -40,6 +40,16 @@ interface OrderDetail {
     receiver_phone: string
     address: string
   }
+  discount: string
+  shipping_fee: string
+  user: {
+    name: string
+    email: string
+  }
+  payment: {
+    payment_method: string
+    paid_at: string | null
+  }
 }
 
 const getStatusLabel = (status: string) => {
@@ -47,7 +57,7 @@ const getStatusLabel = (status: string) => {
     case 'pending':
       return 'Chờ xác nhận'
     case 'processing':
-      return 'Xử lý'
+      return 'Đang xử lý'
     case 'cancelled':
       return 'Đã hủy'
     case 'shipped':
@@ -61,8 +71,8 @@ const getStatusLabel = (status: string) => {
   }
 }
 
-const getPaymentStatusLabel = (paymentStatus: string) => {
-  switch (paymentStatus) {
+const getPaymentStatusLabel = (status: string) => {
+  switch (status) {
     case 'unpaid':
       return 'Chưa thanh toán'
     case 'pending':
@@ -74,34 +84,35 @@ const getPaymentStatusLabel = (paymentStatus: string) => {
     case 'refunded':
       return 'Đã hoàn tiền'
     default:
-      return paymentStatus
+      return status
   }
 }
 
 const OrderDetailPage = () => {
   const [order, setOrder] = useState<OrderDetail | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState(true)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+
   useEffect(() => {
     const orderId = window.location.pathname.split('/').pop()
     if (!orderId) return
 
     apiClient
       .get(`/orders/${orderId}`)
-      .then((response) => {
-        if (response.data.status === 'success') {
-          setOrder(response.data.data)
+      .then((res) => {
+        if (res.data.status === 'success') {
+          setOrder(res.data.data)
         }
       })
-      .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
+      .catch((err) => console.error('Lỗi khi lấy đơn hàng:', err))
       .finally(() => setLoading(false))
   }, [])
 
   const handleCancelOrder = async () => {
+    if (!order) return
     try {
-      if (!order) return
       await dispatch(cancelOrder(order.id)).unwrap()
       setCancelModalVisible(false)
       window.location.reload()
@@ -111,29 +122,22 @@ const OrderDetailPage = () => {
   }
 
   const retryPayment = async () => {
+    if (!order) return
     try {
-      if (!order) return
-
-      const response = await apiClient.post(`/payment/retry/${order.id}`)
-      const resData = response.data as RetryPaymentResponse
-
-      console.log('==> response from retry:', resData)
-
-      if (resData.status === 'success') {
-        localStorage.setItem('checkout', JSON.stringify(order.items))
-        navigate('/checkout')
+      const res = await apiClient.post(`/payment/retry/${order.id}`)
+      if (res.data.success) {
+        window.location.href = res.data.data.redirect_url
       } else {
         Modal.warning({
           title: 'Không thể thanh toán lại',
-          content: resData.message || 'Vui lòng thử lại sau.',
+          content: res.data.message || 'Vui lòng thử lại sau.',
         })
       }
-    } catch (error) {
+    } catch (err) {
       Modal.error({
         title: 'Lỗi',
         content: 'Không thể thực hiện lại thanh toán. Vui lòng thử lại sau.',
       })
-      console.error('Lỗi khi gửi lại thanh toán:', error)
     }
   }
 
@@ -141,192 +145,148 @@ const OrderDetailPage = () => {
   if (!order) return <Text>Không tìm thấy đơn hàng!</Text>
 
   return (
-    <Layout style={{ padding: '24px', background: '#fff' }}>
-      <Content
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          paddingLeft: '100px',
-        }}
-      >
+    <Layout style={{ padding: 24, background: '#fff' }}>
+      <Content style={{ maxWidth: 1200, margin: '0 auto' }}>
         <Card>
           <Title level={2}>Chi tiết đơn hàng #{order.order_number}</Title>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Người nhận:</strong>
-              </Col>
-              <Col span={18}>{order.address.receiver_name}</Col>
-            </Row>
-          </Text>
+          <Row gutter={[0, 12]}>
+            <Col span={6}>
+              <strong>Người nhận:</strong>
+            </Col>
+            <Col span={18}>{order.address.receiver_name}</Col>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Điện thoại:</strong>
-              </Col>
-              <Col span={18}>{order.address.receiver_phone}</Col>
-            </Row>
-          </Text>
+            <Col span={6}>
+              <strong>Điện thoại:</strong>
+            </Col>
+            <Col span={18}>{order.address.receiver_phone}</Col>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Địa chỉ:</strong>
-              </Col>
-              <Col span={18}>{order.address.address}</Col>
-            </Row>
-          </Text>
+            <Col span={6}>
+              <strong>Địa chỉ:</strong>
+            </Col>
+            <Col span={18}>{order.address.address}</Col>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Ngày đặt:</strong>
-              </Col>
-              <Col span={18}>{order.ordered_at}</Col>
-            </Row>
-          </Text>
+            <Col span={6}>
+              <strong>Email người đặt:</strong>
+            </Col>
+            <Col span={18}>{order.user.email}</Col>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Trạng thái đơn hàng:</strong>
-              </Col>
-              <Col span={18}>
-                <Tag
-                  color={
-                    order.status === 'pending' || order.status === 'processing'
-                      ? 'blue'
-                      : order.status === 'cancelled'
-                        ? 'red'
-                        : order.status === 'shipped' ||
-                            order.status === 'delivered'
-                          ? 'green'
-                          : 'gray'
-                  }
-                >
-                  {getStatusLabel(order.status)}
-                </Tag>
-              </Col>
-            </Row>
-          </Text>
+            <Col span={6}>
+              <strong>Ngày đặt:</strong>
+            </Col>
+            <Col span={18}>{order.ordered_at}</Col>
 
-          <Text
-            style={{
-              fontSize: '18px',
-              lineHeight: '2.8',
-              marginBottom: '12px',
-            }}
-          >
-            <Row>
-              <Col span={6}>
-                <strong>Trạng thái thanh toán:</strong>
-              </Col>
-              <Col span={18}>
-                <Tag
-                  color={
-                    order.payment_status === 'paid'
-                      ? 'green'
-                      : order.payment_status === 'unpaid'
-                        ? 'red'
-                        : order.payment_status === 'pending'
-                          ? 'blue'
-                          : order.payment_status === 'failed'
-                            ? 'orange'
-                            : order.payment_status === 'refunded'
-                              ? 'purple'
-                              : 'default'
-                  }
-                >
-                  {getPaymentStatusLabel(order.payment_status)}
-                </Tag>
-              </Col>
-            </Row>
-          </Text>
+            <Col span={6}>
+              <strong>Trạng thái đơn hàng:</strong>
+            </Col>
+            <Col span={18}>
+              <Tag
+                color={
+                  order.status === 'pending' || order.status === 'processing'
+                    ? 'blue'
+                    : order.status === 'cancelled'
+                      ? 'red'
+                      : order.status === 'shipped' ||
+                          order.status === 'delivered'
+                        ? 'green'
+                        : 'default'
+                }
+              >
+                {getStatusLabel(order.status)}
+              </Tag>
+            </Col>
+
+            <Col span={6}>
+              <strong>Trạng thái thanh toán:</strong>
+            </Col>
+            <Col span={18}>
+              <Tag
+                color={
+                  order.payment_status === 'paid'
+                    ? 'green'
+                    : order.payment_status === 'unpaid'
+                      ? 'red'
+                      : order.payment_status === 'failed'
+                        ? 'orange'
+                        : order.payment_status === 'refunded'
+                          ? 'purple'
+                          : 'default'
+                }
+              >
+                {getPaymentStatusLabel(order.payment_status)}
+              </Tag>
+            </Col>
+
+            <Col span={6}>
+              <strong>Phương thức thanh toán:</strong>
+            </Col>
+            <Col span={18}>{order.payment.payment_method.toUpperCase()}</Col>
+
+            <Col span={6}>
+              <strong>Giảm giá:</strong>
+            </Col>
+            <Col span={18}>{Number(order.discount).toLocaleString()} VND</Col>
+
+            <Col span={6}>
+              <strong>Phí vận chuyển:</strong>
+            </Col>
+            <Col span={18}>
+              {Number(order.shipping_fee).toLocaleString()} VND
+            </Col>
+
+            <Col span={6}>
+              <strong>Tổng cộng:</strong>
+            </Col>
+            <Col span={18}>
+              <strong>{Number(order.final_total).toLocaleString()} VND</strong>
+            </Col>
+          </Row>
         </Card>
 
-        <Title level={4}>Sản phẩm trong đơn</Title>
+        <Title level={4} style={{ marginTop: 24 }}>
+          Sản phẩm trong đơn
+        </Title>
+
         <Table
-          dataSource={[
-            ...order.items,
-            {
-              id: 'total',
-              product_name: 'Tổng tiền',
-              unit_price: '',
-              quantity: '',
-              total_price: '',
-            },
-          ]}
+          dataSource={order.items}
+          rowKey="id"
+          pagination={false}
           columns={[
             {
               title: 'Sản phẩm',
               dataIndex: 'product_name',
-              key: 'product_name',
               render: (text, record) => (
                 <Row>
                   <Col span={4}>
-                    {record.id === 'total' ? null : (
-                      <img src={record?.sku?.image_url} alt={text} width={50} />
-                    )}
+                    <img src={record.sku?.image_url} width={50} alt={text} />
                   </Col>
                   <Col span={20}>{text}</Col>
                 </Row>
               ),
             },
-            { title: 'Đơn giá', dataIndex: 'unit_price', key: 'unit_price' },
-            { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity' },
+            {
+              title: 'Đơn giá',
+              dataIndex: 'unit_price',
+              render: (text) => `${Number(text).toLocaleString()} VND`,
+            },
+            {
+              title: 'Số lượng',
+              dataIndex: 'quantity',
+            },
             {
               title: 'Thành tiền',
-              dataIndex: 'total_price',
-              key: 'total_price',
-              render: (text, record) => {
-                if (record.id === 'total') {
-                  return `${order.items.reduce((total, item) => total + Number(item.unit_price) * item.quantity, 0).toLocaleString()} VND`
-                }
-                return `${(Number(record.unit_price) * record.quantity).toLocaleString()} VND`
-              },
+              render: (_, record) =>
+                `${(Number(record.unit_price) * record.quantity).toLocaleString()} VND`,
             },
           ]}
-          rowKey="id"
         />
 
-        <Row justify="center" gutter={16} style={{ marginTop: '16px' }}>
+        <Row justify="center" gutter={16} style={{ marginTop: 24 }}>
           <Col span={8}>
             <Button
               type="primary"
               style={{ width: '100%' }}
-              onClick={() => (window.location.href = '/account')}
+              onClick={() => navigate('/account')}
             >
               Quay lại
             </Button>
@@ -335,8 +295,8 @@ const OrderDetailPage = () => {
           {['pending', 'processing'].includes(order.status) && (
             <Col span={8}>
               <Button
-                type="default"
                 danger
+                type="default"
                 style={{ width: '100%' }}
                 onClick={() => setCancelModalVisible(true)}
               >
@@ -348,8 +308,8 @@ const OrderDetailPage = () => {
           {order.payment_status === 'failed' && (
             <Col span={8}>
               <Button
-                type="primary"
                 danger
+                type="primary"
                 style={{ width: '100%' }}
                 onClick={retryPayment}
               >

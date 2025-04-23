@@ -11,6 +11,7 @@
     "logout": "Đăng xuất"
   },
   "homepage": {
-    "products": "Sản phẩm nổi bật"
+    "products": "Sản phẩm",
+    "categories":"Sản phẩm nổi bật"
   }
 }

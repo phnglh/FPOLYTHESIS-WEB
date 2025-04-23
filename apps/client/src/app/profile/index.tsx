@@ -1,382 +1,250 @@
 import { useEffect, useState } from 'react'
-import {
-  Layout,
-  Menu,
-  Card,
-  Typography,
-  Avatar,
-  Table,
-  Spin,
-  Tag,
-  Button,
-  Space,
-  Form,
-  Input,
-} from 'antd'
-import {
-  UserOutlined,
-  HomeOutlined,
-  ShoppingCartOutlined,
-  EyeOutlined,
-  DeliveredProcedureOutlined,
-} from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUser } from '@store/slices/authSlice'
-import { RootState } from '@store/store'
+import { AppDispatch, RootState } from '@store/store'
+import {
+  Card,
+  Col,
+  Row,
+  Typography,
+  Avatar,
+  Spin,
+  Table,
+  Tag,
+  Button,
+} from 'antd'
 import apiClient from '@store/services/apiClient'
+import { Link } from 'react-router'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
-const { Title } = Typography
-const { Sider, Content } = Layout
+const { Title, Text } = Typography
 
-interface Address {
-  id: number
-  name: string
-  email: string
-  phone: string
-  address: string
-  status: string
+const statusColors: Record<string, string> = {
+  pending: 'gold',
+  processing: 'blue',
+  shipped: 'cyan',
+  delivered: 'green',
+  cancelled: 'red',
 }
 
-interface Order {
-  id: number
-  order_number: string
-  ordered_at: string
-  final_total: string
-  status: string
+const statusLabels: Record<string, string> = {
+  pending: 'Chờ xác nhận',
+  processing: 'Đang xử lý',
+  shipped: 'Đang giao',
+  delivered: 'Đã giao',
+  cancelled: 'Đã hủy',
+}
+
+const paymentStatusColors: Record<string, string> = {
+  unpaid: 'red',
+  pending: 'gold',
+  paid: 'green',
+  failed: 'gray',
+  refunded: 'blue',
+}
+
+const paymentStatusLabels: Record<string, string> = {
+  unpaid: 'Chưa thanh toán',
+  pending: 'Đang chờ',
+  paid: 'Đã thanh toán',
+  failed: 'Thanh toán thất bại',
+  refunded: 'Đã hoàn tiền',
 }
 
 export default function ProfilePage() {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { user, loading } = useSelector((state: RootState) => state.auth)
-  const [selectedMenu, setSelectedMenu] = useState('info')
-  const [userAddresses, setUserAddresses] = useState<Address[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loadingOrders, setLoadingOrders] = useState(false)
-  const [loadingAddresses, setLoadingAddresses] = useState(false)
-  const [paidPayments, setpaidPayments] = useState([])
-  const [loadingpaid, setLoadingpaid] = useState(false)
-  const [orderId, setOrderId] = useState(null)
-  const [totalAmount, setTotalAmount] = useState(0)
 
+  const [orders, setOrders] = useState<any[]>([])
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  })
+
+  const { formatCurrency } = useCurrencyFormatter()
+
+  // Fetch user when component mounts
   useEffect(() => {
     dispatch(getUser())
   }, [dispatch])
 
+  // Fetch orders when pagination changes
   useEffect(() => {
-    if (selectedMenu === 'address') {
-      setLoadingAddresses(true)
-      apiClient
-        .get('/user_addresses')
-        .then((response) => {
-          if (response.data.status === 'success') {
-            setUserAddresses(response.data.data)
-          }
-        })
-        .catch((error) => console.error('Lỗi khi tải địa chỉ:', error))
-        .finally(() => setLoadingAddresses(false))
+    fetchOrders(pagination.current, pagination.pageSize)
+  }, [pagination.current, pagination.pageSize])
+
+  const fetchOrders = async (page: number = 1, pageSize: number = 10) => {
+    try {
+      const response = await apiClient.get('/orders', {
+        params: { page, per_page: pageSize },
+      })
+      const { data, meta } = response.data
+
+      setOrders(data)
+      setPagination({
+        current: page,
+        pageSize,
+        total: meta.total,
+      })
+    } catch (error) {
+      console.error('Failed to fetch orders:', error)
     }
+  }
 
-    if (selectedMenu === 'orders') {
-      setLoadingOrders(true)
-      apiClient
-        .get('/orders')
-        .then((response) => {
-          if (response.data.status === 'success') {
-            setOrders(response.data.data)
-          }
-        })
-        .catch((error) => console.error('Lỗi khi tải đơn hàng:', error))
-        .finally(() => setLoadingOrders(false))
-    }
-  }, [selectedMenu])
+  if (loading) {
+    return (
+      <Spin
+        size="large"
+        style={{ display: 'block', marginTop: '50px', textAlign: 'center' }}
+      />
+    )
+  }
 
-  useEffect(() => {
-    if (selectedMenu === 'ordered' && orderId !== null) {
-      setLoadingpaid(true)
-      apiClient
-        .post('/payment/pay', {
-          order_id: orderId,
-          payment_method: 'vnpay',
-          amount: totalAmount,
-        })
-        .then((response) => {
-          if (response.data.status === 'success') {
-            const filtered = response.data.data.filter(
-              (item: any) => item.status === 'paid',
-            )
-            setpaidPayments(filtered)
-          }
-        })
-        .catch((error) => {
-          if (error.response && error.response.data) {
-            console.error('Lỗi từ API:', error.response.data)
-          } else {
-            console.error('Lỗi khi tải payments:', error)
-          }
-        })
-        .finally(() => setLoadingpaid(false))
-    }
-  }, [selectedMenu, orderId, totalAmount])
+  if (!user) {
+    return <Text>No user data available</Text>
+  }
 
-  const addressColumns = [
+  const columns = [
     {
-      title: 'STT',
-      key: 'stt',
-      render: (_: any, __: any, index: number) => index + 1,
-    },
-    { title: 'Tên', dataIndex: 'receiver_name', key: 'receiver_name' },
-    {
-      title: 'Số điện thoại',
-      dataIndex: 'receiver_phone',
-      key: 'receiver_phone',
-    },
-    { title: 'Địa chỉ', dataIndex: 'address', key: 'address' },
-  ]
-
-  const paidColumns = [
-    {
-      title: 'STT',
-      key: 'stt',
-      render: (_: any, __: any, index: number) => index + 1,
+      title: 'Id',
+      dataIndex: 'id',
+      key: 'id',
     },
     {
-      title: 'Tên người thanh toán',
-      dataIndex: 'name',
-      key: 'name',
+      title: 'Mã đơn hàng',
+      dataIndex: 'order_number',
+      key: 'order_number',
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      title: 'Tổng tiền',
+      dataIndex: 'final_total',
+      key: 'final_total',
+      render: (total: number) => formatCurrency(total),
     },
     {
-      title: 'Ngày cập nhật',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
-    },
-    {
-      title: 'Số tiền',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount: number) => `${Number(amount).toLocaleString()} VND`,
-    },
-    {
-      title: 'Phương thức',
-      dataIndex: 'payment_method',
-      key: 'payment_method',
+      title: 'Trạng thái thanh toán',
+      dataIndex: 'payment_status',
+      key: 'payment_status',
+      render: (payment_status: string) => (
+        <Tag color={paymentStatusColors[payment_status]}>
+          {paymentStatusLabels[payment_status]}
+        </Tag>
+      ),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Tag color={status === 'delivered' ? 'green' : 'red'}>
-          {status === 'delivered' ? 'Đã giao hàng' : status}
-        </Tag>
+        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
       ),
-    },
-  ]
-
-  const orderColumns = [
-    {
-      title: 'Mã đơn hàng',
-      dataIndex: 'order_number',
-      key: 'order_number',
-      render: (text: string, record: Order) => (
-        <a
-          onClick={() => window.location.assign(`/account/orders/${record.id}`)}
-          style={{ cursor: 'pointer', color: '#1890ff' }}
-        >
-          {text}
-        </a>
-      ),
-    },
-    { title: 'Ngày đặt', dataIndex: 'ordered_at', key: 'ordered_at' },
-    {
-      title: 'Tổng tiền',
-      dataIndex: 'final_total',
-      key: 'final_total',
-      render: (total: string) => `${Number(total).toLocaleString()} VND`,
-    },
-    {
-      title: 'Trạng thái đơn hàng',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const statusMap = {
-          pending: 'Chờ xác nhận',
-          processing: 'Xử lý',
-          cancelled: 'Đã hủy',
-          shipped: 'Đang giao',
-          delivered: 'Đã giao hàng',
-          returned: 'Đã trả lại',
-        }
-
-        const statusColorMap = {
-          pending: 'blue',
-          processing: 'orange',
-          cancelled: 'red',
-          shipped: 'green',
-          delivered: 'green',
-          returned: 'gray',
-        }
-
-        return <Tag color={statusColorMap[status]}>{statusMap[status]}</Tag>
-      },
-    },
-    {
-      title: 'Trạng thái thanh toán',
-      dataIndex: 'payment_status',
-      key: 'payment_status',
-      render: (status: string) => {
-        const paymentStatusMap = {
-          unpaid: 'Chưa thanh toán',
-          pending: 'Chờ xác nhận',
-          paid: 'Thanh toán thành công',
-          failed: 'Thanh toán thất bại',
-          refunded: 'Đã hoàn tiền',
-        }
-
-        const paymentStatusColorMap = {
-          unpaid: 'red',
-          pending: 'black',
-          paid: 'blue',
-          failed: 'green',
-          refunded: 'orange',
-        }
-
-        return (
-          <Tag color={paymentStatusColorMap[status]}>
-            {paymentStatusMap[status]}
-          </Tag>
-        )
-      },
     },
     {
       title: 'Chi tiết',
-      key: 'action',
-      render: (text: string, record: Order) => (
-        <Space size="middle">
-          <Button
-            icon={<EyeOutlined />}
-            type="link"
-            onClick={() =>
-              window.location.assign(`/account/orders/${record.id}`)
-            }
-          >
-            Xem
-          </Button>
-        </Space>
+      key: 'details',
+      render: (_text: string, record: any) => (
+        <Link to={`/account/orders/${record.id}`}>
+          <Button type="primary">Xem chi tiết</Button>
+        </Link>
       ),
     },
   ]
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider width={250} theme="light">
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={['info']}
-          onClick={(e) => setSelectedMenu(e.key)}
-        >
-          <Menu.Item key="info" icon={<UserOutlined />}>
-            Thông tin cá nhân
-          </Menu.Item>
-          <Menu.Item key="address" icon={<HomeOutlined />}>
-            Địa chỉ
-          </Menu.Item>
-          <Menu.Item key="orders" icon={<ShoppingCartOutlined />}>
-            Danh sách đơn hàng
-          </Menu.Item>
-          <Menu.Item key="ordered" icon={<DeliveredProcedureOutlined />}>
-            Đơn hàng đã đặt
-          </Menu.Item>
-        </Menu>
-      </Sider>
+    <div
+      style={{
+        padding: '30px',
+        backgroundColor: '#f5f5f5',
+        width: '100%',
+        minHeight: '100vh',
+      }}
+    >
+      {/* Profile Row */}
+      <Row justify="center" gutter={32}>
+        <Col span={24}>
+          <Card
+            title={<Title level={3}>Profile</Title>}
+            style={{
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+              borderRadius: '16px',
+              backgroundColor: '#fff',
+              padding: '20px',
+              transition: 'box-shadow 0.3s',
+            }}
+            hoverable
+          >
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <Avatar
+                size={100}
+                src="https://i.pravatar.cc/150?img=3"
+                style={{ border: '2px solid #1890ff' }}
+              />
+              <Title level={4} style={{ marginTop: '10px', fontWeight: '600' }}>
+                {user.name}
+              </Title>
+              <Text
+                type="secondary"
+                style={{ display: 'block', marginBottom: '15px' }}
+              >
+                {user.role}
+              </Text>
+            </div>
 
-      <Layout style={{ padding: '24px' }}>
-        <Content>
-          <Card>
-            {selectedMenu === 'info' && (
-              <div style={{ textAlign: 'center' }}>
-                <Avatar size={60} icon={<UserOutlined />} />
-                {loading ? (
-                  <Spin size="large" />
-                ) : user ? (
-                  <Form
-                    layout="vertical"
-                    style={{ width: 500, margin: 'auto' }}
-                  >
-                    <Title level={4}>Thông tin người dùng</Title>
-                    <Form.Item label="Tên người dùng">
-                      <Input value={user.name || 'Người dùng'} disabled />
-                    </Form.Item>
-                    <Form.Item label="Email">
-                      <Input value={user.email} disabled />
-                    </Form.Item>
-                    <Form.Item label="Địa chỉ">
-                      <Input value={user.address || 'Chưa cập nhật'} disabled />
-                    </Form.Item>
-                    <Form.Item label="Số điện thoại">
-                      <Input value={user.phone || 'Chưa cập nhật'} disabled />
-                    </Form.Item>
-                  </Form>
-                ) : (
-                  <Title level={5}>Không có thông tin người dùng</Title>
-                )}
-              </div>
-            )}
-
-            {selectedMenu === 'address' && (
-              <>
-                <Title level={4}>Danh sách địa chỉ</Title>
-                {loadingAddresses ? (
-                  <Spin size="large" />
-                ) : (
-                  <Table
-                    dataSource={userAddresses || []}
-                    columns={addressColumns}
-                    rowKey="id"
-                    bordered
-                    pagination={{ pageSize: 5 }}
-                    style={{ marginTop: '20px' }}
-                  />
-                )}
-              </>
-            )}
-
-            {selectedMenu === 'orders' && (
-              <>
-                <Title level={4}>Danh sách đơn hàng</Title>
-                {loadingOrders ? (
-                  <Spin size="large" />
-                ) : (
-                  <Table
-                    dataSource={orders || []}
-                    columns={orderColumns}
-                    rowKey="id"
-                  />
-                )}
-              </>
-            )}
-
-            {selectedMenu === 'ordered' && (
-              <>
-                <Title level={4}>Đơn hàng đã giao</Title>
-                {loadingpaid ? (
-                  <Spin size="large" />
-                ) : (
-                  <Table
-                    dataSource={paidPayments}
-                    columns={paidColumns}
-                    rowKey="id"
-                  />
-                )}
-              </>
-            )}
+            <div>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Text strong>Email:</Text>
+                  <Text> {user.email || 'Not provided'}</Text>
+                </Col>
+                <Col span={24}>
+                  <Text strong>Phone:</Text>
+                  <Text> {user.phone || 'Not provided'}</Text>
+                </Col>
+                <Col span={24}>
+                  <Text strong>Created at:</Text>
+                  <Text> {new Date(user.created_at).toLocaleString()}</Text>
+                </Col>
+              </Row>
+            </div>
           </Card>
-        </Content>
-      </Layout>
-    </Layout>
+        </Col>
+      </Row>
+
+      {/* Orders */}
+      <Row justify="center" gutter={32} style={{ marginTop: '30px' }}>
+        <Col span={24}>
+          <Card
+            title={<Title level={4}>Your Orders</Title>}
+            style={{
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+              borderRadius: '16px',
+              backgroundColor: '#fff',
+              padding: '20px',
+              transition: 'box-shadow 0.3s',
+            }}
+            hoverable
+          >
+            <Table
+              columns={columns}
+              dataSource={orders}
+              rowKey="id"
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                showSizeChanger: true, // Cho phép thay đổi số dòng/trang
+              }}
+              onChange={(pagination) => {
+                fetchOrders(pagination.current, pagination.pageSize)
+              }}
+              style={{ borderRadius: '12px', marginTop: '20px' }}
+              rowClassName="order-row"
+              scroll={{ x: true }}
+            />
+          </Card>
+        </Col>
+      </Row>
+    </div>
   )
 }

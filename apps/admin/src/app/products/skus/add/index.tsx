@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Card,
   Form,
@@ -6,12 +6,14 @@ import {
   Upload,
   Input,
   message,
-  Checkbox,
+  Radio,
   Typography,
+  Space,
 } from 'antd'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router'
 import apiClient from '@store/services/apiClient'
+import { toast } from 'react-toastify'
 
 const { Title } = Typography
 
@@ -35,15 +37,15 @@ interface VariantFormValue {
   price: number
 }
 
-const AddProductVariants: React.FC = () => {
+const AddSku = () => {
   const [form] = Form.useForm()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const [attributes, setAttributes] = useState<Attribute[]>([])
-  const [combinations, setCombinations] = useState<string[][]>([])
+  const [combinations, setCombinations] = useState<AttributeValue[][]>([])
   const [productName, setProductName] = useState<string>('')
-  const [fileList, setFileList] = useState([])
+  const [fileLists, setFileLists] = useState<{ [key: number]: any[] }>({})
 
   const fetchAttributes = async () => {
     try {
@@ -71,9 +73,12 @@ const AddProductVariants: React.FC = () => {
     }
   }, [id])
 
-  const cartesian = (arr: any[][]): any[][] => {
+  const cartesian = (arr: AttributeValue[][]): AttributeValue[][] => {
     return arr.reduce(
-      (a, b) => a.flatMap((d: any) => b.map((e: any) => [...d, e])),
+      (a, b) =>
+        a.flatMap((d: AttributeValue[]) =>
+          b.map((e: AttributeValue) => [...d, e]),
+        ),
       [[]],
     )
   }
@@ -86,31 +91,67 @@ const AddProductVariants: React.FC = () => {
     }
 
     const valuesList = attributes
-      .map((attr) => selectedAttributes[attr.id] || [])
+      .map((attr) => {
+        const selectedValue = selectedAttributes[attr.id]
+        return selectedValue ? [selectedValue] : []
+      })
       .filter((vals) => vals.length > 0)
 
     if (valuesList.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một thuộc tính')
+      message.warning('Vui lòng chọn ít nhất một giá trị cho mỗi thuộc tính')
       return
     }
 
-    const combos = cartesian(valuesList)
-    setCombinations(combos)
+    const newCombos = cartesian(valuesList)
 
+    // Check for duplicate combinations
+    const existingComboStrings = combinations.map((combo) =>
+      combo.map((v) => v.id).join('-'),
+    )
+    const newUniqueCombos = newCombos.filter((combo) => {
+      const comboString = combo.map((v) => v.id).join('-')
+      return !existingComboStrings.includes(comboString)
+    })
+
+    if (newUniqueCombos.length === 0) {
+      message.warning('Biến thể này đã tồn tại')
+      return
+    }
+
+    // Append new combinations to existing ones
+    setCombinations((prev) => [...prev, ...newUniqueCombos])
+
+    // Get current variants from form
+    const currentVariants = form.getFieldValue('variants') || []
+
+    // Append new variants to existing ones
     form.setFieldsValue({
-      variants: combos.map(() => ({ quantity: 0, price: 0, image: [] })),
+      variants: [
+        ...currentVariants,
+        ...newUniqueCombos.map(() => ({ quantity: 0, price: 0, image: [] })),
+      ],
     })
   }
 
-  const handleImageChange = ({ fileList }) => {
-    setFileList(fileList)
-    form.setFieldsValue({ imageUrl: fileList })
+  const handleImageChange = (
+    index: number,
+    { fileList }: { fileList: any[] },
+  ) => {
+    setFileLists((prev) => ({
+      ...prev,
+      [index]: fileList,
+    }))
+    form.setFieldsValue({
+      variants: form
+        .getFieldValue('variants')
+        .map((variant: any, i: number) =>
+          i === index ? { ...variant, image: fileList } : variant,
+        ),
+    })
   }
 
   const onFinish = async (values: any) => {
     try {
-      const selectedAttributes = values.attributes
-
       for (let i = 0; i < combinations.length; i++) {
         const combo = combinations[i]
         const formData = new FormData()
@@ -124,8 +165,6 @@ const AddProductVariants: React.FC = () => {
         })
 
         formData.append('combination', combo.map((v) => v.value).join(' - '))
-        // formData.append('stock', values.variants[i].quantity)
-        // formData.append('price', values.variants[i].price)
         formData.append(
           'stock',
           Math.floor(values.variants[i].quantity).toString(),
@@ -136,8 +175,6 @@ const AddProductVariants: React.FC = () => {
         )
 
         const imageFile = values.variants[i]?.image?.[0]?.originFileObj
-        console.log(imageFile)
-
         if (imageFile) {
           formData.append('image_url', imageFile)
         }
@@ -145,12 +182,38 @@ const AddProductVariants: React.FC = () => {
         await apiClient.post(`/${id}/skus`, formData)
       }
 
-      message.success('Tất cả biến thể đã được lưu')
+      toast.success('Tất cả biến thể đã được lưu')
       navigate('/products')
     } catch (error) {
-      console.error(error)
-      message.error('Lỗi khi lưu biến thể sản phẩm')
+      toast.error(error.response.data.error)
     }
+  }
+
+  const handleDeleteVariant = (index: number) => {
+    // Remove combination at the specified index
+    setCombinations((prev) => prev.filter((_, i) => i !== index))
+
+    // Remove variant from form
+    const currentVariants = form.getFieldValue('variants') || []
+    form.setFieldsValue({
+      variants: currentVariants.filter((_: any, i: number) => i !== index),
+    })
+
+    // Remove associated fileList
+    setFileLists((prev) => {
+      const newFileLists = { ...prev }
+      delete newFileLists[index]
+      // Reindex remaining fileLists to match new variant indices
+      const reindexedFileLists: { [key: number]: any[] } = {}
+      Object.keys(newFileLists).forEach((key, i) => {
+        const newIndex =
+          parseInt(key) > index ? parseInt(key) - 1 : parseInt(key)
+        reindexedFileLists[newIndex] = newFileLists[key]
+      })
+      return reindexedFileLists
+    })
+
+    message.success('Đã xóa biến thể')
   }
 
   return (
@@ -165,14 +228,17 @@ const AddProductVariants: React.FC = () => {
             key={attribute.id}
             name={['attributes', attribute.id]}
             label={`Chọn ${attribute.name}`}
+            rules={[
+              { required: true, message: `Vui lòng chọn ${attribute.name}` },
+            ]}
           >
-            <Checkbox.Group>
+            <Radio.Group>
               {attribute.values.map((val) => (
-                <Checkbox key={val.id} value={val}>
+                <Radio key={val.id} value={val}>
                   {val.value}
-                </Checkbox>
+                </Radio>
               ))}
-            </Checkbox.Group>
+            </Radio.Group>
           </Form.Item>
         ))}
 
@@ -181,7 +247,7 @@ const AddProductVariants: React.FC = () => {
           icon={<PlusOutlined />}
           onClick={generateCombinations}
         >
-          Tạo ra biến thể
+          Thêm biến thể
         </Button>
       </Card>
 
@@ -192,21 +258,32 @@ const AddProductVariants: React.FC = () => {
               key={combo.map((v) => v.id).join('-')}
               type="inner"
               style={{ marginBottom: 16 }}
-              title={`Kết hợp: ${combo.map((v) => v.value).join(' - ')}`}
+              title={
+                <Space>
+                  <span>Kết hợp: {combo.map((v) => v.value).join(' - ')}</span>
+                  <Button
+                    type="link"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDeleteVariant(index)}
+                  />
+                </Space>
+              }
             >
               <Form.Item
                 label="Hình ảnh"
-                name="imageUrl"
+                name={['variants', index, 'image']}
                 valuePropName="fileList"
                 getValueFromEvent={(e) => e.fileList}
               >
                 <Upload
-                  listType="picture"
+                  listType="picture-card"
                   beforeUpload={() => false}
-                  fileList={fileList}
-                  onChange={handleImageChange}
+                  fileList={fileLists[index] || []}
+                  onChange={(info) => handleImageChange(index, info)}
+                  maxCount={1}
                 >
-                  <Button icon={<UploadOutlined />}>Upload</Button>
+                  Upload
                 </Upload>
               </Form.Item>
               <Form.Item
@@ -214,7 +291,7 @@ const AddProductVariants: React.FC = () => {
                 label="Số lượng"
                 rules={[{ required: true, message: 'Nhập số lượng' }]}
               >
-                <Input type="number" placeholder="Số lượng" />
+                <Input type="number" placeholder="Số lượng" min={0} />
               </Form.Item>
 
               <Form.Item
@@ -222,7 +299,7 @@ const AddProductVariants: React.FC = () => {
                 label="Giá"
                 rules={[{ required: true, message: 'Nhập giá' }]}
               >
-                <Input type="number" placeholder="Giá sản phẩm" />
+                <Input type="number" placeholder="Giá sản phẩm" min={0} />
               </Form.Item>
             </Card>
           ))}
@@ -238,4 +315,4 @@ const AddProductVariants: React.FC = () => {
   )
 }
 
-export default AddProductVariants
+export default AddSku

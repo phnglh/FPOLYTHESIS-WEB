@@ -1,30 +1,50 @@
-import { Card, Form, Input, Button, Typography, Space, Flex } from 'antd'
+import { Form, Input, Button, Spin, Card, Space, Typography, Flex } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
-import { useNavigate } from 'react-router'
 import { useEffect } from 'react'
-import { Brand } from '#types/brand'
-import { addBrand, fetchBrands } from '@store/slices/brandSlice'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'react-toastify'
+import { fetchBrandById, updateBrand } from '@store/slices/brandSlice'
+import { Brand } from '#types/brand'
 
 const { Title, Text } = Typography
 
-const CreateBrand = () => {
+const UpdateBrand = () => {
   const [form] = Form.useForm()
+  const { id } = useParams()
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const { data } = useSelector((state: RootState) => state.categories)
 
-  console.log(data)
+  const {
+    data: brands,
+    loading,
+    selectedItem,
+  } = useSelector((state: RootState) => state.brands)
+
   useEffect(() => {
-    dispatch(fetchBrands())
-  }, [dispatch])
+    if (id) {
+      dispatch(fetchBrandById(Number(id)))
+    }
+  }, [dispatch, id])
+
+  console.log(brands)
+  useEffect(() => {
+    if (selectedItem && brands.length > 0) {
+      form.setFieldsValue({
+        name: selectedItem.name,
+        description: selectedItem.description,
+      })
+    }
+  }, [selectedItem, brands, form])
 
   const handleFinish = async (values: Brand) => {
-    await dispatch(addBrand(values)).unwrap()
-    toast.success('Thêm thương hiệu thành công!')
-
+    await dispatch(updateBrand({ ...values, id: Number(id) }))
+    toast.success('Cập nhập thương hiệu thành công!')
     navigate('/brands')
+  }
+
+  if (!brands) {
+    return <Spin size="large" />
   }
 
   return (
@@ -42,21 +62,16 @@ const CreateBrand = () => {
         style={{ padding: '24px', width: '100%', maxWidth: 900 }}
       >
         <Space direction="vertical" size="small">
-          <Title level={3}>Thêm Thương Hiệu Mới</Title>
+          <Title level={3}>Cập nhập Thương hiệu mới</Title>
           <Text type="secondary">
-            Điền thông tin để thêm thương hiệu vào hệ thống.
+            Điền thông tin để cập nhập thương hiệu vào hệ thống.
           </Text>
         </Space>
 
         <Card style={{ maxWidth: 800, width: '100%' }}>
-          <Form
-            form={form}
-            onFinish={handleFinish}
-            layout="vertical"
-            size="large"
-          >
+          <Form form={form} onFinish={handleFinish} layout="vertical">
             <Form.Item
-              label="Tên Thương Hiệu"
+              label="Tên Thương hiệu"
               name="name"
               rules={[
                 { required: true, message: 'Vui lòng nhập tên thương hiệu' },
@@ -64,20 +79,16 @@ const CreateBrand = () => {
             >
               <Input placeholder="Nhập tên thương hiệu" />
             </Form.Item>
-
             <Form.Item
               label="Mô tả"
               name="description"
               rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
             >
-              <Input.TextArea rows={4} placeholder="Nhập mô tả" />
+              <Input placeholder="Nhập mô tả" />
             </Form.Item>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block>
-                Thêm Danh Mục
-              </Button>
-            </Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Lưu Thay Đổi
+            </Button>
           </Form>
         </Card>
       </Flex>
@@ -85,4 +96,4 @@ const CreateBrand = () => {
   )
 }
 
-export default CreateBrand
+export default UpdateBrand

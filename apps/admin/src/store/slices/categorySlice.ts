@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import apiClient from '@store/services/apiClient'
 import { Category, CategoryState } from '#types/category'
 import { ApiErrorResponse } from '#types/api'
+import axios from 'axios'
 
 const initialCategoriesState: CategoryState = {
   data: [],
@@ -53,12 +54,20 @@ export const addCategory = createAsyncThunk(
       const response = await apiClient.post('/categories', newCategory)
       return response.data
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message)
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const { data } = error.response
+          if (data.status === 'error' && data.errors) {
+            return rejectWithValue(data.errors)
+          } else if (!data.success && data.message) {
+            return rejectWithValue(data.message)
+          }
+        }
+
+        return rejectWithValue('Thêm danh mục thất bại!')
       }
-      const errMsg =
-        (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
-      return rejectWithValue(errMsg)
+
+      return rejectWithValue('Lỗi không xác định!')
     }
   },
 )

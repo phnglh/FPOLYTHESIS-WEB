@@ -1,4 +1,14 @@
-import { Button, Input, Select, Space, Table, Tag, Modal, message } from 'antd'
+import {
+  Button,
+  Input,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Modal,
+  Row,
+  Typography,
+} from 'antd'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store.ts'
@@ -87,21 +97,8 @@ const OrderList = () => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string, record: Order) => (
-        <Space>
-          <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-          <Button
-            size="small"
-            onClick={() => {
-              setSelectedOrder(record)
-              setSelectedStatus(record.status)
-              setConfirmVisible(true)
-            }}
-            disabled={status === 'delivered' || status === 'cancelled'}
-          >
-            Cập nhật
-          </Button>
-        </Space>
+      render: (status: string) => (
+        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
       ),
     },
     {
@@ -109,6 +106,18 @@ const OrderList = () => {
       key: 'actions',
       render: (_: string, record: Order) => (
         <Space>
+          <Button
+            onClick={() => {
+              setSelectedOrder(record)
+              setSelectedStatus(record.status)
+              setConfirmVisible(true)
+            }}
+            disabled={
+              record.status === 'delivered' || record.status === 'cancelled'
+            }
+          >
+            Cập nhật
+          </Button>
           <Button onClick={() => navigate(`/orders/${record.id}`)}>
             Chi tiết
           </Button>
@@ -121,7 +130,16 @@ const OrderList = () => {
   ]
 
   return (
-    <div>
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          Danh sách đơn hàng
+        </Typography.Title>
+      </Row>
       <Space size="middle" style={{ marginBottom: 16 }}>
         <Input
           placeholder="Tìm mã đơn hàng"
@@ -179,7 +197,7 @@ const OrderList = () => {
           <Select.Option value="cancelled">Đã hủy</Select.Option>
         </Select>
       </Modal>
-    </div>
+    </Space>
   )
 }
 

@@ -3,6 +3,7 @@ import { ShoppingCartOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Product, Sku } from '#types/products'
 import { useNavigate } from 'react-router'
+import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 
 const { Meta } = Card
 const { Text } = Typography
@@ -11,16 +12,17 @@ type Props = {
   product: Product
   onAddToCart: (sku: Sku) => void
 }
-const ProductCard = ({ product, onAddToCart }: Props) => {
+const ProductCard = ({ product }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
   const navigate = useNavigate()
+  const { formatCurrency } = useCurrencyFormatter()
   return (
     <Card
       hoverable
       cover={
         <Image
           onClick={() => navigate(`/products/${product.id}`)}
-          src={product.image_url}
+          src={selectedSku.image_url || product.image_url}
           preview={false}
           style={{
             width: '100%',
@@ -52,15 +54,6 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
             {product.name}
           </Text>
         }
-        description={
-          <Text
-            type="secondary"
-            ellipsis
-            onClick={() => navigate(`/products/${product.id}`)}
-          >
-            {product.description}
-          </Text>
-        }
       />
       {product.skus && product.skus.length > 0 && (
         <div
@@ -71,7 +64,7 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
             marginTop: '8px',
           }}
         >
-          {product.skus.map((sku) => {
+          {product.skus.slice(0, 4).map((sku) => {
             return (
               <Image
                 key={sku.id}
@@ -102,15 +95,15 @@ const ProductCard = ({ product, onAddToCart }: Props) => {
         }}
       >
         <Text strong style={{ fontSize: '16px', color: '#ff4d4f' }}>
-          ${selectedSku.price}
+          {formatCurrency(selectedSku.price)}
         </Text>
         <Button
-          size="small"
+          size="large"
           type="primary"
           icon={<ShoppingCartOutlined />}
-          onClick={() => onAddToCart(selectedSku)}
+          onClick={() => navigate(`/products/${product.id}`)}
         >
-          Mua
+          Chi tiết
         </Button>
       </div>
     </Card>

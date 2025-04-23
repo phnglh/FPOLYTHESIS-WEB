@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Table, Button, Modal, Form, Input, Space } from 'antd'
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Space,
+  Row,
+  Col,
+  Typography,
+} from 'antd'
 import {
   fetchAttributes,
   addAttribute,
@@ -13,7 +23,9 @@ import {
 import { AppDispatch, RootState } from '@store/store'
 import { Attribute, AttributeValue } from '#types/product'
 import { toast } from 'react-toastify'
+import { PlusOutlined } from '@ant-design/icons'
 
+const { Title } = Typography
 const AttributeManagement = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { data, loading } = useSelector((state: RootState) => state.attributes)
@@ -55,6 +67,7 @@ const AttributeManagement = () => {
   const handleSubmit = async (values: Attribute) => {
     if (editingAttribute) {
       await dispatch(updateAttribute({ ...values, id: editingAttribute.id }))
+      toast.success('Cập nhập thành công')
     } else {
       await dispatch(addAttribute(values)).unwrap()
       toast.success('Thêm thành công')
@@ -145,10 +158,29 @@ const AttributeManagement = () => {
   ]
 
   return (
-    <div>
-      <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
-        Thêm thuộc tính
-      </Button>
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: 'flex', marginTop: '30px' }}
+    >
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={3} style={{ margin: 0 }}>
+            Danh sách thuộc tính
+          </Title>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            style={{ marginBottom: 16 }}
+          >
+            Thêm thuộc tính
+          </Button>
+        </Col>
+      </Row>
+
       <Table
         dataSource={data}
         columns={columns}
@@ -213,7 +245,7 @@ const AttributeManagement = () => {
           rowKey="id"
         />
       </Modal>
-    </div>
+    </Space>
   )
 }
 
