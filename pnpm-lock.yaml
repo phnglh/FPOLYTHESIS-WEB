@@ -3211,8 +3211,10 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
 
+
   react-router@7.5.2:
     resolution: {integrity: sha512-9Rw8r199klMnlGZ8VAsV/I8WrIF6IyJ90JQUdboupx1cdkgYqwnrYjH+I/nY/7cA1X5zia4mDJqH36npP7sxGQ==}
+
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -7705,3 +7707,4 @@ snapshots:
       type-fest: 2.19.0
 
   zod@3.24.2: {}
+
