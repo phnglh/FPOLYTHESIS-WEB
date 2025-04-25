@@ -326,8 +326,8 @@ const CheckoutPage = () => {
         }
       } else {
         toast.success('Đặt hàng thành công!')
-        const orderId = response.data?.data?.order?.id
-        const orderNumber = response.data?.data?.order?.order_number
+        const orderId = response.data?.data?.id
+        const orderNumber = response.data?.data?.order_number
         navigate(
           `/order-status?success=1&id=${orderId}&order_number=${orderNumber}&message=Đặt hàng thành công`,
         )
