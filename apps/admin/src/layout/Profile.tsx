@@ -4,7 +4,6 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
-  PlusOutlined,
   ShoppingOutlined,
 } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router'
@@ -39,13 +38,6 @@ const ProfileTab = ({ open, onClose, user }: Props) => {
     { icon: <SettingOutlined />, label: 'Account settings' },
   ]
 
-  const avatars = [
-    user?.avatar ||
-      'https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg',
-    'https://i.pravatar.cc/150?img=1',
-    'https://i.pravatar.cc/150?img=2',
-  ]
-
   return (
     <Drawer
       title={null}
@@ -71,22 +63,10 @@ const ProfileTab = ({ open, onClose, user }: Props) => {
           </Title>
           <Text type="secondary">{user?.email || 'demo@minimals.cc'}</Text>
         </div>
-
-        {/* Multi-avatars */}
-        <Space>
-          {avatars.map((avt, idx) => (
-            <Avatar key={idx} src={avt} />
-          ))}
-          <Avatar
-            icon={<PlusOutlined />}
-            style={{ backgroundColor: '#f0f0f0', color: '#888' }}
-          />
-        </Space>
       </Space>
 
       <Divider />
 
-      {/* Menu List */}
       <List
         itemLayout="horizontal"
         dataSource={menuItems}
@@ -119,7 +99,6 @@ const ProfileTab = ({ open, onClose, user }: Props) => {
         icon={<LogoutOutlined />}
         block
         style={{
-          //   background: 'rgba(255, 0, 0, 0.05)',
           fontWeight: 'bold',
           padding: '12px 0',
         }}

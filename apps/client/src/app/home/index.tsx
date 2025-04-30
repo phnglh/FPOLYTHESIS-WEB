@@ -8,6 +8,7 @@ import { addToCart, fetchCart } from '@store/slices/cartSlice'
 import { toast } from 'react-toastify'
 import ProductCardHorizontal from '@layout/components/homepage/ProductCardHorizontal'
 import { Sku } from '#types/products'
+import { useNavigate } from 'react-router'
 
 const { Title } = Typography
 
@@ -15,7 +16,7 @@ export default function Home() {
   const { t } = useTranslation()
   const { data } = useProductList()
   const dispatch = useDispatch<AppDispatch>()
-
+  const navigate = useNavigate()
   const handleAddToCart = (selectedSku: Sku) => {
     if (!selectedSku) {
       alert('Vui lòng chọn phiên bản trước khi thêm vào giỏ hàng')
@@ -25,7 +26,7 @@ export default function Home() {
     dispatch(addToCart({ sku_id: selectedSku.id, quantity: 1 }))
       .unwrap()
       .then(() => {
-        toast.success('THem')
+        toast.success('Thêm vào giỏ hàng thành công')
         dispatch(fetchCart())
       })
       .catch((error) => {
@@ -60,7 +61,11 @@ export default function Home() {
             ))}
           </Row>
           <Col span={24} style={{ textAlign: 'center', marginTop: 20 }}>
-            <Button type="primary" size="large">
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => navigate('/products')}
+            >
               Xem tất cả
             </Button>
           </Col>

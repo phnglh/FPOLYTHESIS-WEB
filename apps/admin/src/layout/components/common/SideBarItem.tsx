@@ -87,23 +87,13 @@ export const items = [
   },
   {
     key: '/vouchers',
-    icon: <UserOutlined />,
+    icon: <TagsOutlined />,
     label: <Link to="/vouchers">Quản lý mã khuyến mại</Link>,
   },
   {
     key: '/users',
     icon: <UserOutlined />,
-    label: 'Người dùng',
-    children: [
-      {
-        key: '/users/list',
-        label: <Link to="/users">Quản lý người dùng</Link>,
-      },
-      //   {
-      //     key: '/users/create',
-      //     label: <Link to="/users/create">Thêm người dùng</Link>,
-      //   },
-    ],
+    label: <Link to="/users">Quản lý người dùng</Link>,
   },
   {
     key: '/settings',

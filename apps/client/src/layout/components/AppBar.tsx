@@ -20,7 +20,7 @@ import {
   ShoppingCartOutlined,
   DeleteOutlined,
 } from '@ant-design/icons'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
@@ -33,6 +33,7 @@ import { toast } from 'react-toastify'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
+import apiClient from '@store/services/apiClient'
 
 const { Header } = Layout
 
@@ -44,12 +45,26 @@ const AppHeader = () => {
   const { user, access_token } = useSelector((state: RootState) => state.auth)
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
+  const [wishlist, setWishlist] = useState([])
 
   useEffect(() => {
     if (access_token && user) {
       dispatch(fetchCart())
+      fetchWishlist()
     }
   }, [access_token, user, dispatch])
+
+  const fetchWishlist = async () => {
+    try {
+      const response = await apiClient.get('/wishlist')
+      if (response.status === 200) {
+        const wishlist = response.data.data
+        setWishlist(wishlist)
+      }
+    } catch (error) {
+      console.error('Error fetching wishlist:', error)
+    }
+  }
 
   useEffect(() => {
     if (
@@ -195,6 +210,9 @@ const AppHeader = () => {
     <Menu>
       <Menu.Item key="account">
         <Link to="/account">Hồ sơ</Link>{' '}
+      </Menu.Item>
+      <Menu.Item key="/change-password">
+        <Link to="/change-password">Đổi mật khẩu</Link>
       </Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
         Đăng xuất

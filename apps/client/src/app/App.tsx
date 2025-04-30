@@ -26,6 +26,7 @@ import { AccountLayout } from '@layout/AccountLayout'
 import PrivateRoute from '@routes/PrivateRoute'
 import PublicRoute from '../routes/PublicRoute'
 import AddressPage from '@app/profile/address'
+import ChangePasswordPage from '@app/change-password'
 
 function App() {
   const dispatch = useDispatch<AppDispatch>()
@@ -77,6 +78,7 @@ function App() {
             </PublicRoute>
           }
         />
+        <Route path="change-password" element={<ChangePasswordPage />} />
         <Route
           path="register"
           element={

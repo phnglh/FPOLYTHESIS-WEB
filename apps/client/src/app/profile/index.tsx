@@ -175,20 +175,10 @@ export default function ProfilePage() {
             hoverable
           >
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <Avatar
-                size={100}
-                src="https://i.pravatar.cc/150?img=3"
-                style={{ border: '2px solid #1890ff' }}
-              />
+              <Avatar size={100} src={user?.avatar} />
               <Title level={4} style={{ marginTop: '10px', fontWeight: '600' }}>
                 {user.name}
               </Title>
-              <Text
-                type="secondary"
-                style={{ display: 'block', marginBottom: '15px' }}
-              >
-                {user.role}
-              </Text>
             </div>
 
             <div>
@@ -198,11 +188,7 @@ export default function ProfilePage() {
                   <Text> {user.email || 'Not provided'}</Text>
                 </Col>
                 <Col span={24}>
-                  <Text strong>Phone:</Text>
-                  <Text> {user.phone || 'Not provided'}</Text>
-                </Col>
-                <Col span={24}>
-                  <Text strong>Created at:</Text>
+                  <Text strong>Tạo lúc:</Text>
                   <Text> {new Date(user.created_at).toLocaleString()}</Text>
                 </Col>
               </Row>
