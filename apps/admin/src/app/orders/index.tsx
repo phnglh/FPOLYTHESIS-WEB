@@ -9,14 +9,14 @@ import {
   Row,
   Typography,
 } from 'antd'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 import { useNavigate } from 'react-router'
 import { Order } from '#types/order'
 import { User } from '#types/user'
 import apiClient from '@store/services/apiClient'
 import { toast } from 'react-toastify'
-
+import { debounce } from 'lodash'
 const statusColors: Record<string, string> = {
   pending: 'gold',
   processing: 'blue',
@@ -35,8 +35,9 @@ const statusLabels: Record<string, string> = {
 
 const OrderList = () => {
   const navigate = useNavigate()
+  const { formatCurrency } = useCurrencyFormatter()
   const [orders, setOrders] = useState<Order[]>([])
-  const [pageSize, setPageSize] = useState(10) // mặc định 10 dòng mỗi trang
+  const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -44,13 +45,27 @@ const OrderList = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [confirmVisible, setConfirmVisible] = useState(false)
-
-  const { formatCurrency } = useCurrencyFormatter()
   const [currentPage, setCurrentPage] = useState(1)
-  const fetchOrders = async (page: number, size: number) => {
+
+  const fetchOrders = async (
+    page: number,
+    size: number,
+    search: string = searchTerm,
+    status: string = statusFilter,
+  ) => {
     try {
-      console.log(size)
-      const response = await apiClient.get(`/orders?page=${page}&limit=${size}`)
+      const params: any = {
+        page,
+        limit: size,
+      }
+      if (status !== 'all') {
+        params.status = status
+      }
+      if (search.trim() !== '') {
+        params.search = search.trim()
+      }
+
+      const response = await apiClient.get(`/orders`, { params })
       setOrders(response.data.data)
       setLoading(false)
       setCurrentPage(response.data.meta.current_page)
@@ -63,21 +78,20 @@ const OrderList = () => {
 
   useEffect(() => {
     fetchOrders(currentPage, pageSize)
-  }, [])
+  }, [statusFilter, searchTerm])
 
-  console.log(pageSize)
+  const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      fetchOrders(1, pageSize, term, statusFilter)
+    }, 500), // delay 500ms
+    [pageSize, statusFilter],
+  )
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination
     setCurrentPage(current)
     setPageSize(pageSize)
     fetchOrders(current, pageSize)
   }
-
-  const filteredOrders = (Array.isArray(orders) ? orders : []).filter(
-    (order) =>
-      (statusFilter === 'all' || order.status === statusFilter) &&
-      order.id.toString().includes(searchTerm.trim()),
-  )
 
   const handleConfirmStatusChange = async () => {
     if (!selectedOrder) return
@@ -165,7 +179,11 @@ const OrderList = () => {
         <Input
           placeholder="Tìm mã đơn hàng"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value
+            setSearchTerm(value)
+            debouncedSearch(value)
+          }}
           allowClear
         />
         <Select
