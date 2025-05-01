@@ -10,9 +10,6 @@ import {
   Typography,
 } from 'antd'
 import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '@store/store.ts'
-import { fetchOrders } from '@store/slices/orderSlice.ts'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
 import { useNavigate } from 'react-router'
 import { Order } from '#types/order'
@@ -37,22 +34,46 @@ const statusLabels: Record<string, string> = {
 }
 
 const OrderList = () => {
-  const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [pageSize, setPageSize] = useState(10) // mặc định 10 dòng mỗi trang
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [confirmVisible, setConfirmVisible] = useState(false)
 
-  const { data, loading } = useSelector((state: RootState) => state.orders)
   const { formatCurrency } = useCurrencyFormatter()
-  const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const fetchOrders = async (page: number, size: number) => {
+    try {
+      console.log(size)
+      const response = await apiClient.get(`/orders?page=${page}&limit=${size}`)
+      setOrders(response.data.data)
+      setLoading(false)
+      setCurrentPage(response.data.meta.current_page)
+      setTotal(response.data.meta.total)
+    } catch (error) {
+      console.error('Failed to fetch orders:', error)
+      toast.error('Có lỗi xảy ra khi tải danh sách đơn hàng')
+    }
+  }
 
   useEffect(() => {
-    dispatch(fetchOrders())
-  }, [dispatch])
+    fetchOrders(currentPage, pageSize)
+  }, [])
 
-  const filteredOrders = (Array.isArray(data) ? data : []).filter(
+  console.log(pageSize)
+  const handleTableChange = (pagination: any) => {
+    const { current, pageSize } = pagination
+    setCurrentPage(current)
+    setPageSize(pageSize)
+    fetchOrders(current, pageSize)
+  }
+
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter(
     (order) =>
       (statusFilter === 'all' || order.status === statusFilter) &&
       order.id.toString().includes(searchTerm.trim()),
@@ -68,7 +89,7 @@ const OrderList = () => {
       )
       toast.success('Cập nhật trạng thái thành công')
       setConfirmVisible(false)
-      dispatch(fetchOrders())
+      await fetchOrders(currentPage, pageSize)
     } catch (error) {
       console.error('Failed to update status:', error)
       toast.error('Có lỗi xảy ra khi cập nhật trạng thái')
@@ -78,8 +99,8 @@ const OrderList = () => {
   const columns = [
     {
       title: 'Mã đơn hàng',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'order_number',
+      key: 'order_number',
     },
     {
       title: 'Khách hàng',
@@ -164,10 +185,18 @@ const OrderList = () => {
 
       <Table
         columns={columns}
-        dataSource={filteredOrders}
+        dataSource={orders}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: total,
+
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '25', '50', '100'],
+        }}
+        onChange={handleTableChange}
       />
 
       <Modal

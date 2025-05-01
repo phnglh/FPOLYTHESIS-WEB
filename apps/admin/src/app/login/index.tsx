@@ -25,9 +25,11 @@ const LoginPage = () => {
       .catch((err) => {
         toast.error(err)
       })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
-  console.log(user)
   if (user && user.role === 'admin') {
     return <Navigate to="/dashboard" replace />
   }
