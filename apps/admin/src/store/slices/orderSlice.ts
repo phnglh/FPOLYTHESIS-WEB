@@ -28,10 +28,10 @@ export const createOrder = createAsyncThunk(
 // Lấy danh sách đơn hàng
 export const fetchOrders = createAsyncThunk(
   'order/fetchOrders',
-  async (_, { rejectWithValue }) => {
+  async (page: number = 1, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get('/orders')
-      return res.data.data
+      const res = await apiClient.get(`/orders?page=${page}`)
+      return res.data
     } catch (error: unknown) {
       const errMsg =
         (error as ApiErrorResponse)?.message || 'Lỗi không xác định'
