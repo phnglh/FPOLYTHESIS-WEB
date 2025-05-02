@@ -45,7 +45,7 @@ const ProductCardHorizontal = ({ product }: Props) => {
 
           {product.skus?.length > 0 && (
             <div className="flex gap-2 mt-2">
-              {product.skus.map((sku) => {
+              {product.skus.slice(0, 4).map((sku) => {
                 const isSelected = selectedSku.id === sku.id
                 return (
                   <Image

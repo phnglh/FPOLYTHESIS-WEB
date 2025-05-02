@@ -16,6 +16,24 @@ const ProductCard = ({ product }: Props) => {
   const [selectedSku, setSelectedSku] = useState(product.skus[0])
   const navigate = useNavigate()
   const { formatCurrency } = useCurrencyFormatter()
+
+  const skus = product.skus
+  const skusByColor = Object.values(
+    skus.reduce(
+      (acc, sku) => {
+        const colorAttr = sku.attributes.find((attr) => attr.name === 'Màu sắc')
+        if (!colorAttr) return acc
+
+        const color = colorAttr.value
+        if (!acc[color]) {
+          acc[color] = sku
+        }
+        return acc
+      },
+      {} as Record<string, (typeof product.skus)[0]>,
+    ),
+  )
+
   return (
     <Card
       hoverable
@@ -64,26 +82,24 @@ const ProductCard = ({ product }: Props) => {
             marginTop: '8px',
           }}
         >
-          {product.skus.slice(0, 4).map((sku) => {
-            return (
-              <Image
-                key={sku.id}
-                src={sku.image_url}
-                preview={false}
-                width={40}
-                height={40}
-                style={{
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  border:
-                    selectedSku.id === sku.id
-                      ? '2px solid #ff4d4f'
-                      : '2px solid transparent',
-                }}
-                onClick={() => setSelectedSku(sku)}
-              />
-            )
-          })}
+          {skusByColor.slice(0, 4).map((sku) => (
+            <Image
+              key={sku.id}
+              src={sku.image_url}
+              preview={false}
+              width={40}
+              height={40}
+              style={{
+                borderRadius: '50%',
+                cursor: 'pointer',
+                border:
+                  selectedSku.id === sku.id
+                    ? '2px solid #ff4d4f'
+                    : '2px solid transparent',
+              }}
+              onClick={() => setSelectedSku(sku)}
+            />
+          ))}
         </div>
       )}
       <div
