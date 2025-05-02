@@ -15,7 +15,7 @@ import apiClient from '@store/services/apiClient.ts'
 import { useDispatch } from 'react-redux'
 import { cancelOrder } from '@store/slices/orderSlice'
 import { AppDispatch } from '@store/store'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 const { Title, Text } = Typography
 const { Content } = Layout
@@ -93,14 +93,14 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true)
   const [cancelModalVisible, setCancelModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
+  const { id } = useParams()
   const navigate = useNavigate()
 
   useEffect(() => {
-    const orderId = window.location.pathname.split('/').pop()
-    if (!orderId) return
+    if (!id) return
 
     apiClient
-      .get(`/orders/${orderId}`)
+      .get(`/customer/orders/${id}`)
       .then((res) => {
         if (res.data.status === 'success') {
           setOrder(res.data.data)

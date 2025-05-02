@@ -31,10 +31,15 @@ export default function DashboardPage() {
     { date: string; revenue: number }[]
   >([])
   const [topProducts, setTopProducts] = useState<
-    { product_name: string; total_quantity: number }[]
+    {
+      product_name: string
+      total_quantity: number
+      variant: string
+      stock: number
+    }[]
   >([])
   const [topCustomers, setTopCustomers] = useState<
-    { name: string; total_spent: number }[]
+    { name: string; total_spent: number; arpu: number; order_count: number }[]
   >([])
   const [dateRange, setDateRange] = useState({
     from: dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -455,8 +460,11 @@ export default function DashboardPage() {
             <table className="w-full">
               <thead>
                 <tr className="text-left bg-green-100 text-green-800">
+                  <th className="p-3">STT</th>
                   <th className="p-3">Tên sản phẩm</th>
-                  <th className="p-3 text-right">Số lượng bán</th>
+                  <th className="p-3">Biến thể</th>
+                  <th className="p-3 text-center">Tồn kho</th>
+                  <th className="p-3 text-center">Số lượng bán</th>
                 </tr>
               </thead>
               <tbody>
@@ -465,8 +473,11 @@ export default function DashboardPage() {
                     key={index}
                     className="border-b border-gray-200 hover:bg-green-50 transition-colors duration-300"
                   >
+                    <td className="p-3">{index + 1}</td>
                     <td className="p-3">{item.product_name}</td>
-                    <td className="p-3 text-right text-green-600">
+                    <td className="p-3">{item.variant}</td>
+                    <td className="p-3 text-center">{item.stock}</td>
+                    <td className="p-3 text-center text-green-600">
                       {item.total_quantity}
                     </td>
                   </tr>
@@ -487,8 +498,11 @@ export default function DashboardPage() {
             <table className="w-full">
               <thead>
                 <tr className="text-left bg-orange-100 text-orange-800">
+                  <th className="p-3">STT</th>
                   <th className="p-3">Tên khách hàng</th>
-                  <th className="p-3 text-right">Tổng chi tiêu</th>
+                  <th className="p-3 text-center">Số lượt mua</th>
+                  <th className="p-3 text-center">Tổng chi tiêu</th>
+                  <th className="p-3 text-center">ARPU</th>
                 </tr>
               </thead>
               <tbody>
@@ -497,9 +511,14 @@ export default function DashboardPage() {
                     key={index}
                     className="border-b border-gray-200 hover:bg-orange-50 transition-colors duration-300"
                   >
+                    <td className="p-3">{index + 1}</td>
                     <td className="p-3">{item.name}</td>
-                    <td className="p-3 text-right text-orange-600">
+                    <td className="p-3 text-center">{item.order_count}</td>
+                    <td className="p-3 text-center text-orange-600">
                       {Math.round(item.total_spent).toLocaleString('vi-VN')} VNĐ
+                    </td>
+                    <td className="p-3 text-center">
+                      {Math.round(item.arpu).toLocaleString('vi-VN')} VNĐ
                     </td>
                   </tr>
                 ))}

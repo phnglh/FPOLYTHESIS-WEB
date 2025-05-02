@@ -19,7 +19,7 @@ const Orders = () => {
 
   useEffect(() => {
     apiClient
-      .get('/orders')
+      .get('/customer/orders')
       .then((response) => {
         if (response.data.status === 'success') {
           setOrders(response.data.data)

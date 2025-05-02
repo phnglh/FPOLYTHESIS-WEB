@@ -11,7 +11,6 @@
       "comments": "on",
       "strings": "on"
     },
-    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "files.autoSave": "afterDelay",
   "editor.formatOnSave": true

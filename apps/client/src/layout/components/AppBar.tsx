@@ -20,7 +20,7 @@ import {
   ShoppingCartOutlined,
   DeleteOutlined,
 } from '@ant-design/icons'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@store/store'
 import { getUser, logout } from '@store/slices/authSlice'
@@ -33,7 +33,6 @@ import { toast } from 'react-toastify'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import useCurrencyFormatter from '@hooks/useCurrencyFormatter'
-import apiClient from '@store/services/apiClient'
 
 const { Header } = Layout
 
@@ -45,26 +44,26 @@ const AppHeader = () => {
   const { user, access_token } = useSelector((state: RootState) => state.auth)
   const cart = useSelector((state: RootState) => state.cart)
   const cartItems = useMemo(() => cart.data?.items || [], [cart.data])
-  const [wishlist, setWishlist] = useState([])
+  //   const [wishlist, setWishlist] = useState([])
 
   useEffect(() => {
     if (access_token && user) {
       dispatch(fetchCart())
-      fetchWishlist()
+      // fetchWishlist()
     }
   }, [access_token, user, dispatch])
 
-  const fetchWishlist = async () => {
-    try {
-      const response = await apiClient.get('/wishlist')
-      if (response.status === 200) {
-        const wishlist = response.data.data
-        setWishlist(wishlist)
-      }
-    } catch (error) {
-      console.error('Error fetching wishlist:', error)
-    }
-  }
+  //   const fetchWishlist = async () => {
+  //     try {
+  //       const response = await apiClient.get('/wishlist')
+  //       if (response.status === 200) {
+  //         const wishlist = response.data.data
+  //         setWishlist(wishlist)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching wishlist:', error)
+  //     }
+  //   }
 
   useEffect(() => {
     if (

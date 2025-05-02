@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
   const fetchOrders = async (page: number = 1, pageSize: number = 10) => {
     try {
-      const response = await apiClient.get('/orders', {
+      const response = await apiClient.get('/customer/orders', {
         params: { page, per_page: pageSize },
       })
       const { data, meta } = response.data
