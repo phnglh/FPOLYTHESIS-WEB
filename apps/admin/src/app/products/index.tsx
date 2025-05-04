@@ -1,18 +1,10 @@
-import {
-  ArrowRightOutlined,
-  EyeOutlined,
-  FilterOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from '@ant-design/icons'
+import { ArrowRightOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
   Descriptions,
-  Input,
   Modal,
   Row,
-  Select,
   Space,
   Switch,
   Table,
@@ -199,53 +191,6 @@ const ProductPage = () => {
               total: data?.meta?.total,
             }}
             onChange={handleTableChange}
-            title={() => (
-              <Row justify="space-between" align="middle" gutter={[16, 16]}>
-                <Col>
-                  <Row gutter={8}>
-                    <Col>
-                      <Select defaultValue="Stock" style={{ width: 120 }}>
-                        <Select.Option value="in_stock">In Stock</Select.Option>
-                        <Select.Option value="out_stock">
-                          Out of Stock
-                        </Select.Option>
-                      </Select>
-                    </Col>
-                    <Col>
-                      <Select defaultValue="Publish" style={{ width: 120 }}>
-                        <Select.Option value="published">
-                          Published
-                        </Select.Option>
-                        <Select.Option value="draft">Draft</Select.Option>
-                      </Select>
-                    </Col>
-                    <Col>
-                      <Input.Search placeholder="Search..." allowClear />
-                    </Col>
-                  </Row>
-                </Col>
-
-                <Col>
-                  <Row gutter={16}>
-                    <Col>
-                      <Button type="link" icon={<EyeOutlined />}>
-                        Columns
-                      </Button>
-                    </Col>
-                    <Col>
-                      <Button type="link" icon={<FilterOutlined />}>
-                        Filters
-                      </Button>
-                    </Col>
-                    <Col>
-                      <Button type="link" icon={<UploadOutlined />}>
-                        Export
-                      </Button>
-                    </Col>
-                  </Row>
-                </Col>
-              </Row>
-            )}
           />
         </Col>
       </Row>

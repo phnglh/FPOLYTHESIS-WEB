@@ -23,7 +23,7 @@ const LoginPage = () => {
         toast.success('Đăng nhập thành công!')
       })
       .catch((err) => {
-        toast.error(err)
+        toast.error('Đăng nhập thất bại!')
       })
       .finally(() => {
         setLoading(false)
