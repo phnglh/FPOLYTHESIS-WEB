@@ -375,19 +375,8 @@ const ProductDetailPage = () => {
             <ul className="list-disc ml-6 space-y-2 text-gray-700 text-base bg-gray-50 p-4 rounded-lg">
               <li>Giao hàng tiêu chuẩn: 2-5 ngày làm việc.</li>
               <li>Giao hàng nhanh (Nội thành): 1-2 ngày.</li>
-              <li>Miễn phí vận chuyển với đơn hàng từ 250,000₫ trở lên.</li>
+              <li>Miễn phí vận chuyển.</li>
               <li>Giao hàng toàn quốc.</li>
-            </ul>
-          </TabPane>
-
-          <TabPane tab="🔁 Chính sách đổi trả" key="4">
-            <ul className="list-disc ml-6 space-y-2 text-gray-700 text-base bg-gray-50 p-4 rounded-lg">
-              <li>
-                Thời gian đổi hàng trong vòng 15 ngày kể từ khi nhận hàng.
-              </li>
-              <li>Sản phẩm còn nguyên tem mác, chưa qua sử dụng.</li>
-              <li>Đổi hàng do lỗi nhà sản xuất hoặc không đúng mô tả.</li>
-              <li>Không áp dụng đổi trả với sản phẩm khuyến mãi trên 50%.</li>
             </ul>
           </TabPane>
         </Tabs>
