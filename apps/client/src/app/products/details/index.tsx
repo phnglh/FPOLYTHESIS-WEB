@@ -218,20 +218,19 @@ const ProductDetailPage = () => {
               🎁 KHUYẾN MÃI - ƯU ĐÃI
             </p>
             <ul className="text-sm list-disc ml-5 space-y-1">
-              <li>MUA 2 sản phẩm GIẢM 10%</li>
               <li>
-                Nhập mã <strong>APR10</strong> GIẢM 10% tối đa 10K
+                Nhập mã <strong>FLAMES10</strong> GIẢM 10% tối đa 10K
               </li>
               <li>
-                Nhập mã <strong>APR30</strong> GIẢM 30K đơn từ 599K
+                Nhập mã <strong>FLAMES30</strong> GIẢM 30K đơn từ 599K
               </li>
               <li>
-                Nhập mã <strong>APR70</strong> GIẢM 70K đơn từ 899K
+                Nhập mã <strong>FLAMES70</strong> GIẢM 70K đơn từ 899K
               </li>
               <li>
-                Nhập mã <strong>APR100</strong> GIẢM 100K đơn từ 1199K
+                Nhập mã <strong>FLAMES100</strong> GIẢM 100K đơn từ 1199K
               </li>
-              <li>🚚 Miễn phí vận chuyển cho đơn từ 250K</li>
+              <li>🚚 Miễn phí vận chuyển</li>
             </ul>
           </div>
 
@@ -290,22 +289,29 @@ const ProductDetailPage = () => {
 
       {/* Tabs mô tả, đánh giá, chính sách */}
       <div className="mt-12 w-full max-w-4xl">
-        <Tabs defaultActiveKey="1" type="line" tabBarGutter={32}>
-          <TabPane tab="Mô tả sản phẩm" key="1">
-            <p className="text-gray-700 leading-relaxed">
+        <Tabs
+          defaultActiveKey="1"
+          type="line"
+          tabBarGutter={32}
+          tabBarStyle={{ fontWeight: '500', fontSize: '16px' }}
+          className="bg-white p-4 rounded-xl shadow-sm"
+        >
+          <TabPane tab="📝 Mô tả sản phẩm" key="1">
+            <p className="text-gray-700 leading-relaxed text-base bg-gray-50 p-4 rounded-lg">
               {product.description ||
                 'Hiện tại chưa có mô tả chi tiết cho sản phẩm này.'}
             </p>
           </TabPane>
 
-          <TabPane tab="Đánh giá" key="2">
-            <div className="space-y-6">
-              {/* Danh sách đánh giá */}
+          <TabPane tab="⭐ Đánh giá" key="2">
+            <div className="space-y-6 bg-gray-50 p-4 rounded-lg">
               {reviews?.length > 0 ? (
                 reviews.map((review, index) => (
-                  <div key={index}>
+                  <div key={index} className="border-b pb-4">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium">{review.user.name}</p>
+                      <p className="font-medium text-gray-800">
+                        {review.user.name}
+                      </p>
                       <Rate
                         disabled
                         defaultValue={review.rating}
@@ -316,21 +322,17 @@ const ProductDetailPage = () => {
                   </div>
                 ))
               ) : (
-                <p>Hiện chưa có đánh giá nào cho sản phẩm này.</p>
+                <p className="text-gray-500">
+                  Hiện chưa có đánh giá nào cho sản phẩm này.
+                </p>
               )}
 
-              {/* Nếu user chưa đánh giá */}
               {!reviews?.find((r) => r.user_id === currentUserId) && (
                 <div className="mt-6 border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
                     Đánh giá sản phẩm
                   </h3>
-                  <Form
-                    layout="vertical"
-                    onFinish={(values) => {
-                      handleReviewSubmit(values)
-                    }}
-                  >
+                  <Form layout="vertical" onFinish={handleReviewSubmit}>
                     <Form.Item
                       name="rating"
                       label="Chọn số sao"
@@ -340,7 +342,6 @@ const ProductDetailPage = () => {
                     >
                       <Rate />
                     </Form.Item>
-
                     <Form.Item
                       name="review"
                       label="Nhận xét"
@@ -353,7 +354,6 @@ const ProductDetailPage = () => {
                         placeholder="Nhập đánh giá của bạn..."
                       />
                     </Form.Item>
-
                     <Form.Item>
                       <Button type="primary" htmlType="submit">
                         Gửi đánh giá
@@ -363,7 +363,6 @@ const ProductDetailPage = () => {
                 </div>
               )}
 
-              {/* Nếu user đã đánh giá */}
               {reviews?.find((r) => r.user_id === currentUserId) && (
                 <p className="text-green-600 italic">
                   Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
@@ -372,8 +371,8 @@ const ProductDetailPage = () => {
             </div>
           </TabPane>
 
-          <TabPane tab="Chính sách giao hàng" key="3">
-            <ul className="list-disc ml-6 space-y-2 text-gray-700">
+          <TabPane tab="🚚 Chính sách giao hàng" key="3">
+            <ul className="list-disc ml-6 space-y-2 text-gray-700 text-base bg-gray-50 p-4 rounded-lg">
               <li>Giao hàng tiêu chuẩn: 2-5 ngày làm việc.</li>
               <li>Giao hàng nhanh (Nội thành): 1-2 ngày.</li>
               <li>Miễn phí vận chuyển với đơn hàng từ 250,000₫ trở lên.</li>
@@ -381,8 +380,8 @@ const ProductDetailPage = () => {
             </ul>
           </TabPane>
 
-          <TabPane tab="Chính sách đổi trả" key="4">
-            <ul className="list-disc ml-6 space-y-2 text-gray-700">
+          <TabPane tab="🔁 Chính sách đổi trả" key="4">
+            <ul className="list-disc ml-6 space-y-2 text-gray-700 text-base bg-gray-50 p-4 rounded-lg">
               <li>
                 Thời gian đổi hàng trong vòng 15 ngày kể từ khi nhận hàng.
               </li>
