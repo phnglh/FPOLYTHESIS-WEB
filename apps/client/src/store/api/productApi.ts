@@ -42,10 +42,9 @@ export const productApi = createApi({
 
         if (category !== undefined) params.append('category', String(category))
         if (brand !== undefined) params.append('brand', String(brand))
-        if (minPrice !== undefined) params.append('min_price', String(minPrice))
-        if (maxPrice !== undefined) params.append('max_price', String(maxPrice))
         if (sort) params.append('sort', sort)
 
+        console.log('params', params.toString(), minPrice, maxPrice)
         return `/products?${params.toString()}`
       },
       transformResponse: (response: { data: Product[]; meta: Meta }) => ({

@@ -52,7 +52,7 @@ const ProductCard = ({ product }: Props) => {
         />
       }
       style={{
-        width: '280px',
+        width: '300px',
         textAlign: 'center',
         borderRadius: '10px',
         minHeight: '400px',

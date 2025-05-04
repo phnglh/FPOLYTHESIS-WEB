@@ -20,12 +20,10 @@ export const useProductList = (filters: FilterOptions = {}) => {
     per_page: pagination.pageSize,
     category: filters.category,
     brand: filters.brand,
-    min_price: filters.minPrice,
-    max_price: filters.maxPrice,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
     sort: filters.sort,
   }
-
-  console.log('Filters sent to API:', queryParams)
 
   const { data, error, isLoading } = useGetProductsQuery(queryParams, {
     pollingInterval: 10000,
