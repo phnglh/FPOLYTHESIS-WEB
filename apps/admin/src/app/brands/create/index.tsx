@@ -75,7 +75,7 @@ const CreateBrand = () => {
 
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
-                Thêm Danh Mục
+                Thêm Thương Hiệu
               </Button>
             </Form.Item>
           </Form>
